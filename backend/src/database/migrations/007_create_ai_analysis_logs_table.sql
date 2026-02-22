@@ -1,0 +1,1 @@
+-- AI Analysis Logs table migration

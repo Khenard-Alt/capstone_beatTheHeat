@@ -1,0 +1,2 @@
+-- Supabase database schema for Beat The Heat system
+-- Main database schema file
