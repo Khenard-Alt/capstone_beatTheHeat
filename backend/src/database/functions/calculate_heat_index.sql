@@ -1,1 +1,0 @@
--- Database functions for heat index calculations

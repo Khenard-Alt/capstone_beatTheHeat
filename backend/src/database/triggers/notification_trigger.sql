@@ -1,1 +1,0 @@
--- Database triggers for automated tasks
