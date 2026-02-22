@@ -1,0 +1,277 @@
+# ==========================================
+# ROOT PROJECT GITIGNORE
+# Beat The Heat - Capstone Project
+# ==========================================
+
+# ==========================================
+# SENSITIVE FILES - NEVER COMMIT
+# ==========================================
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+**/.env
+
+# IMPORTANT: Always keep example files
+!.env.example
+!**/.env.example
+
+# API Keys & Secrets (backup location)
+secrets/
+.secrets/
+*.key
+*.pem
+*.p12
+
+# ==========================================
+# DEPENDENCIES
+# ==========================================
+
+# Node modules (both frontend and backend)
+**/node_modules/
+node_modules/
+
+# Package manager files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# ==========================================
+# BUILD OUTPUT
+# ==========================================
+
+# Backend build
+backend/dist/
+backend/build/
+
+# Frontend build
+frontend/dist/
+frontend/dist-ssr/
+frontend/build/
+
+# General build artifacts
+**/dist/
+**/build/
+*.tsbuildinfo
+
+# ==========================================
+# LOGS & RUNTIME
+# ==========================================
+
+# All log files
+logs/
+*.log
+**/*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ==========================================
+# TEST & COVERAGE
+# ==========================================
+
+# Test coverage
+coverage/
+.nyc_output/
+**/.nyc_output/
+
+# Test results
+test-results/
+junit.xml
+
+# ==========================================
+# CACHE & TEMPORARY
+# ==========================================
+
+# Cache directories
+.cache/
+.eslintcache
+.parcel-cache/
+.vite/
+**/.cache/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+**/.tmp/
+**/.temp/
+
+# ==========================================
+# OS SPECIFIC
+# ==========================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ==========================================
+# IDE / EDITOR
+# ==========================================
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+
+# Emacs
+\#*\#
+.\#*
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# ==========================================
+# DOCKER & DEPLOYMENT
+# ==========================================
+
+# Docker volumes (if any)
+docker-volumes/
+
+# Kubernetes secrets (if any)
+k8s-secrets/
+
+# ==========================================
+# KEEP THESE IMPORTANT FILES
+# ==========================================
+
+# Documentation is crucial - NEVER ignore
+!**/*.md
+!README.md
+!SETUP_GUIDE.md
+!PROJECT_STRUCTURE.md
+
+# Keep all database schemas and migrations
+!backend/database/**
+!**/database/**
+!**/*.sql
+
+# Keep all docs
+!backend/docs/**
+!**/docs/**
+
+# Keep all source code
+!backend/src/**
+!frontend/src/**
+!**/src/**
+
+# Keep all configuration files
+!*.json
+!*.config.js
+!*.config.ts
+!tsconfig*.json
+!package.json
+!docker-compose.yml
+
+# Keep Docker files
+!Dockerfile
+!.dockerignore
+
+# Keep linter/formatter configs
+!.eslintrc*
+!.prettierrc*
+!.editorconfig
+
+# Keep CI/CD configs
+!.github/**
+!.gitlab-ci.yml
+!.circleci/**
+
+# ==========================================
+# PROJECT SPECIFIC
+# ==========================================
+
+# Uploaded files (runtime)
+uploads/
+**/uploads/
+
+# Generated files
+generated/
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Database dumps (local only)
+*.sql.gz
+*.dump
+
+# User data (if stored locally)
+user-data/
+
+# ==========================================
+# NOTES
+# ==========================================
+# 
+# This gitignore ensures:
+# ✅ .env files are ignored (.env.example is kept)
+# ✅ node_modules are ignored
+# ✅ Build outputs are ignored
+# ✅ All source code is tracked
+# ✅ All documentation is tracked
+# ✅ All database files are tracked
+# ✅ All configuration files are tracked
+# ✅ Logs and cache are ignored
+# ✅ OS and IDE files are ignored
+#
+# Always commit:
+# - All .md files (documentation)
+# - All database/ folder contents
+# - All docs/ folder contents
+# - All src/ folder contents
+# - Configuration files
+# - .env.example (but NOT .env)
+#

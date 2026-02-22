@@ -1,0 +1,1 @@
+-- Health Advisories table migration

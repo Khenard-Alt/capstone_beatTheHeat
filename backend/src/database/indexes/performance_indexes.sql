@@ -1,0 +1,1 @@
+-- Database indexes for performance optimization
