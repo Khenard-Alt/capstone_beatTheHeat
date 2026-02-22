@@ -1,0 +1,1 @@
+-- Heat Index data table migration
