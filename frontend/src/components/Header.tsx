@@ -132,7 +132,12 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                             <MdCheckCircle /> Mark all as read
                           </button>
                         )}
-                        <button className="close-notif-btn" onClick={toggleNotifications}>
+                        <button 
+                          className="close-notif-btn" 
+                          onClick={toggleNotifications}
+                          title="Close notifications"
+                          aria-label="Close notifications"
+                        >
                           <MdClose />
                         </button>
                       </div>
@@ -169,6 +174,8 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                                 e.stopPropagation();
                                 deleteNotification(notif.id);
                               }}
+                              title="Delete notification"
+                              aria-label="Delete notification"
                             >
                               <MdClose />
                             </button>

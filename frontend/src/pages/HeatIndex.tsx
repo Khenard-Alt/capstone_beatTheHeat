@@ -65,17 +65,17 @@ export const HeatIndex: React.FC = () => {
       </div>
 
       <div className="heat-index-stats">
-        <Card className="stat-card">
+        <Card className="stat-card stat-card-heat" data-heat-level={currentLevel}>
           <div className="stat-content">
-            <div className="stat-icon" style={{ color: getHeatColor(currentLevel) }}>
+            <div className="stat-icon" data-heat-level={currentLevel}>
               🌡️
             </div>
             <div className="stat-info">
-              <div className="stat-value" style={{ color: getHeatColor(currentLevel) }}>
+              <div className="stat-value" data-heat-level={currentLevel}>
                 {currentHeatIndex}°C
               </div>
               <div className="stat-label">Current Heat Index</div>
-              <div className="stat-badge" style={{ backgroundColor: getHeatColor(currentLevel) }}>
+              <div className="stat-badge" data-heat-level={currentLevel}>
                 {getHeatLabel(currentLevel)}
               </div>
             </div>

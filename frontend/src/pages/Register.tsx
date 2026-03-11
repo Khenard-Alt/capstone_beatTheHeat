@@ -142,6 +142,7 @@ export const Register: React.FC = () => {
               value={formData.role}
               onChange={handleChange}
               className="select-field"
+              aria-label="Select your role"
             >
               <option value="teacher">Teacher</option>
               <option value="staff">Staff</option>

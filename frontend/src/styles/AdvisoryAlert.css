@@ -1,1 +1,74 @@
 /* AdvisoryAlert Component Styles */
+
+.advisory-alert {
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid var(--heat-color, #64748b);
+  margin-bottom: 16px;
+}
+
+.advisory-alert-critical {
+  background-color: #fef2f2;
+}
+
+.advisory-alert-high {
+  background-color: #fef3c7;
+}
+
+.advisory-alert-moderate,
+.advisory-alert-low {
+  background-color: #dbeafe;
+}
+
+.advisory-alert-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.advisory-alert-icon {
+  font-size: 24px;
+  color: var(--heat-color, #64748b);
+}
+
+.advisory-alert-title {
+  flex: 1;
+}
+
+.advisory-alert-title h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.advisory-alert-risk {
+  font-size: 12px;
+  text-transform: capitalize;
+  color: #64748b;
+}
+
+.advisory-alert-dismiss {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+
+.advisory-alert-dismiss:hover {
+  color: #1e293b;
+}
+
+.advisory-alert-body {
+  margin-top: 12px;
+}
+
+.advisory-alert-text {
+  margin: 0;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}

@@ -23,20 +23,20 @@ export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
   const label = getHeatLabel(level);
 
   return (
-    <div className="heat-index-card" style={{ borderColor: color }}>
+    <div 
+      className="heat-index-card" 
+      data-heat-level={level}
+    >
       <div className="heat-index-header">
         <h3 className="heat-index-title">Current Heat Index</h3>
-        <span
-          className="heat-index-badge"
-          style={{ backgroundColor: color }}
-        >
+        <span className="heat-index-badge" data-heat-level={level}>
           {label}
         </span>
       </div>
 
       <div className="heat-index-body">
         <div className="heat-index-main">
-          <div className="heat-index-value" style={{ color }}>
+          <div className="heat-index-value" data-heat-level={level}>
             {heatIndex.toFixed(1)}°C
           </div>
           <div className="heat-index-label">Heat Index</div>
