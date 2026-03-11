@@ -375,6 +375,8 @@ export const Login: React.FC = () => {
                 className="chat-send-button"
                 onClick={() => handleSendMessage()}
                 disabled={!userInput.trim()}
+                title="Send message"
+                aria-label="Send message"
               >
                 <MdSend />
               </button>
