@@ -212,7 +212,7 @@ export const Dashboard: React.FC = () => {
             <div className="quick-stat-label">Heat Index</div>
           </div>
           <div className="quick-stat-item">
-            <div className="quick-stat-value" style={{ color: '#ef4444' }}>
+            <div className="quick-stat-value text-danger">
               {healthIncidents.filter(i => i.status !== 'resolved').length}
             </div>
             <div className="quick-stat-label">Active Cases</div>
@@ -258,13 +258,13 @@ export const Dashboard: React.FC = () => {
                 <span className="mini-stat-label">Total</span>
               </div>
               <div className="mini-stat">
-                <span className="mini-stat-value" style={{ color: '#ef4444' }}>
+                <span className="mini-stat-value text-danger">
                   {healthIncidents.filter(i => i.severity === 'severe').length}
                 </span>
                 <span className="mini-stat-label">Severe</span>
               </div>
               <div className="mini-stat">
-                <span className="mini-stat-value" style={{ color: '#10b981' }}>
+                <span className="mini-stat-value text-success">
                   {healthIncidents.filter(i => i.status === 'resolved').length}
                 </span>
                 <span className="mini-stat-label">Resolved</span>
@@ -287,18 +287,13 @@ export const Dashboard: React.FC = () => {
                     <div className="incident-compact-badges">
                       <span
                         className="severity-badge-mini"
-                        style={{ 
-                          backgroundColor: `${getSeverityColor(incident.severity)}20`,
-                          color: getSeverityColor(incident.severity)
-                        }}
+                        data-severity={incident.severity}
                       >
                         {incident.severity}
                       </span>
                       <span
                         className="status-badge-mini"
-                        style={{
-                          color: getStatusBadge(incident.status).color
-                        }}
+                        data-status={incident.status}
                       >
                         {getStatusBadge(incident.status).icon}
                       </span>

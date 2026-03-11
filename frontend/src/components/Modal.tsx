@@ -45,7 +45,12 @@ export const Modal: React.FC<ModalProps> = ({
           <div className="modal-header">
             {title && <h2 className="modal-title">{title}</h2>}
             {showCloseButton && (
-              <button className="modal-close-button" onClick={onClose}>
+              <button 
+                className="modal-close-button" 
+                onClick={onClose}
+                title="Close modal"
+                aria-label="Close modal"
+              >
                 <MdClose />
               </button>
             )}

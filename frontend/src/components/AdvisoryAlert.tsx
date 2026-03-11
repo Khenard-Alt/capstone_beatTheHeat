@@ -29,10 +29,10 @@ export const AdvisoryAlert: React.FC<AdvisoryAlertProps> = ({
   return (
     <div
       className={`advisory-alert advisory-alert-${advisory.riskLevel}`}
-      style={{ borderLeftColor: color }}
+      data-heat-level={advisory.heatLevel}
     >
       <div className="advisory-alert-header">
-        <div className="advisory-alert-icon" style={{ color }}>
+        <div className="advisory-alert-icon" data-heat-level={advisory.heatLevel}>
           {getRiskIcon()}
         </div>
         <div className="advisory-alert-title">
