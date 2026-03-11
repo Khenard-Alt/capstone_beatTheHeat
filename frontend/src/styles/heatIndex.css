@@ -40,7 +40,23 @@
 
 .stat-icon {
   font-size: 48px;
-  color: var(--heat-color, #2563eb);
+  color: #2563eb;
+}
+
+.stat-icon[data-heat-level="caution"] {
+  color: #f59e0b;
+}
+
+.stat-icon[data-heat-level="extreme-caution"] {
+  color: #f97316;
+}
+
+.stat-icon[data-heat-level="danger"] {
+  color: #ef4444;
+}
+
+.stat-icon[data-heat-level="extreme-danger"] {
+  color: #dc2626;
 }
 
 .stat-info {
@@ -50,9 +66,25 @@
 .stat-value {
   font-size: 36px;
   font-weight: 700;
-  color: var(--heat-color, #2563eb);
+  color: #2563eb;
   line-height: 1;
   margin-bottom: 8px;
+}
+
+.stat-value[data-heat-level="caution"] {
+  color: #f59e0b;
+}
+
+.stat-value[data-heat-level="extreme-caution"] {
+  color: #f97316;
+}
+
+.stat-value[data-heat-level="danger"] {
+  color: #ef4444;
+}
+
+.stat-value[data-heat-level="extreme-danger"] {
+  color: #dc2626;
 }
 
 .stat-label {
@@ -71,5 +103,21 @@
   color: white;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background-color: var(--heat-color, #2563eb);
+  background-color: #2563eb;
+}
+
+.stat-badge[data-heat-level="caution"] {
+  background-color: #f59e0b;
+}
+
+.stat-badge[data-heat-level="extreme-caution"] {
+  background-color: #f97316;
+}
+
+.stat-badge[data-heat-level="danger"] {
+  background-color: #ef4444;
+}
+
+.stat-badge[data-heat-level="extreme-danger"] {
+  background-color: #dc2626;
 }
