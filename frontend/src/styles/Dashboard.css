@@ -1,1 +1,400 @@
-/* Dashboard Page Styles */
+/* Dashboard Page Styles - Modern & Professional */
+
+.dashboard {
+  padding: var(--spacing-xl);
+  height: 100%;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-title-section h1 {
+  margin: 0 0 6px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.dashboard-greeting {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+}
+
+/* Quick Stats in Header */
+.dashboard-quick-stats {
+  display: flex;
+  gap: var(--spacing-xl);
+}
+
+.quick-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 90px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quick-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.quick-stat-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 6px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* Optimized Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  gap: 24px;
+  align-items: start;
+}
+
+.dashboard-col-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dashboard-col-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 20px;
+}
+
+/* Top Row with Heat Index and Weather Side by Side */
+.dashboard-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Compact Health Incidents Styles */
+.health-incidents-mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.mini-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+  border-color: #2563eb;
+}
+
+.mini-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2563eb;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.mini-stat-label {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Compact Incidents List */
+.health-incidents-compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.health-incidents-compact-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.health-incidents-compact-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.health-incidents-compact-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.health-incidents-compact-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
+
+.health-incident-compact-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.health-incident-compact-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px) translateX(2px);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.incident-compact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.incident-compact-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.incident-type-icon-small {
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 10px;
+  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+}
+
+.incident-name-compact {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+}
+
+.incident-grade-compact {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.incident-compact-badges {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.severity-badge-mini {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid currentColor;
+}
+
+.status-badge-mini {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.incident-compact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.incident-info-row {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #475569;
+  min-width: 50px;
+  flex-shrink: 0;
+}
+
+.incident-info-row span:last-child {
+  color: #64748b;
+  flex: 1;
+  font-weight: 400;
+}
+
+.incident-compact-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.incident-compact-time svg {
+  opacity: 0.7;
+}
+
+.no-incidents-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  color: #64748b;
+  text-align: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
+}
+
+.no-incidents-compact svg {
+  font-size: 48px;
+  color: #10b981;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.3));
+}
+
+.no-incidents-compact p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+}
+
+/* Responsive Dashboard */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-col-sidebar {
+    position: static;
+  }
+
+  .dashboard-top-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: var(--spacing-md);
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+  }
+
+  .dashboard-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    width: 100%;
+  }
+
+  .quick-stat-item {
+    min-width: auto;
+  }
+
+  .dashboard-grid {
+    gap: var(--spacing-md);
+  }
+
+  .dashboard-col-main {
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: var(--spacing-sm);
+  }
+
+  .dashboard-title-section h1 {
+    font-size: var(--font-2xl);
+  }
+
+  .dashboard-quick-stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .quick-stat-value {
+    font-size: var(--font-lg);
+  }
+
+  .quick-stat-label {
+    font-size: 10px;
+  }
+
+  .health-incidents-mini-stats {
+    grid-template-columns: 1fr;
+  }
+}
+

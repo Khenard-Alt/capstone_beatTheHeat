@@ -1,1 +1,105 @@
-/* Global CSS Variables and Theme */
+/* CSS Variables */
+:root {
+  /* Colors - Primary (Blue & White Theme) */
+  --color-primary: #2563eb;
+  --color-primary-dark: #1e40af;
+  --color-primary-light: #3b82f6;
+  --color-secondary: #06b6d4;
+  --color-secondary-dark: #0891b2;
+  --color-secondary-light: #22d3ee;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #06b6d4;
+
+  /* Heat Level Colors */
+  --color-heat-normal: #10b981;
+  --color-heat-caution: #fbbf24;
+  --color-heat-extreme-caution: #f97316;
+  --color-heat-danger: #ef4444;
+  --color-heat-extreme-danger: #991b1b;
+
+  /* Text Colors */
+  --color-text: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-light: #9ca3af;
+  --color-text-inverse: #ffffff;
+
+  /* Background Colors */
+  --color-background: #f8fafc;
+  --color-background-secondary: #ffffff;
+  --color-background-hover: #eff6ff;
+  --color-background-active: #dbeafe;
+
+  /* Border Colors */
+  --color-border: #e5e7eb;
+  --color-border-dark: #d1d5db;
+  --color-border-light: #f3f4f6;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px
+
+ rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Font Sizes */
+  --font-xs: 0.75rem;
+  --font-sm: 0.875rem;
+  --font-base: 1rem;
+  --font-lg: 1.125rem;
+  --font-xl: 1.25rem;
+  --font-2xl: 1.5rem;
+  --font-3xl: 1.875rem;
+  --font-4xl: 2.25rem;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 350ms ease;
+
+  /* Z-index */
+  --z-dropdown: 1000;
+  --z-modal: 2000;
+  --z-tooltip: 3000;
+  --z-notification: 4000;
+}
+
+/* Dark Theme */
+[data-theme='dark'] {
+  --color-text: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-light: #9ca3af;
+  --color-text-inverse: #1f2937;
+  --color-background: #111827;
+  --color-background-secondary: #1f2937;
+  --color-background-hover: #374151;
+  --color-background-active: #4b5563;
+  --color-border: #374151;
+  --color-border-dark: #4b5563;
+  --color-border-light: #1f2937;
+}
