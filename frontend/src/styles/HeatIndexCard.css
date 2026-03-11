@@ -4,7 +4,7 @@
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 16px;
   padding: 0;
-  border-left: 6px solid var(--heat-color, #64748b);
+  border-left: 6px solid #64748b;
   border-right: 2px solid #e2e8f0;
   border-top: 2px solid #e2e8f0;
   border-bottom: 2px solid #e2e8f0;
@@ -14,6 +14,23 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Heat level color variants */
+.heat-index-card[data-heat-level="caution"] {
+  border-left-color: #f59e0b;
+}
+
+.heat-index-card[data-heat-level="extreme-caution"] {
+  border-left-color: #f97316;
+}
+
+.heat-index-card[data-heat-level="danger"] {
+  border-left-color: #ef4444;
+}
+
+.heat-index-card[data-heat-level="extreme-danger"] {
+  border-left-color: #dc2626;
 }
 
 .heat-index-card:hover {
@@ -47,7 +64,23 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  background-color: var(--heat-color, #64748b);
+  background-color: #64748b;
+}
+
+.heat-index-badge[data-heat-level="caution"] {
+  background-color: #f59e0b;
+}
+
+.heat-index-badge[data-heat-level="extreme-caution"] {
+  background-color: #f97316;
+}
+
+.heat-index-badge[data-heat-level="danger"] {
+  background-color: #ef4444;
+}
+
+.heat-index-badge[data-heat-level="extreme-danger"] {
+  background-color: #dc2626;
 }
 
 .heat-index-body {
@@ -70,7 +103,23 @@
   letter-spacing: -3px;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   margin-bottom: 8px;
-  color: var(--heat-color, #64748b);
+  color: #64748b;
+}
+
+.heat-index-value[data-heat-level="caution"] {
+  color: #f59e0b;
+}
+
+.heat-index-value[data-heat-level="extreme-caution"] {
+  color: #f97316;
+}
+
+.heat-index-value[data-heat-level="danger"] {
+  color: #ef4444;
+}
+
+.heat-index-value[data-heat-level="extreme-danger"] {
+  color: #dc2626;
 }
 
 .heat-index-label {

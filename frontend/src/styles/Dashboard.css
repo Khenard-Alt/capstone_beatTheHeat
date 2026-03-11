@@ -248,11 +248,49 @@
   border: 1px solid currentColor;
 }
 
+/* Severity badge colors */
+.severity-badge-mini[data-severity="mild"] {
+  background-color: rgba(34, 197, 94, 0.13);
+  color: #16a34a;
+}
+
+.severity-badge-mini[data-severity="moderate"] {
+  background-color: rgba(245, 158, 11, 0.13);
+  color: #f59e0b;
+}
+
+.severity-badge-mini[data-severity="severe"] {
+  background-color: rgba(239, 68, 68, 0.13);
+  color: #ef4444;
+}
+
+.severity-badge-mini[data-severity="critical"] {
+  background-color: rgba(220, 38, 38, 0.13);
+  color: #dc2626;
+}
+
 .status-badge-mini {
   font-size: 18px;
   display: flex;
   align-items: center;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Status badge colors */
+.status-badge-mini[data-status="pending"] {
+  color: #f59e0b;
+}
+
+.status-badge-mini[data-status="under-observation"] {
+  color: #3b82f6;
+}
+
+.status-badge-mini[data-status="resolved"] {
+  color: #10b981;
+}
+
+.status-badge-mini[data-status="sent-home"] {
+  color: #8b5cf6;
 }
 
 .incident-compact-info {
