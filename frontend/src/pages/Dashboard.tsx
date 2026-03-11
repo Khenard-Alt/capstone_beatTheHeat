@@ -160,19 +160,6 @@ export const Dashboard: React.FC = () => {
     return badges[status as keyof typeof badges] || badges.reported;
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'severe':
-        return '#ef4444';
-      case 'moderate':
-        return '#f97316';
-      case 'mild':
-        return '#fbbf24';
-      default:
-        return '#6b7280';
-    }
-  };
-
   const formatTimeAgo = useMemo(() => {
     return (timestamp: string) => {
       const now = Date.now();

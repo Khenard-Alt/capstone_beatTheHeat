@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../components/Card';
 import { Chart } from '../components/Chart';
 import { Button } from '../components/Button';
-import { getHeatLevel, getHeatColor, getHeatLabel } from '../utils/helpers';
+import { getHeatLevel, getHeatLabel } from '../utils/helpers';
 import { CHART_COLORS } from '../utils/constants';
 import '../styles/heatIndex.css';
 
