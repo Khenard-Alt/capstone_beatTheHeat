@@ -25,7 +25,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
   const sidebarClasses = ['sidebar', isOpen ? 'sidebar-open' : ''].filter(Boolean).join(' ');
 
   const menuItems = [
-    { path: '/', icon: <MdDashboard />, label: 'Dashboard', roles: ['admin', 'teacher', 'staff'], badge: null },
+    { path: '/admin', icon: <MdDashboard />, label: 'Admin Dashboard', roles: ['admin'], badge: null },
+    { path: '/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['teacher', 'staff'], badge: null },
     { path: '/heat-index', icon: <MdThermostat />, label: 'Heat Index', roles: ['admin', 'teacher', 'staff'], badge: null },
     { path: '/health-advisory', icon: <MdHealthAndSafety />, label: 'Health Advisory', roles: ['admin', 'teacher', 'staff'], badge: null },
     { path: '/notifications', icon: <MdNotifications />, label: 'Notifications', roles: ['admin', 'teacher', 'staff'], badge: 3 },

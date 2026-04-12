@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { isValidEmail } from '../utils/validators';
 import { MdEmail, MdLock, MdClose, MdSend } from 'react-icons/md';
+import { generateScopedAdvisory } from '../services/healthAdvisory.service';
 import '../styles/Login.css';
 
 interface ChatMessage {
@@ -28,13 +29,13 @@ export const Login: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: 1,
-      text: "Hi! I'm your Weather & Heat Index Assistant 🌤️ How can I help you today?",
+      text: "Hi! I am the Beat The Heat AI Advisory Assistant. I only use this system's live heat, humidity, and temperature data to generate school health advisories.",
       sender: 'ai',
       suggestions: [
-        'What is heat index?',
-        'Current weather status',
-        'Health advisory tips',
-        'How to use the system'
+        'Generate advisory based on current heat',
+        'Explain heat index risk levels',
+        'What actions for danger level?',
+        'How is AI limited in this system?'
       ]
     }
   ]);
@@ -75,7 +76,7 @@ export const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await login(formData.email, formData.password);
-      navigate('/');
+      navigate('/dashboard');
     } catch {
       setErrorMessage('Invalid email or password. Please try again.');
     } finally {
@@ -88,22 +89,22 @@ export const Login: React.FC = () => {
     
     if (lowerMsg.includes('heat index') || lowerMsg.includes('what is')) {
       return {
-        text: "Heat Index measures how hot it feels when humidity is factored with air temperature. Our system monitors this in real-time to protect students from heat-related illnesses! 🌡️",
-        suggestions: ['View live monitoring', 'Health safety tips', 'System features']
+        text: "Heat Index is the felt temperature when humidity is combined with air temperature. In this system, AI advisories are grounded on live heat index + humidity + temperature to guide school safety decisions.",
+        suggestions: ['Generate advisory based on current heat', 'Explain heat index risk levels', 'System scope of AI']
       };
     } else if (lowerMsg.includes('weather') || lowerMsg.includes('current')) {
       return {
-        text: "Our system provides real-time weather monitoring including temperature, humidity, and heat index levels. Once you log in, you'll see live updates on the dashboard! ☀️",
-        suggestions: ['How to login?', 'What features available?', 'Emergency protocols']
+        text: "The system captures live weather and computes heat index in real-time. The AI then converts these values into prioritized actions for students, teachers, and school staff.",
+        suggestions: ['Generate advisory based on current heat', 'What actions for danger level?', 'Emergency protocols']
       };
     } else if (lowerMsg.includes('health') || lowerMsg.includes('advisory') || lowerMsg.includes('tips')) {
       return {
-        text: "We provide instant health advisories based on heat levels:\n\n🟢 Safe (HI < 27°C)\n🟡 Caution (27-32°C)\n🟠 Extreme Caution (32-41°C)\n🔴 Danger (41-54°C)\n⚫ Extreme Danger (> 54°C)",
-        suggestions: ['What to do in high heat?', 'Student safety measures', 'Alert system']
+        text: "AI advisories are generated from heat levels:\n\n🟢 Safe\n🟡 Caution\n🟠 Extreme Caution\n🔴 Danger\n⚫ Extreme Danger\n\nEach response includes risk level, action list, and scope note tied to system weather values.",
+        suggestions: ['Generate advisory based on current heat', 'What actions for danger level?', 'How is AI limited in this system?']
       };
     } else if (lowerMsg.includes('use') || lowerMsg.includes('how') || lowerMsg.includes('system')) {
       return {
-        text: "Simply log in with your credentials! The demo account is:\n📧 admin@mayamot.edu.ph\n🔐 Admin123\n\nAfter login, you'll access the dashboard with real-time monitoring, health advisories, and AI-powered predictions! 🚀",
+        text: "Login to access dashboards and AI-generated advisories. The AI assistant is system-scoped: it avoids off-topic answers and focuses only on heat safety guidance from live weather values.",
         suggestions: ['System benefits', 'Available features', 'Who can use this?']
       };
     } else if (lowerMsg.includes('feature') || lowerMsg.includes('benefit')) {
@@ -118,13 +119,43 @@ export const Login: React.FC = () => {
       };
     } else {
       return {
-        text: "I'm here to help! Ask me about:\n• Heat index monitoring\n• Current weather status\n• Health and safety tips\n• How to use the system\n• Available features",
-        suggestions: ['Weather info', 'Safety guidelines', 'Login help', 'System features']
+        text: "I can help with system-based heat advisories:\n• Current heat risk explanation\n• Advisory actions for school operations\n• Scope and confidence of AI output\n• Safety tips per heat level",
+        suggestions: ['Generate advisory based on current heat', 'Explain heat index risk levels', 'How is AI limited in this system?', 'Safety guidelines']
       };
     }
   };
 
-  const handleSendMessage = (messageText?: string) => {
+  const formatScopedResponse = (scoped: Awaited<ReturnType<typeof generateScopedAdvisory>>): string => {
+    const confidenceRaw = typeof scoped.confidenceScore === 'number' ? scoped.confidenceScore : 0;
+    const confidencePercent = Math.round(Math.max(0, Math.min(1, confidenceRaw)) * 100);
+    const rationale = scoped.decisionBasis?.rationale?.length
+      ? scoped.decisionBasis.rationale
+      : ['Recommendations are based on current in-system heat and humidity values.'];
+
+    return [
+      scoped.summary,
+      '',
+      `Risk Level: ${scoped.riskLevel}`,
+      `Confidence: ${confidencePercent}%`,
+      '',
+      'Recommended Actions:',
+      ...scoped.actions.map((action) => `• ${action}`),
+      '',
+      'Heat Data Basis:',
+      `• Heat Index: ${scoped.decisionBasis?.heatIndexC ?? 'N/A'}°C`,
+      `• Temperature: ${scoped.decisionBasis?.temperatureC ?? 'N/A'}°C`,
+      `• Humidity: ${scoped.decisionBasis?.humidityPercent ?? 'N/A'}%`,
+      `• Heat Level: ${scoped.decisionBasis?.heatLevel ?? 'N/A'}`,
+      `• Data Source: ${scoped.decisionBasis?.dataSource ?? 'system'}`,
+      '',
+      'AI Rationale:',
+      ...rationale.map((item) => `• ${item}`),
+      '',
+      scoped.scopeNote,
+    ].join('\n');
+  };
+
+  const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || userInput;
     if (!textToSend.trim()) return;
 
@@ -134,7 +165,18 @@ export const Login: React.FC = () => {
       sender: 'user'
     };
 
-    const response = getAIResponse(textToSend);
+    let response = getAIResponse(textToSend);
+
+    try {
+      const scoped = await generateScopedAdvisory(textToSend);
+      response = {
+        text: formatScopedResponse(scoped),
+        suggestions: ['Generate advisory based on current heat', 'What actions for danger level?', 'How is AI limited in this system?'],
+      };
+    } catch (error) {
+      console.error('Scoped AI API unavailable. Falling back to local assistant.', error);
+    }
+
     const aiMessage: ChatMessage = {
       id: chatMessages.length + 2,
       text: response.text,
@@ -142,7 +184,7 @@ export const Login: React.FC = () => {
       suggestions: response.suggestions
     };
 
-    setChatMessages([...chatMessages, userMessage, aiMessage]);
+    setChatMessages((prev) => [...prev, userMessage, aiMessage]);
     setUserInput('');
   };
 
@@ -293,6 +335,13 @@ export const Login: React.FC = () => {
                 <p><strong>Password:</strong> Admin123</p>
               </div>
             </div>
+
+            <div className="login-public-access">
+              <p className="public-access-label">No login needed for parents:</p>
+              <Link to="/" className="public-access-btn">
+                View Parent Dashboard
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -322,10 +371,10 @@ export const Login: React.FC = () => {
               <div className="chat-header-content">
                 <span className="chat-header-icon">🤖</span>
                 <div className="chat-header-text">
-                  <h3>AI Weather Assistant</h3>
+                  <h3>AI Heat Advisory Assistant</h3>
                   <span className="chat-status">
                     <span className="status-dot"></span>
-                    Online
+                    System-Scoped Mode
                   </span>
                 </div>
               </div>
@@ -366,7 +415,7 @@ export const Login: React.FC = () => {
               <input
                 type="text"
                 className="chat-input"
-                placeholder="Ask me anything about weather & heat index..."
+                placeholder="Ask for heat-based school advisory..."
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}

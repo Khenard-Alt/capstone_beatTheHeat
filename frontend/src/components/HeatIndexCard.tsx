@@ -1,7 +1,7 @@
 import React from 'react';
-import { HeatLevel } from '../types';
-import { getHeatColor, getHeatLabel } from '../utils/helpers';
-import { formatTemperature, formatHumidity } from '../utils/formatters';
+import type { HeatLevel } from '../types';
+import { getHeatLabel } from '../utils/helpers';
+import { formatTemperature, formatHumidity, formatDateTimeGlobal } from '../utils/formatters';
 import '../styles/HeatIndexCard.css';
 
 interface HeatIndexCardProps {
@@ -19,7 +19,6 @@ export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
   level,
   lastUpdated,
 }) => {
-  const color = getHeatColor(level);
   const label = getHeatLabel(level);
 
   return (
@@ -62,7 +61,7 @@ export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
       </div>
 
       <div className="heat-index-footer">
-        <small>Last updated: {new Date(lastUpdated).toLocaleTimeString()}</small>
+        <small>Last updated: {formatDateTimeGlobal(lastUpdated)}</small>
       </div>
     </div>
   );

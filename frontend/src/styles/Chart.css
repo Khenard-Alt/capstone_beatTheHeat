@@ -1,1 +1,26 @@
 /* Chart Component Styles */
+.chart-container {
+	width: 100%;
+}
+
+.chart-title {
+	margin: 0 0 0.75rem;
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #1f2937;
+}
+
+.chart-container .recharts-cartesian-axis-tick-value {
+	fill: #6b7280;
+	font-size: 11px;
+}
+
+.chart-container .recharts-cartesian-grid line {
+	stroke: #e5e7eb;
+}
+
+.chart-container .recharts-default-tooltip {
+	border-radius: 10px !important;
+	border: 1px solid #dbeafe !important;
+	box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08) !important;
+}

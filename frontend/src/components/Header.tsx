@@ -89,10 +89,12 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
     }
   };
 
+  const homePath = user ? '/dashboard' : '/';
+
   return (
     <header className="header">
       <div className="header-left">
-        <Link to="/" className="header-logo">
+        <Link to={homePath} className="header-logo">
           <div className="header-logo-placeholder">
             <span className="header-logo-icon">☀️</span>
           </div>

@@ -1,7 +1,7 @@
 import React from 'react';
-import { HealthAdvisory } from '../types';
+import type { HealthAdvisory } from '../types';
 import { MdWarning, MdInfo, MdError } from 'react-icons/md';
-import { getHeatColor } from '../utils/helpers';
+import { formatDateTimeGlobal } from '../utils/formatters';
 import '../styles/AdvisoryAlert.css';
 
 interface AdvisoryAlertProps {
@@ -23,8 +23,6 @@ export const AdvisoryAlert: React.FC<AdvisoryAlertProps> = ({
         return <MdInfo />;
     }
   };
-
-  const color = getHeatColor(advisory.heatLevel);
 
   return (
     <div
@@ -63,7 +61,7 @@ export const AdvisoryAlert: React.FC<AdvisoryAlertProps> = ({
 
       <div className="advisory-alert-footer">
         <small>
-          Issued: {new Date(advisory.createdAt).toLocaleString()}
+          Issued: {formatDateTimeGlobal(advisory.createdAt)}
         </small>
       </div>
     </div>

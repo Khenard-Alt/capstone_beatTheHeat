@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { MdNotifications, MdClose } from 'react-icons/md';
-import { Notification } from '../types';
+import { MdNotifications } from 'react-icons/md';
+import type { Notification } from '../types';
 import { getTimeAgo } from '../utils/helpers';
 import '../styles/NotificationBell.css';
 
