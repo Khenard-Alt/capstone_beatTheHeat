@@ -20,6 +20,9 @@
 ### Project Type
 Full-Stack Web Application with AI Integration
 
+**AI Integration Clarification (Adviser-Facing)**
+The system uses an API-based AI service (e.g., OpenAI GPT-4) for advisory generation and pattern analysis, and its outputs are strictly limited to system data and weather inputs (temperature, humidity, computed heat index, and related records stored in the project). The AI does not pull in external knowledge or answer beyond what exists in the system. This approach integrates established AI capabilities without training a custom model. Model training or fine-tuning is not required unless explicitly mandated by the project scope or adviser.
+
 ---
 
 ## 🎯 PROJECT OBJECTIVES

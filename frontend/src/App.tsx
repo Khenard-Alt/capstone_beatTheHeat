@@ -9,6 +9,8 @@ import { Sidebar } from './components/Sidebar';
 import { Footer } from './components/Footer';
 import { Loading } from './components/Loading';
 import { Dashboard } from './pages/Dashboard';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { ParentDashboard } from './pages/ParentDashboard';
 import { Login } from './pages/Login';
 import { HeatIndex } from './pages/HeatIndex';
 import { HealthAdvisory } from './pages/HealthAdvisory';
@@ -30,6 +32,38 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
 
   return <>{children}</>;
+};
+
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const HomeRoute: React.FC = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <Dashboard />;
 };
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -56,6 +90,18 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
+const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div className="public-layout">
+      <Header user={null} />
+      <main className="public-main">
+        <div className="public-content">{children}</div>
+      </main>
+      <Footer variant="public" />
+    </div>
+  );
+};
+
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
@@ -64,11 +110,31 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/"
         element={
+          <PublicLayout>
+            <ParentDashboard />
+          </PublicLayout>
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
           <ProtectedRoute>
             <AppLayout>
-              <Dashboard />
+              <HomeRoute />
             </AppLayout>
           </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AppLayout>
+              <AdminDashboard />
+            </AppLayout>
+          </AdminRoute>
         }
       />
 
@@ -145,7 +211,7 @@ const AppRoutes: React.FC = () => {
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ThemeProvider>
         <AuthProvider>
           <NotificationProvider>

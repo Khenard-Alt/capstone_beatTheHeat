@@ -613,6 +613,42 @@
   border-radius: 10px;
 }
 
+.login-public-access {
+  margin-top: 20px;
+  padding: 18px 20px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.public-access-label {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+.public-access-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0f766e 100%);
+  color: white;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 16px rgba(14, 116, 144, 0.2);
+}
+
+.public-access-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(14, 116, 144, 0.25);
+}
+
 .demo-header {
   display: flex;
   align-items: center;

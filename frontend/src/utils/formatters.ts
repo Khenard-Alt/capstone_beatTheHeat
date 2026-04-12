@@ -1,16 +1,50 @@
 import { format, parseISO } from 'date-fns';
 import { DATE_FORMATS } from './constants';
 
+const toDateSafe = (input: string | Date): Date | null => {
+  if (input instanceof Date) {
+    return Number.isNaN(input.getTime()) ? null : input;
+  }
+
+  const parsed = parseISO(input);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed;
+  }
+
+  const fallback = new Date(input);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+};
+
 /**
  * Format date to readable string
  */
 export const formatDate = (date: string | Date, formatStr: string = DATE_FORMATS.FULL): string => {
   try {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    const dateObj = toDateSafe(date);
+    if (!dateObj) {
+      return 'Invalid date';
+    }
+
     return format(dateObj, formatStr);
   } catch (error) {
     return 'Invalid date';
   }
+};
+
+/**
+ * Standard global datetime format requested by UI.
+ * Example: Mar-24-2026 05-01-39 AM
+ */
+export const formatDateTimeGlobal = (date: string | Date): string => {
+  return formatDate(date, 'MMM-dd-yyyy hh-mm-ss a');
+};
+
+/**
+ * Compact chart axis format for readability.
+ * Example: Mar-24 05:01 AM
+ */
+export const formatDateTimeCompact = (date: string | Date): string => {
+  return formatDate(date, 'MMM-dd hh:mm a');
 };
 
 /**

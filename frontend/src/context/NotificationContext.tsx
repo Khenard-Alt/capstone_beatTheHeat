@@ -1,5 +1,6 @@
-import React, { createContext, useState, ReactNode } from 'react';
-import { Notification } from '../types';
+import React, { createContext, useState } from 'react';
+import type { ReactNode } from 'react';
+import type { Notification } from '../types';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -59,12 +60,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       id: Date.now().toString(),
       sentAt: new Date().toISOString(),
     };
-    setNotifications([newNotification, ...notifications]);
+    setNotifications((prev) => [newNotification, ...prev]);
   };
 
   const markAsRead = (id: string) => {
-    setNotifications(
-      notifications.map((n) =>
+    setNotifications((prev) =>
+      prev.map((n) =>
         n.id === id
           ? { ...n, status: 'read', readAt: new Date().toISOString() }
           : n

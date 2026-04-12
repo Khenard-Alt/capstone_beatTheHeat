@@ -5,6 +5,7 @@ interface CardProps {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
+  icon?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
   hoverable?: boolean;
@@ -15,6 +16,7 @@ export const Card: React.FC<CardProps> = ({
   children,
   title,
   subtitle,
+  icon,
   actions,
   className = '',
   hoverable = false,
@@ -31,10 +33,15 @@ export const Card: React.FC<CardProps> = ({
 
   return (
     <div className={cardClasses}>
-      {(title || subtitle || actions) && (
+      {(title || subtitle || actions || icon) && (
         <div className="card-header">
           <div className="card-header-content">
-            {title && <h3 className="card-title">{title}</h3>}
+            {title && (
+              <h3 className="card-title">
+                {icon && <span className="card-title-icon">{icon}</span>}
+                {title}
+              </h3>
+            )}
             {subtitle && <p className="card-subtitle">{subtitle}</p>}
           </div>
           {actions && <div className="card-actions">{actions}</div>}

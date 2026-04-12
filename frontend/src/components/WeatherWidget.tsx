@@ -1,6 +1,6 @@
 import React from 'react';
-import { WeatherData } from '../types';
-import { formatTemperature, formatHumidity, formatWindSpeed } from '../utils/formatters';
+import type { WeatherData } from '../types';
+import { formatTemperature, formatHumidity, formatWindSpeed, formatDateTimeGlobal } from '../utils/formatters';
 import { WEATHER_ICONS } from '../utils/constants';
 import '../styles/WeatherWidget.css';
 
@@ -59,7 +59,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
 
       <div className="weather-footer">
         <small>
-          Updated: {new Date(weather.timestamp).toLocaleString()}
+          Updated: {formatDateTimeGlobal(weather.timestamp)}
         </small>
       </div>
     </div>

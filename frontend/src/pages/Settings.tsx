@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { useAuth } from '../hooks/useAuth';
 import { MdSave, MdNotifications, MdPalette, MdLanguage } from 'react-icons/md';
 import '../styles/Settings.css';
 
 export const Settings: React.FC = () => {
-  const { user } = useAuth();
-
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
     smsNotifications: false,

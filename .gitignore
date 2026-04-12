@@ -198,9 +198,9 @@ k8s-secrets/
 !**/database/**
 !**/*.sql
 
-# Keep all docs
-!backend/docs/**
+# Keep all docs except backend docs snapshot
 !**/docs/**
+/backend/docs/
 
 # Keep all source code
 !backend/src/**
@@ -238,6 +238,10 @@ uploads/
 **/uploads/
 
 # Generated files
+
+# Temporary docs scratch assets
+backend/docs/text/imgAndTexts/
+backend/docs/text/imgAndTexts/.md
 generated/
 
 # Backup files

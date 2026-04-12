@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { HeatIndexCard } from '../components/HeatIndexCard';
 import { WeatherWidget } from '../components/WeatherWidget';
 import { AdvisoryAlert } from '../components/AdvisoryAlert';
@@ -7,16 +7,17 @@ import { Card } from '../components/Card';
 import { useAuth } from '../hooks/useAuth';
 import type { HeatIndexData, WeatherData, HealthAdvisory, StudentHealthIncident } from '../types';
 import { calculateHeatIndex, getHeatLevel, getGreeting } from '../utils/helpers';
+import { formatDateTimeCompact, formatDateTimeGlobal } from '../utils/formatters';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../utils/constants';
 import { FaHeartbeat, FaExclamationTriangle, FaCheckCircle, FaClock } from 'react-icons/fa';
 import { MdLocalHospital } from 'react-icons/md';
+import { fetchCurrentWeather } from '../services/weather.service';
 import '../styles/Dashboard.css';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
 
-  // Mock data - replace with actual API calls
-  const [currentWeather] = useState<WeatherData>({
+  const [currentWeather, setCurrentWeather] = useState<WeatherData>({
     id: '1',
     schoolId: 'school-1',
     temperature: 35,
@@ -28,6 +29,53 @@ export const Dashboard: React.FC = () => {
     pressure: 1013,
     timestamp: new Date().toISOString(),
   });
+
+  // Store weather history for real-time charts
+  const [weatherHistory, setWeatherHistory] = useState<Array<{
+    time: string;
+    fullTime: string;
+    temperature: number;
+    humidity: number;
+    heatIndex: number;
+  }>>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadWeather = async () => {
+      try {
+        const weather = await fetchCurrentWeather();
+        if (mounted) {
+          setCurrentWeather(weather);
+          
+          // Add to history (keep last 24 readings)
+          const heatIndex = calculateHeatIndex(weather.temperature, weather.humidity);
+          const timeStr = formatDateTimeCompact(weather.timestamp);
+          
+          setWeatherHistory(prev => {
+            const updated = [...prev, { 
+              time: timeStr, 
+              fullTime: formatDateTimeGlobal(weather.timestamp),
+              temperature: weather.temperature, 
+              humidity: weather.humidity, 
+              heatIndex 
+            }];
+            return updated.slice(-24); // Keep last 24 points
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load weather data. Using fallback UI data.', error);
+      }
+    };
+
+    loadWeather();
+    const intervalId = window.setInterval(loadWeather, 15 * 60 * 1000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   // Calculate heat index data
   const heatIndexData = useMemo<HeatIndexData>(() => {
@@ -60,15 +108,19 @@ export const Dashboard: React.FC = () => {
     };
   }, [heatIndexData]);
 
-  // Mock chart data
-  const chartData = [
-    { time: '8:00', temperature: 28, humidity: 65, heatIndex: 29 },
-    { time: '10:00', temperature: 31, humidity: 68, heatIndex: 34 },
-    { time: '12:00', temperature: 34, humidity: 72, heatIndex: 39 },
-    { time: '2:00', temperature: 35, humidity: 75, heatIndex: 42 },
-    { time: '4:00', temperature: 33, humidity: 73, heatIndex: 38 },
-    { time: '6:00', temperature: 30, humidity: 70, heatIndex: 33 },
+  // Use REAL weather data for charts (not mock data)
+  const chartData = weatherHistory.length > 0 ? weatherHistory : [
+    { time: '08:00 AM', fullTime: 'Sample 08:00 AM', temperature: 28, humidity: 65, heatIndex: 29 },
+    { time: '10:00 AM', fullTime: 'Sample 10:00 AM', temperature: 31, humidity: 68, heatIndex: 34 },
+    { time: '12:00 PM', fullTime: 'Sample 12:00 PM', temperature: 34, humidity: 72, heatIndex: 39 },
+    { time: '02:00 PM', fullTime: 'Sample 02:00 PM', temperature: 35, humidity: 75, heatIndex: 42 },
+    { time: '04:00 PM', fullTime: 'Sample 04:00 PM', temperature: 33, humidity: 73, heatIndex: 38 },
+    { time: '06:00 PM', fullTime: 'Sample 06:00 PM', temperature: 30, humidity: 70, heatIndex: 33 },
   ];
+
+  const getDashboardFullTime = (label: string): string => {
+    return chartData.find((point) => point.time === label)?.fullTime ?? label;
+  };
 
   // Mock student health incidents
   const [healthIncidents] = useState<StudentHealthIncident[]>(() => {
@@ -187,11 +239,11 @@ export const Dashboard: React.FC = () => {
         {/* Quick Stats in Header */}
         <div className="dashboard-quick-stats">
           <div className="quick-stat-item">
-            <div className="quick-stat-value">35°C</div>
+            <div className="quick-stat-value">{currentWeather.temperature.toFixed(1)}°C</div>
             <div className="quick-stat-label">Temp</div>
           </div>
           <div className="quick-stat-item">
-            <div className="quick-stat-value">75%</div>
+            <div className="quick-stat-value">{Math.round(currentWeather.humidity)}%</div>
             <div className="quick-stat-label">Humidity</div>
           </div>
           <div className="quick-stat-item">
@@ -231,6 +283,9 @@ export const Dashboard: React.FC = () => {
                 { key: 'temperature', name: 'Temperature (°C)', color: CHART_COLORS.temperature },
               ]}
               xAxisKey="time"
+              xAxisAngle={-12}
+              xAxisHeight={68}
+              tooltipLabelFormatter={getDashboardFullTime}
               height={240}
             />
           </Card>

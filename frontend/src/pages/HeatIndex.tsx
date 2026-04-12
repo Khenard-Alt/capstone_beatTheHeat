@@ -1,61 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../components/Card';
 import { Chart } from '../components/Chart';
 import { Button } from '../components/Button';
+import { formatDateTimeCompact, formatDateTimeGlobal } from '../utils/formatters';
 import { getHeatLevel, getHeatLabel } from '../utils/helpers';
 import { CHART_COLORS } from '../utils/constants';
+import { apiClient } from '../services/api';
 import '../styles/heatIndex.css';
+
+interface HeatIndexData {
+  time: string;
+  displayTime: string;
+  fullTime: string;
+  avgTemp: number;
+  avgHumidity: number;
+  avgHeatIndex: number;
+  minHeatIndex?: number;
+  maxHeatIndex?: number;
+}
 
 export const HeatIndex: React.FC = () => {
   const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [data, setData] = useState<HeatIndexData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentStats, setCurrentStats] = useState({
+    heatIndex: 0,
+    max: 0,
+    min: 0,
+    avg: 0,
+  });
 
-  // Mock data for different time periods
-  const dailyData = [
-    { time: '6:00 AM', temperature: 26, humidity: 75, heatIndex: 27 },
-    { time: '8:00 AM', temperature: 28, humidity: 72, heatIndex: 30 },
-    { time: '10:00 AM', temperature: 31, humidity: 68, heatIndex: 34 },
-    { time: '12:00 PM', temperature: 34, humidity: 70, heatIndex: 40 },
-    { time: '2:00 PM', temperature: 35, humidity: 75, heatIndex: 44 },
-    { time: '4:00 PM', temperature: 33, humidity: 72, heatIndex: 38 },
-    { time: '6:00 PM', temperature: 30, humidity: 70, heatIndex: 33 },
-  ];
+  useEffect(() => {
+    const fetchHeatIndexHistory = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get('/api/heat-index/history', {
+          params: { 
+            period: viewMode,
+            limit: viewMode === 'daily' ? 24 : (viewMode === 'weekly' ? 7 : 30),
+          },
+        });
 
-  const weeklyData = [
-    { day: 'Mon', avgTemp: 32, avgHumidity: 70, avgHeatIndex: 36 },
-    { day: 'Tue', avgTemp: 33, avgHumidity: 72, avgHeatIndex: 38 },
-    { day: 'Wed', avgTemp: 34, avgHumidity: 75, avgHeatIndex: 41 },
-    { day: 'Thu', avgTemp: 35, avgHumidity: 73, avgHeatIndex: 42 },
-    { day: 'Fri', avgTemp: 33, avgHumidity: 71, avgHeatIndex: 38 },
-    { day: 'Sat', avgTemp: 32, avgHumidity: 69, avgHeatIndex: 35 },
-    { day: 'Sun', avgTemp: 31, avgHumidity: 68, avgHeatIndex: 34 },
-  ];
+        if (response.data.success && response.data.data) {
+          const historyData = response.data.data as HeatIndexData[];
+          const formattedHistory = historyData.map((point) => ({
+            ...point,
+            displayTime: formatDateTimeCompact(point.time),
+            fullTime: formatDateTimeGlobal(point.time),
+          }));
 
-  const monthlyData = [
-    { week: 'Week 1', avgTemp: 31, avgHumidity: 68, avgHeatIndex: 34 },
-    { week: 'Week 2', avgTemp: 33, avgHumidity: 71, avgHeatIndex: 38 },
-    { week: 'Week 3', avgTemp: 34, avgHumidity: 74, avgHeatIndex: 41 },
-    { week: 'Week 4', avgTemp: 32, avgHumidity: 70, avgHeatIndex: 36 },
-  ];
+          setData(formattedHistory);
 
-  const getChartData = () => {
-    switch (viewMode) {
-      case 'weekly':
-        return { data: weeklyData, xKey: 'day' };
-      case 'monthly':
-        return { data: monthlyData, xKey: 'week' };
-      default:
-        return { data: dailyData, xKey: 'time' };
-    }
+          // Calculate current stats
+          if (formattedHistory.length > 0) {
+            const latest = formattedHistory[formattedHistory.length - 1];
+            const allHeatIndexes = formattedHistory.map(d => d.avgHeatIndex);
+            
+            // Defensive checks for empty arrays
+            const validIndexes = allHeatIndexes.filter(h => typeof h === 'number' && !isNaN(h));
+            
+            setCurrentStats({
+              heatIndex: Math.round(latest.avgHeatIndex * 10) / 10,
+              max: validIndexes.length > 0 ? Math.round(Math.max(...validIndexes) * 10) / 10 : 0,
+              min: validIndexes.length > 0 ? Math.round(Math.min(...validIndexes) * 10) / 10 : 0,
+              avg: validIndexes.length > 0 
+                ? Math.round((validIndexes.reduce((a, b) => a + b, 0) / validIndexes.length) * 10) / 10
+                : 0,
+            });
+          } else {
+            // Reset stats if no data
+            setCurrentStats({ heatIndex: 0, max: 0, min: 0, avg: 0 });
+          }
+
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch heat index history:', err);
+        setError('Failed to load heat index data');
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHeatIndexHistory();
+  }, [viewMode]);
+
+  const currentLevel = getHeatLevel(currentStats.heatIndex);
+  const xKey = 'displayTime';
+  const getFullTimestamp = (label: string): string => {
+    return data.find((point) => point.displayTime === label)?.fullTime ?? label;
   };
-
-  const { data, xKey } = getChartData();
-
-  // Heat index statistics
-  const currentHeatIndex = 38.5;
-  const currentLevel = getHeatLevel(currentHeatIndex);
-  const todayMax = 44;
-  const todayMin = 27;
-  const todayAvg = 35.5;
 
   return (
     <div className="heat-index-page">
@@ -63,6 +99,12 @@ export const HeatIndex: React.FC = () => {
         <h1>Heat Index Monitor</h1>
         <p>Real-time and historical heat index data</p>
       </div>
+
+      {error && (
+        <div className="error-alert">
+          {error}
+        </div>
+      )}
 
       <div className="heat-index-stats">
         <Card className="stat-card stat-card-heat" data-heat-level={currentLevel}>
@@ -72,7 +114,7 @@ export const HeatIndex: React.FC = () => {
             </div>
             <div className="stat-info">
               <div className="stat-value" data-heat-level={currentLevel}>
-                {currentHeatIndex}°C
+                {currentStats.heatIndex}°C
               </div>
               <div className="stat-label">Current Heat Index</div>
               <div className="stat-badge" data-heat-level={currentLevel}>
@@ -86,8 +128,8 @@ export const HeatIndex: React.FC = () => {
           <div className="stat-content">
             <div className="stat-icon">🔺</div>
             <div className="stat-info">
-              <div className="stat-value">{todayMax}°C</div>
-              <div className="stat-label">Today's Maximum</div>
+              <div className="stat-value">{currentStats.max}°C</div>
+              <div className="stat-label">{viewMode === 'daily' ? "Today's" : "Period's"} Maximum</div>
             </div>
           </div>
         </Card>
@@ -96,8 +138,8 @@ export const HeatIndex: React.FC = () => {
           <div className="stat-content">
             <div className="stat-icon">🔻</div>
             <div className="stat-info">
-              <div className="stat-value">{todayMin}°C</div>
-              <div className="stat-label">Today's Minimum</div>
+              <div className="stat-value">{currentStats.min}°C</div>
+              <div className="stat-label">{viewMode === 'daily' ? "Today's" : "Period's"} Minimum</div>
             </div>
           </div>
         </Card>
@@ -106,8 +148,8 @@ export const HeatIndex: React.FC = () => {
           <div className="stat-content">
             <div className="stat-icon">📊</div>
             <div className="stat-info">
-              <div className="stat-value">{todayAvg}°C</div>
-              <div className="stat-label">Today's Average</div>
+              <div className="stat-value">{currentStats.avg}°C</div>
+              <div className="stat-label">{viewMode === 'daily' ? "Today's" : "Period's"} Average</div>
             </div>
           </div>
         </Card>
@@ -141,57 +183,78 @@ export const HeatIndex: React.FC = () => {
           </div>
         }
       >
-        <Chart
-          data={data}
-          type="area"
-          dataKeys={[
-            {
-              key: viewMode === 'daily' ? 'heatIndex' : 'avgHeatIndex',
-              name: 'Heat Index (°C)',
-              color: CHART_COLORS.heatIndex,
-            },
-          ]}
-          xAxisKey={xKey}
-          height={350}
-        />
-      </Card>
-
-      <div className="heat-index-charts">
-        <Card title="Temperature & Humidity">
+        {loading && <div className="loading-state">Loading data...</div>}
+        {!loading && data.length > 0 && (
           <Chart
             data={data}
-            type="line"
+            type="area"
             dataKeys={[
               {
-                key: viewMode === 'daily' ? 'temperature' : 'avgTemp',
-                name: 'Temperature (°C)',
-                color: CHART_COLORS.temperature,
-              },
-              {
-                key: viewMode === 'daily' ? 'humidity' : 'avgHumidity',
-                name: 'Humidity (%)',
-                color: CHART_COLORS.humidity,
-              },
-            ]}
-            xAxisKey={xKey}
-            height={300}
-          />
-        </Card>
-
-        <Card title="Heat Index Comparison">
-          <Chart
-            data={data}
-            type="bar"
-            dataKeys={[
-              {
-                key: viewMode === 'daily' ? 'heatIndex' : 'avgHeatIndex',
+                key: 'avgHeatIndex',
                 name: 'Heat Index (°C)',
                 color: CHART_COLORS.heatIndex,
               },
             ]}
             xAxisKey={xKey}
-            height={300}
+            xAxisAngle={-12}
+            xAxisHeight={72}
+            tooltipLabelFormatter={getFullTimestamp}
+            height={350}
           />
+        )}
+        {!loading && data.length === 0 && (
+          <div className="empty-state">No data available for this period</div>
+        )}
+      </Card>
+
+      <div className="heat-index-charts">
+        <Card title="Temperature & Humidity">
+          {loading && <div className="loading-state">Loading...</div>}
+          {!loading && data.length > 0 && (
+            <Chart
+              data={data}
+              type="line"
+              dataKeys={[
+                {
+                  key: 'avgTemp',
+                  name: 'Temperature (°C)',
+                  color: CHART_COLORS.temperature,
+                },
+                {
+                  key: 'avgHumidity',
+                  name: 'Humidity (%)',
+                  color: CHART_COLORS.humidity,
+                },
+              ]}
+              xAxisKey={xKey}
+              xAxisAngle={-12}
+              xAxisHeight={72}
+              tooltipLabelFormatter={getFullTimestamp}
+              height={300}
+            />
+          )}
+        </Card>
+
+        <Card title="Heat Index Comparison">
+          {loading && <div className="loading-state">Loading...</div>}
+          {!loading && data.length > 0 && (
+            <Chart
+              data={data}
+              type="bar"
+              dataKeys={[
+                {
+                  key: 'avgHeatIndex',
+                  name: 'Heat Index (°C)',
+                  color: CHART_COLORS.heatIndex,
+                },
+              ]}
+              xAxisKey={xKey}
+              xAxisAngle={-12}
+              xAxisHeight={72}
+              tooltipLabelFormatter={getFullTimestamp}
+              height={300}
+            />
+          )}
         </Card>
       </div>
     </div>

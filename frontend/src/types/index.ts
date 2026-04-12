@@ -76,6 +76,17 @@ export interface HealthAdvisory {
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   createdAt: string;
   createdBy?: string;
+  confidenceScore?: number;
+  modelScope?: string;
+  modelMode?: string;
+  decisionBasis?: {
+    heatIndexC?: number;
+    temperatureC?: number;
+    humidityPercent?: number;
+    heatLevel?: string;
+    dataSource?: string;
+    rationale?: string[];
+  };
 }
 
 // Notification Types

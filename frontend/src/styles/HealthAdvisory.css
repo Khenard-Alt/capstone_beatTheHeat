@@ -1,1 +1,163 @@
 /* HealthAdvisory Page Styles */
+
+.health-advisory-page {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.page-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.page-header h1 {
+	margin: 0;
+	color: #0f172a;
+}
+
+.page-header p {
+	margin: 6px 0 0;
+	color: #475569;
+}
+
+.advisory-section {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.advisory-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.loading-state,
+.error-alert,
+.empty-state-text {
+	padding: 12px 14px;
+	border-radius: 10px;
+	font-size: 14px;
+}
+
+.loading-state {
+	background: #eff6ff;
+	color: #1d4ed8;
+}
+
+.error-alert {
+	background: #fef2f2;
+	color: #b91c1c;
+	border: 1px solid #fecaca;
+}
+
+.empty-state-text {
+	background: #f8fafc;
+	color: #64748b;
+}
+
+.ai-evidence-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.evidence-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	gap: 10px;
+}
+
+.evidence-item {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 10px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.evidence-label {
+	font-size: 12px;
+	color: #64748b;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.evidence-item strong {
+	color: #0f172a;
+	font-size: 15px;
+}
+
+.evidence-rationale h4 {
+	margin: 0 0 8px;
+	font-size: 14px;
+	color: #1e293b;
+}
+
+.evidence-rationale ul,
+.ai-behavior-profile ul {
+	margin: 0;
+	padding-left: 18px;
+	color: #334155;
+	display: grid;
+	gap: 6px;
+}
+
+.ai-behavior-profile {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.ai-behavior-profile p {
+	margin: 0;
+	color: #334155;
+}
+
+.guidelines {
+	display: grid;
+	gap: 12px;
+}
+
+.guideline-item {
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 12px;
+	background: #ffffff;
+}
+
+.guideline-level {
+	margin-bottom: 8px;
+}
+
+.guideline-level strong {
+	font-size: 14px;
+}
+
+.guideline-normal strong {
+	color: #15803d;
+}
+
+.guideline-caution strong {
+	color: #b45309;
+}
+
+.guideline-extreme-caution strong {
+	color: #c2410c;
+}
+
+.guideline-danger strong {
+	color: #b91c1c;
+}
+
+.guideline-item ul {
+	margin: 0;
+	padding-left: 18px;
+	color: #334155;
+}

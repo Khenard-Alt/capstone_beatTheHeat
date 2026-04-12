@@ -51,8 +51,42 @@ Create new advisory (Admin only)
 #### GET /api/weather/current
 Get current weather data
 
-#### GET /api/weather/forecast
-Get weather forecast
+#### POST /api/weather/scheduled/snapshot
+Trigger a secure weather snapshot job.
+
+Headers:
+```
+x-scheduler-token: <WEATHER_SCHEDULER_TOKEN>
+```
+
+Body (optional):
+```
+{
+	"lat": 14.575,
+	"lon": 121.025
+}
+```
+
+#### POST /api/weather/scheduled/backfill
+Backfill historical weather snapshots for the last N days (max 7).
+
+Headers:
+```
+x-scheduler-token: <WEATHER_SCHEDULER_TOKEN>
+```
+
+Body (optional):
+```
+{
+	"days": 3,
+	"lat": 14.575,
+	"lon": 121.025
+}
+```
+
+Notes:
+- Uses OpenWeather One Call timemachine endpoint.
+- Requires API account access to historical data.
 
 ### Schools
 

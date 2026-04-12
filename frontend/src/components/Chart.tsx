@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   LineChart,
   Line,
@@ -16,23 +15,31 @@ import {
 import { CHART_COLORS } from '../utils/constants';
 import '../styles/Chart.css';
 
-interface ChartProps {
-  data: any[];
+interface ChartProps<T extends object> {
+  data: T[];
   type?: 'line' | 'area' | 'bar';
   dataKeys: { key: string; name: string; color?: string }[];
   xAxisKey: string;
   height?: number;
   title?: string;
+  xAxisTickFormatter?: (value: string) => string;
+  tooltipLabelFormatter?: (label: string) => string;
+  xAxisAngle?: number;
+  xAxisHeight?: number;
 }
 
-export const Chart: React.FC<ChartProps> = ({
+export const Chart = <T extends object>({
   data,
   type = 'line',
   dataKeys,
   xAxisKey,
   height = 300,
   title,
-}) => {
+  xAxisTickFormatter,
+  tooltipLabelFormatter,
+  xAxisAngle = 0,
+  xAxisHeight = 40,
+}: ChartProps<T>) => {
   const renderChart = () => {
     const commonProps = {
       data,
@@ -44,9 +51,17 @@ export const Chart: React.FC<ChartProps> = ({
         return (
           <AreaChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={xAxisKey} />
+            <XAxis
+              dataKey={xAxisKey}
+              tickFormatter={xAxisTickFormatter}
+              angle={xAxisAngle}
+              textAnchor={xAxisAngle === 0 ? 'middle' : 'end'}
+              height={xAxisHeight}
+              interval="preserveStartEnd"
+              tick={{ fontSize: 11 }}
+            />
             <YAxis />
-            <Tooltip />
+            <Tooltip labelFormatter={tooltipLabelFormatter} />
             <Legend />
             {dataKeys.map((dk) => (
               <Area
@@ -66,9 +81,17 @@ export const Chart: React.FC<ChartProps> = ({
         return (
           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={xAxisKey} />
+            <XAxis
+              dataKey={xAxisKey}
+              tickFormatter={xAxisTickFormatter}
+              angle={xAxisAngle}
+              textAnchor={xAxisAngle === 0 ? 'middle' : 'end'}
+              height={xAxisHeight}
+              interval="preserveStartEnd"
+              tick={{ fontSize: 11 }}
+            />
             <YAxis />
-            <Tooltip />
+            <Tooltip labelFormatter={tooltipLabelFormatter} />
             <Legend />
             {dataKeys.map((dk) => (
               <Bar
@@ -86,9 +109,17 @@ export const Chart: React.FC<ChartProps> = ({
         return (
           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={xAxisKey} />
+            <XAxis
+              dataKey={xAxisKey}
+              tickFormatter={xAxisTickFormatter}
+              angle={xAxisAngle}
+              textAnchor={xAxisAngle === 0 ? 'middle' : 'end'}
+              height={xAxisHeight}
+              interval="preserveStartEnd"
+              tick={{ fontSize: 11 }}
+            />
             <YAxis />
-            <Tooltip />
+            <Tooltip labelFormatter={tooltipLabelFormatter} />
             <Legend />
             {dataKeys.map((dk) => (
               <Line
