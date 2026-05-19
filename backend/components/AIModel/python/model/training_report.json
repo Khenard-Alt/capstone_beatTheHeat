@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-05-15T19:20:55.062712+00:00",
-  "rows": 1351,
-  "train_size": 1080,
-  "test_size": 271,
-  "min_class_count": 100,
+  "generated_at": "2026-05-19T16:58:25.689258+00:00",
+  "rows": 1653,
+  "train_size": 1322,
+  "test_size": 331,
+  "min_class_count": 0,
   "class_counts": {
     "safe": 275,
-    "caution": 177,
-    "extreme-caution": 400,
-    "danger": 384,
+    "caution": 253,
+    "extreme-caution": 596,
+    "danger": 414,
     "extreme-danger": 115
   },
   "label_map": {
@@ -26,44 +26,44 @@
       "precision": 1.0,
       "recall": 1.0,
       "f1-score": 1.0,
-      "support": 36.0
+      "support": 80.0
     },
     "danger": {
       "precision": 1.0,
       "recall": 1.0,
       "f1-score": 1.0,
-      "support": 93.0
+      "support": 39.0
     },
     "extreme-caution": {
       "precision": 1.0,
       "recall": 1.0,
       "f1-score": 1.0,
-      "support": 94.0
+      "support": 212.0
     },
     "extreme-danger": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 42.0
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 0.0
     },
     "safe": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 6.0
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 0.0
     },
     "accuracy": 1.0,
     "macro avg": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 271.0
+      "precision": 0.6,
+      "recall": 0.6,
+      "f1-score": 0.6,
+      "support": 331.0
     },
     "weighted avg": {
       "precision": 1.0,
       "recall": 1.0,
       "f1-score": 1.0,
-      "support": 271.0
+      "support": 331.0
     }
   }
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MdChat } from 'react-icons/md';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { fetchRealtimeAdvisory } from '../services/healthAdvisory.service';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/FloatingAdvisoryWidget.css';
@@ -15,26 +15,24 @@ interface AdvisoryState {
 
 export const FloatingAdvisoryWidget: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const [advisory, setAdvisory] = useState<AdvisoryState | null>(null);
   const [tick, setTick] = useState(0);
-
-  const isDashboardRoute = useMemo(() => {
-    const path = location.pathname;
-    const dashboardPaths = [
-      '/dashboard',
-      '/parent/dashboard',
-      '/admin',
-      '/principal/dashboard',
-      '/head-teacher/dashboard',
-      '/teacher/dashboard',
-    ];
-    return dashboardPaths.includes(path);
-  }, [location.pathname]);
+  const [isAttention, setIsAttention] = useState(true);
 
   useEffect(() => {
     let mounted = true;
+    let attentionTimeout: number | undefined;
+
+    const triggerAttention = () => {
+      setIsAttention(true);
+      if (attentionTimeout) {
+        window.clearTimeout(attentionTimeout);
+      }
+      attentionTimeout = window.setTimeout(() => {
+        setIsAttention(false);
+      }, 8000);
+    };
 
     const load = async () => {
       try {
@@ -56,14 +54,19 @@ export const FloatingAdvisoryWidget: React.FC = () => {
     };
 
     void load();
+    triggerAttention();
     const interval = setInterval(() => {
       void load();
+      triggerAttention();
       setTick((prev) => prev + 1);
     }, 60 * 1000);
 
     return () => {
       mounted = false;
       clearInterval(interval);
+      if (attentionTimeout) {
+        window.clearTimeout(attentionTimeout);
+      }
     };
   }, []);
 
@@ -95,13 +98,9 @@ export const FloatingAdvisoryWidget: React.FC = () => {
     navigate('/login');
   };
 
-  if (!isDashboardRoute) {
-    return null;
-  }
-
   return (
     <button
-      className="floating-advisory-header"
+      className={`floating-advisory-header${isAttention ? ' attention' : ''}`}
       onClick={handleOpen}
       title="Open advisory chatbot"
       aria-label="Open advisory chatbot"

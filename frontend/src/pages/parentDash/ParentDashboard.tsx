@@ -74,8 +74,8 @@ export const ParentDashboard: React.FC = () => {
           setCurrentWeather(data);
           setWeatherHistory((prev) => {
             const updated = [...prev, data];
-            // Keep max 24 hours of data (one per 15 minutes = ~96 points, but we'll cap at 24)
-            return updated.slice(-24);
+            // Keep the last 60 points (about 1 hour at 1-minute polling)
+            return updated.slice(-60);
           });
         }
       } catch (error) {

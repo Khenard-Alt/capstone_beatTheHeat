@@ -44,6 +44,8 @@ export interface WeatherBackfillResult {
 }
 
 class WeatherService {
+	private readonly schoolLocationName = 'Mayamot Elementary School, Antipolo City';
+
 	public async collectScheduledSnapshot(lat = env.schoolLat, lon = env.schoolLon): Promise<WeatherSnapshot> {
 		return this.getCurrentWeather(lat, lon);
 	}
@@ -188,7 +190,7 @@ class WeatherService {
 
 		return {
 			source: 'openweathermap',
-			location: 'Mayamot Elementary School',
+			location: this.schoolLocationName,
 			temperatureC,
 			humidityPercent,
 			condition: point.weather?.[0]?.description ?? point.weather?.[0]?.main ?? timezone ?? 'historical clear',
@@ -215,7 +217,7 @@ class WeatherService {
 
 		return {
 			source: 'openweathermap',
-			location: data.name || 'Mayamot Elementary School',
+			location: this.schoolLocationName,
 			temperatureC,
 			humidityPercent,
 			condition: data.weather?.[0]?.description ?? data.weather?.[0]?.main ?? 'Unknown',
@@ -234,7 +236,7 @@ class WeatherService {
 
 		return {
 			source: 'fallback',
-			location: 'Mayamot Elementary School',
+			location: this.schoolLocationName,
 			temperatureC,
 			humidityPercent,
 			condition: 'partly cloudy',

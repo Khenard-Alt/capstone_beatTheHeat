@@ -23,6 +23,7 @@ import { ParentAnnouncements } from './pages/parentDash/ParentAnnouncements';
 import { ParentAdvisory } from './pages/parentDash/ParentAdvisory';
 import { ParentChatbot } from './pages/parentDash/ParentChatbot';
 import { FloatingAdvisoryWidget } from './components/FloatingAdvisoryWidget';
+import { GlobalAdvisoryNudge } from './components/GlobalAdvisoryNudge';
 import { ParentProfileSettings } from './pages/parentDash/ParentProfileSettings';
 import { PrincipalDashboard } from './pages/principalDash/PrincipalDashboard';
 import { HeadTeacherDashboard } from './pages/headTeacherDash/HeadTeacherDashboard';
@@ -221,6 +222,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </div>
 
       <FloatingAdvisoryWidget />
+      <GlobalAdvisoryNudge />
       <Footer />
     </div>
   );
@@ -234,6 +236,7 @@ const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         <div className="public-content">{children}</div>
       </main>
       <FloatingAdvisoryWidget />
+      <GlobalAdvisoryNudge />
       <Footer variant="public" />
     </div>
   );

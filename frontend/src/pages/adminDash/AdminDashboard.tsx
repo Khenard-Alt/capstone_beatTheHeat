@@ -101,7 +101,7 @@ export const AdminDashboard: React.FC = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 15 * 60 * 1000); // Refresh every 15 minutes
+    const interval = setInterval(fetchData, 60 * 1000); // Refresh every 1 minute
     
     return () => clearInterval(interval);
   }, [isAdmin]);
@@ -302,7 +302,7 @@ export const AdminDashboard: React.FC = () => {
 
           <Card title="System Notes">
             <ul className="admin-notes">
-              <li>Weather fetch interval: 15 minutes</li>
+              <li>Weather fetch interval: 1 minute</li>
               <li>Last advisory generation: 10 minutes ago</li>
               <li>Email queue: 2 pending</li>
               <li>SMS queue: 1 pending</li>

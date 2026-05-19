@@ -78,7 +78,7 @@ export const PrincipalDashboard: React.FC = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 15 * 60 * 1000); // Refresh every 15 minutes
+    const interval = setInterval(fetchData, 60 * 1000); // Refresh every 1 minute
     
     return () => clearInterval(interval);
   }, []);

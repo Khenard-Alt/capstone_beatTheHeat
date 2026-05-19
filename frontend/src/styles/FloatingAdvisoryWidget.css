@@ -1,11 +1,37 @@
-.floating-advisory-header{position:fixed;right:24px;top:84px;z-index:900;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;min-width:320px;max-width:420px;padding:12px 14px;border:none;border-radius:999px;background:#0f172a;color:#fff;box-shadow:0 14px 30px rgba(15,23,42,0.35);cursor:pointer;font-weight:600;line-height:1.2}
+.floating-advisory-header{position:fixed;right:24px;top:84px;z-index:1200;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;min-width:320px;max-width:420px;padding:12px 14px;border:none;border-radius:999px;background:#0f172a;color:#fff;box-shadow:0 14px 30px rgba(15,23,42,0.35);cursor:pointer;font-weight:600;line-height:1.2;animation:floatAdvisorySlide 0.35s ease-out}
 .floating-advisory-header:hover{background:#111827}
+.floating-advisory-header.attention{animation:floatAdvisoryPulse 0.9s ease-in-out infinite, floatAdvisoryShake 0.18s ease-in-out infinite;box-shadow:0 0 0 0 rgba(249,115,22,0.5),0 24px 60px rgba(15,23,42,0.45)}
+.floating-advisory-header.attention::after{content:'';position:absolute;inset:-8px;border-radius:999px;border:2px solid rgba(249,115,22,0.55);animation:floatAdvisoryRing 1.4s ease-out infinite}
 .floating-advisory-header-left{display:flex;flex-direction:column;gap:4px;min-width:0}
 .floating-advisory-badge{align-self:flex-start;background:#f97316;color:#fff;border-radius:999px;padding:4px 8px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase}
 .floating-advisory-text{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
 .floating-advisory-icon{display:grid;place-items:center;background:#0ea5e9;border-radius:999px;width:34px;height:34px}
 .floating-advisory-icon svg{font-size:18px}
 .floating-advisory-time{font-size:10px;color:#dbeafe;opacity:0.9}
+
+@keyframes floatAdvisorySlide{
+  from{opacity:0;transform:translateY(-10px) scale(0.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+@keyframes floatAdvisoryPulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.03)}
+  100%{transform:scale(1)}
+}
+
+@keyframes floatAdvisoryShake{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-2px)}
+  50%{transform:translateX(2px)}
+  75%{transform:translateX(-1px)}
+  100%{transform:translateX(0)}
+}
+
+@keyframes floatAdvisoryRing{
+  0%{opacity:0.6;transform:scale(0.98)}
+  100%{opacity:0;transform:scale(1.08)}
+}
 
 @media (max-width: 768px){
   .floating-advisory-header{right:16px;left:16px;top:72px;max-width:none}

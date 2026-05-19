@@ -48,7 +48,7 @@ export const Dashboard: React.FC = () => {
         if (mounted) {
           setCurrentWeather(weather);
           
-          // Add to history (keep last 24 readings)
+          // Add to history (keep last 60 readings)
           const heatIndex = calculateHeatIndex(weather.temperature, weather.humidity);
           const timeStr = formatDateTimeCompact(weather.timestamp);
           
@@ -60,7 +60,7 @@ export const Dashboard: React.FC = () => {
               humidity: weather.humidity, 
               heatIndex 
             }];
-            return updated.slice(-24); // Keep last 24 points
+            return updated.slice(-60); // Keep last 60 points
           });
         }
       } catch (error) {
@@ -69,7 +69,7 @@ export const Dashboard: React.FC = () => {
     };
 
     loadWeather();
-    const intervalId = window.setInterval(loadWeather, 15 * 60 * 1000);
+    const intervalId = window.setInterval(loadWeather, 60 * 1000);
 
     return () => {
       mounted = false;

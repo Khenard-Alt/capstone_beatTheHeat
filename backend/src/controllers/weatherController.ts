@@ -43,10 +43,7 @@ export const getCurrentWeather = async (
 	next: NextFunction
 ): Promise<void> => {
 	try {
-		const lat = req.query.lat ? Number(req.query.lat) : undefined;
-		const lon = req.query.lon ? Number(req.query.lon) : undefined;
-
-		const weather = await weatherService.getCurrentWeather(lat, lon);
+		const weather = await weatherService.getCurrentWeather();
 
 		res.status(200).json({
 			success: true,
@@ -67,10 +64,7 @@ export const runScheduledSnapshot = async (
 	}
 
 	try {
-		const lat = req.body?.lat ? Number(req.body.lat) : undefined;
-		const lon = req.body?.lon ? Number(req.body.lon) : undefined;
-
-		const weather = await weatherService.collectScheduledSnapshot(lat, lon);
+		const weather = await weatherService.collectScheduledSnapshot();
 
 		res.status(200).json({
 			success: true,
@@ -98,10 +92,8 @@ export const runWeatherBackfill = async (
 		const intervalHours = Number.isFinite(rawInterval)
 			? Math.min(24, Math.max(1, Math.floor(rawInterval)))
 			: 3;
-		const lat = req.body?.lat ? Number(req.body.lat) : undefined;
-		const lon = req.body?.lon ? Number(req.body.lon) : undefined;
 
-		const result = await weatherService.backfillRecentDays(days, lat, lon, intervalHours);
+		const result = await weatherService.backfillRecentDays(days, undefined, undefined, intervalHours);
 
 		res.status(200).json({
 			success: true,

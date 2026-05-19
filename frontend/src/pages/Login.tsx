@@ -6,19 +6,11 @@ import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { isValidEmail } from '../utils/validators';
 import { STORAGE_KEYS } from '../utils/constants';
-import { MdEmail, MdLock, MdClose, MdSend, MdAdminPanelSettings } from 'react-icons/md';
-import { generateScopedAdvisory } from '../services/healthAdvisory.service';
+import { MdEmail, MdLock, MdClose, MdAdminPanelSettings } from 'react-icons/md';
 import '../styles/Login.css';
 import RegisterModal from './Register';
 
 const ADMIN_AUTH_STORAGE_KEY = 'school_management_admin_unlocked';
-
-interface ChatMessage {
-  id: number;
-  text: string;
-  sender: 'user' | 'ai';
-  suggestions?: string[];
-}
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +25,6 @@ export const Login: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [adminAuthEmail, setAdminAuthEmail] = useState('admin@beattheheat.local');
@@ -41,21 +32,6 @@ export const Login: React.FC = () => {
   const [adminAuthError, setAdminAuthError] = useState('');
   const [adminAuthSuccess, setAdminAuthSuccess] = useState('');
   const [isAuthenticatingAdmin, setIsAuthenticatingAdmin] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      text: "Hi! I am the Beat The Heat AI Advisory Assistant. I only use this system's live heat, humidity, and temperature data to generate school health advisories.",
-      sender: 'ai',
-      suggestions: [
-        'Generate advisory based on current heat',
-        'Explain heat index risk levels',
-        'What actions for danger level?',
-        'How is AI limited in this system?'
-      ]
-    }
-  ]);
-  const [userInput, setUserInput] = useState('');
-
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'a') {
@@ -131,118 +107,6 @@ export const Login: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getAIResponse = (message: string): { text: string; suggestions?: string[] } => {
-    const lowerMsg = message.toLowerCase();
-    
-    if (lowerMsg.includes('heat index') || lowerMsg.includes('what is')) {
-      return {
-        text: "Heat Index is the felt temperature when humidity is combined with air temperature. In this system, AI advisories are grounded on live heat index + humidity + temperature to guide school safety decisions.",
-        suggestions: ['Generate advisory based on current heat', 'Explain heat index risk levels', 'System scope of AI']
-      };
-    } else if (lowerMsg.includes('weather') || lowerMsg.includes('current')) {
-      return {
-        text: "The system captures live weather and computes heat index in real-time. The AI then converts these values into prioritized actions for students, teachers, and school staff.",
-        suggestions: ['Generate advisory based on current heat', 'What actions for danger level?', 'Emergency protocols']
-      };
-    } else if (lowerMsg.includes('health') || lowerMsg.includes('advisory') || lowerMsg.includes('tips')) {
-      return {
-        text: "AI advisories are generated from heat levels:\n\n🟢 Safe\n🟡 Caution\n🟠 Extreme Caution\n🔴 Danger\n⚫ Extreme Danger\n\nEach response includes risk level, action list, and scope note tied to system weather values.",
-        suggestions: ['Generate advisory based on current heat', 'What actions for danger level?', 'How is AI limited in this system?']
-      };
-    } else if (lowerMsg.includes('use') || lowerMsg.includes('how') || lowerMsg.includes('system')) {
-      return {
-        text: "Login to access dashboards and AI-generated advisories. The AI assistant is system-scoped: it avoids off-topic answers and focuses only on heat safety guidance from live weather values.",
-        suggestions: ['System benefits', 'Available features', 'Who can use this?']
-      };
-    } else if (lowerMsg.includes('feature') || lowerMsg.includes('benefit')) {
-      return {
-        text: "Our key features:\n✅ Real-time heat monitoring\n✅ AI-powered predictions\n✅ Health advisory alerts\n✅ Student tracking\n✅ Automated notifications\n✅ Historical data analysis",
-        suggestions: ['How accurate is AI?', 'Alert notifications', 'Data privacy']
-      };
-    } else if (lowerMsg.includes('emergency') || lowerMsg.includes('danger')) {
-      return {
-        text: "In emergency situations with extreme heat:\n🚨 Instant alerts sent to all teachers\n🚨 Automatic activity recommendations\n🚨 Student health monitoring\n🚨 Emergency contact notifications\n\nSafety is our top priority! 💪",
-        suggestions: ['Prevention measures', 'First aid tips', 'Contact support']
-      };
-    } else {
-      return {
-        text: "I can help with system-based heat advisories:\n• Current heat risk explanation\n• Advisory actions for school operations\n• Scope and confidence of AI output\n• Safety tips per heat level",
-        suggestions: ['Generate advisory based on current heat', 'Explain heat index risk levels', 'How is AI limited in this system?', 'Safety guidelines']
-      };
-    }
-  };
-
-  const formatScopedResponse = (scoped: Awaited<ReturnType<typeof generateScopedAdvisory>>): string => {
-    const confidenceRaw = typeof scoped.confidenceScore === 'number' ? scoped.confidenceScore : 0;
-    const confidencePercent = Math.round(Math.max(0, Math.min(1, confidenceRaw)) * 100);
-    const rationale = scoped.decisionBasis?.rationale?.length
-      ? scoped.decisionBasis.rationale
-      : ['Recommendations are based on current in-system heat and humidity values.'];
-
-    return [
-      scoped.summary,
-      '',
-      `Risk Level: ${scoped.riskLevel}`,
-      `Confidence: ${confidencePercent}%`,
-      '',
-      'Recommended Actions:',
-      ...scoped.actions.map((action) => `• ${action}`),
-      '',
-      'Heat Data Basis:',
-      `• Heat Index: ${scoped.decisionBasis?.heatIndexC ?? 'N/A'}°C`,
-      `• Temperature: ${scoped.decisionBasis?.temperatureC ?? 'N/A'}°C`,
-      `• Humidity: ${scoped.decisionBasis?.humidityPercent ?? 'N/A'}%`,
-      `• Heat Level: ${scoped.decisionBasis?.heatLevel ?? 'N/A'}`,
-      `• Data Source: ${scoped.decisionBasis?.dataSource ?? 'system'}`,
-      '',
-      'AI Rationale:',
-      ...rationale.map((item) => `• ${item}`),
-      '',
-      scoped.scopeNote,
-    ].join('\n');
-  };
-
-  const handleSendMessage = async (messageText?: string) => {
-    const textToSend = messageText || userInput;
-    if (!textToSend.trim()) return;
-
-    const userMessage: ChatMessage = {
-      id: chatMessages.length + 1,
-      text: textToSend,
-      sender: 'user'
-    };
-
-    let response = getAIResponse(textToSend);
-
-    try {
-      const scoped = await generateScopedAdvisory(textToSend);
-      response = {
-        text: formatScopedResponse(scoped),
-        suggestions: ['Generate advisory based on current heat', 'What actions for danger level?', 'How is AI limited in this system?'],
-      };
-    } catch (error) {
-      console.error('Scoped AI API unavailable. Falling back to local assistant.', error);
-    }
-
-    const aiMessage: ChatMessage = {
-      id: chatMessages.length + 2,
-      text: response.text,
-      sender: 'ai',
-      suggestions: response.suggestions
-    };
-
-    setChatMessages((prev) => [...prev, userMessage, aiMessage]);
-    setUserInput('');
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    handleSendMessage(suggestion);
-  };
-
-  const toggleChat = () => {
-    setIsChatOpen(!isChatOpen);
   };
 
   const handleAdminAuth = async (event: React.FormEvent) => {
@@ -482,93 +346,6 @@ export const Login: React.FC = () => {
         <RegisterModal open={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} />
       </div>
 
-      {/* AI Chatbot */}
-      <div className={`ai-chatbot ${isChatOpen ? 'open' : ''}`}>
-        {/* Chat Button */}
-        <button
-          className="ai-chat-button"
-          onClick={toggleChat}
-          aria-label="AI Assistant"
-        >
-          {isChatOpen ? (
-            <MdClose className="chat-icon" />
-          ) : (
-            <div className="chat-icon-wrapper">
-              <span className="ai-icon">🤖</span>
-              <span className="pulse-ring"></span>
-            </div>
-          )}
-        </button>
-
-        {/* Chat Window */}
-        {isChatOpen && (
-          <div className="ai-chat-window">
-            <div className="chat-header">
-              <div className="chat-header-content">
-                <span className="chat-header-icon">🤖</span>
-                <div className="chat-header-text">
-                  <h3>AI Heat Advisory Assistant</h3>
-                  <span className="chat-status">
-                    <span className="status-dot"></span>
-                    System-Scoped Mode
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="chat-messages">
-              {chatMessages.map((message) => (
-                <div key={message.id} className={`chat-message ${message.sender}`}>
-                  {message.sender === 'ai' && (
-                    <div className="message-avatar">🤖</div>
-                  )}
-                  <div className="message-content">
-                    <div className="message-bubble">
-                      {message.text}
-                    </div>
-                    {message.suggestions && (
-                      <div className="message-suggestions">
-                        {message.suggestions.map((suggestion, idx) => (
-                          <button
-                            key={idx}
-                            className="suggestion-chip"
-                            onClick={() => handleSuggestionClick(suggestion)}
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {message.sender === 'user' && (
-                    <div className="message-avatar user">👤</div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="chat-input-container">
-              <input
-                type="text"
-                className="chat-input"
-                placeholder="Ask for heat-based school advisory..."
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              />
-              <button
-                className="chat-send-button"
-                onClick={() => handleSendMessage()}
-                disabled={!userInput.trim()}
-                title="Send message"
-                aria-label="Send message"
-              >
-                <MdSend />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 };
