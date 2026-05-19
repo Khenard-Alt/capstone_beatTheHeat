@@ -1,0 +1,8 @@
+{
+  "temperatureC": 33.4,
+  "humidityPercent": 68,
+  "windSpeedMps": 2.8,
+  "pressureHpa": 1007.2,
+  "heatIndexC": 41.2,
+  "source": "openweathermap"
+}

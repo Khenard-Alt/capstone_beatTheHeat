@@ -1,4 +1,9 @@
 import axios from 'axios';
+import { execFile } from 'child_process';
+import { access, mkdtemp, rm, writeFile } from 'fs/promises';
+import os from 'os';
+import path from 'path';
+import { promisify } from 'util';
 import { env, hasGeminiApiKey } from '../config/environment';
 import { AdvisoryInput, AdvisoryResult } from '../types';
 import { auditLogService } from './auditLog.service';
@@ -30,6 +35,7 @@ type ConversationIntent =
 	| 'school-status'
 	| 'general';
 const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-2.0-flash-lite'];
+const execFileAsync = promisify(execFile);
 
 class AIAnalysisService {
 	public async generateScopedAdvisory(input: AdvisoryInput): Promise<AdvisoryResult> {
@@ -48,6 +54,20 @@ class AIAnalysisService {
 		if (scenarioTemplate) {
 			await this.logAdvisoryAudit(input, scopedQuery, scenarioTemplate, 'fallback', 'intent-template');
 			return scenarioTemplate;
+		}
+
+		if (env.aiModelProvider === 'python') {
+			const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle);
+			if (pythonResult) {
+				return pythonResult;
+			}
+		}
+
+		if (env.aiModelProvider === 'fallback') {
+			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
+			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, adjustedFallback, 'fallback', 'fallback-only');
+			return adjustedFallback;
 		}
 
 		if (!hasGeminiApiKey()) {
@@ -155,7 +175,7 @@ class AIAnalysisService {
 		input: AdvisoryInput,
 		scopedQuery: string,
 		result: AdvisoryResult,
-		source: 'gemini' | 'fallback',
+		source: 'gemini' | 'fallback' | 'python',
 		model: string,
 		tokenInput?: number,
 		tokenOutput?: number,
@@ -185,6 +205,111 @@ class AIAnalysisService {
 		// Google Gemini: completely FREE on free tier
 		// This is kept for compatibility; cost is always 0
 		return 0;
+	}
+
+	private async generatePythonAdvisory(
+		input: AdvisoryInput,
+		scopedQuery: string,
+		languageStyle: LanguageStyle
+	): Promise<AdvisoryResult | null> {
+		const resolved = await this.resolvePythonModelPaths();
+		if (!resolved) {
+			console.warn('Python advisory model paths not found.');
+			return null;
+		}
+
+		const pythonExecutable = await this.resolvePythonExecutable();
+		const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'bth-ai-'));
+		const inputPath = path.join(tmpDir, 'input.json');
+		const pythonLanguage = languageStyle === 'taglish' ? 'tagalog' : languageStyle;
+
+		try {
+			const payload = {
+				temperatureC: input.weather.temperatureC,
+				humidityPercent: input.weather.humidityPercent,
+				windSpeedMps: input.weather.windSpeedMps,
+				pressureHpa: input.weather.pressureHpa,
+				heatIndexC: input.weather.heatIndexC,
+				source: input.weather.source,
+			};
+
+			await writeFile(inputPath, JSON.stringify(payload), 'utf-8');
+			const { stdout } = await execFileAsync(
+				pythonExecutable,
+				[
+					resolved.scriptPath,
+					'predict',
+					'--model-dir',
+					resolved.modelDir,
+					'--input-json',
+					inputPath,
+					'--language',
+					pythonLanguage,
+				],
+				{ timeout: 15000 }
+			);
+
+			const parsed = this.parseAdvisory(String(stdout).trim(), input.weather, languageStyle);
+			const result = this.enforceOutputScope(parsed, input.weather.heatLevel, languageStyle);
+			const adjustedResult = this.applyQueryPolicy(result, input, scopedQuery, languageStyle);
+
+			await this.logAdvisoryAudit(input, scopedQuery, adjustedResult, 'python', 'local-sklearn');
+			return adjustedResult;
+		} catch (error) {
+			console.error('Python advisory generation failed:', error);
+			return null;
+		} finally {
+			await rm(tmpDir, { recursive: true, force: true });
+		}
+	}
+
+	private async resolvePythonModelPaths(): Promise<{ scriptPath: string; modelDir: string } | null> {
+		const scriptCandidates = [
+			env.pythonScriptPath,
+			path.resolve(process.cwd(), 'components', 'AIModel', 'python', 'ai.py'),
+		];
+		const modelCandidates = [
+			env.pythonModelDir,
+			path.resolve(process.cwd(), 'components', 'AIModel', 'python', 'model'),
+		];
+
+		const scriptPath = await this.pickExistingPath(scriptCandidates);
+		const modelDir = await this.pickExistingPath(modelCandidates);
+
+		if (!scriptPath || !modelDir) {
+			return null;
+		}
+
+		return { scriptPath, modelDir };
+	}
+
+	private async resolvePythonExecutable(): Promise<string> {
+		const candidates = [env.pythonExecutable, 'python'];
+		for (const candidate of candidates) {
+			if (await this.pathExists(candidate)) {
+				return candidate;
+			}
+		}
+
+		return 'python';
+	}
+
+	private async pickExistingPath(paths: string[]): Promise<string | null> {
+		for (const candidate of paths) {
+			if (await this.pathExists(candidate)) {
+				return candidate;
+			}
+		}
+		return null;
+	}
+
+	private async pathExists(candidate: string): Promise<boolean> {
+		try {
+			await access(candidate);
+			return true;
+		} catch {
+			return false;
+		}
 	}
 
 	private systemPrompt(): string {

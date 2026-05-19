@@ -1,0 +1,7 @@
+{
+  "caution": 0,
+  "danger": 1,
+  "extreme-caution": 2,
+  "extreme-danger": 3,
+  "safe": 4
+}

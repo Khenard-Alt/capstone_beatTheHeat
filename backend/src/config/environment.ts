@@ -1,3 +1,15 @@
+import path from 'path';
+
+const defaultPythonExecutable = (): string => {
+	const base = path.resolve(
+		process.cwd(),
+		'.venv',
+		process.platform === 'win32' ? 'Scripts' : 'bin',
+		process.platform === 'win32' ? 'python.exe' : 'python'
+	);
+	return base;
+};
+
 export const env = {
 	get nodeEnv(): string {
 		return process.env.NODE_ENV ?? 'development';
@@ -22,6 +34,28 @@ export const env = {
 	},
 	get weatherSchedulerToken(): string {
 		return process.env.WEATHER_SCHEDULER_TOKEN ?? '';
+	},
+	get aiModelProvider(): 'gemini' | 'python' | 'fallback' {
+		const raw = (process.env.AI_MODEL_PROVIDER ?? 'gemini').toLowerCase();
+		if (raw === 'python' || raw === 'fallback') {
+			return raw;
+		}
+		return 'gemini';
+	},
+	get pythonExecutable(): string {
+		return process.env.PYTHON_EXECUTABLE ?? defaultPythonExecutable();
+	},
+	get pythonModelDir(): string {
+		return (
+			process.env.PYTHON_MODEL_DIR ??
+			path.resolve(process.cwd(), 'backend', 'components', 'AIModel', 'python', 'model')
+		);
+	},
+	get pythonScriptPath(): string {
+		return (
+			process.env.PYTHON_AI_SCRIPT ??
+			path.resolve(process.cwd(), 'backend', 'components', 'AIModel', 'python', 'ai.py')
+		);
 	},
 };
 

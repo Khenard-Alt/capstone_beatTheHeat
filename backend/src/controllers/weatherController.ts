@@ -94,10 +94,14 @@ export const runWeatherBackfill = async (
 	try {
 		const rawDays = Number(req.body?.days ?? req.query.days ?? 3);
 		const days = Number.isFinite(rawDays) ? Math.min(7, Math.max(1, Math.floor(rawDays))) : 3;
+		const rawInterval = Number(req.body?.intervalHours ?? req.query.intervalHours ?? 3);
+		const intervalHours = Number.isFinite(rawInterval)
+			? Math.min(24, Math.max(1, Math.floor(rawInterval)))
+			: 3;
 		const lat = req.body?.lat ? Number(req.body.lat) : undefined;
 		const lon = req.body?.lon ? Number(req.body.lon) : undefined;
 
-		const result = await weatherService.backfillRecentDays(days, lat, lon);
+		const result = await weatherService.backfillRecentDays(days, lat, lon, intervalHours);
 
 		res.status(200).json({
 			success: true,

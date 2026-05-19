@@ -36,6 +36,7 @@ interface WeatherBackfillFailure {
 
 export interface WeatherBackfillResult {
 	requestedDays: number;
+	intervalHours: number;
 	inserted: number;
 	mode: 'onecall-timemachine' | 'current-api-no-key';
 	failures: WeatherBackfillFailure[];
@@ -50,15 +51,18 @@ class WeatherService {
 	public async backfillRecentDays(
 		days: number,
 		lat = env.schoolLat,
-		lon = env.schoolLon
+		lon = env.schoolLon,
+		intervalHours = 3
 	): Promise<WeatherBackfillResult> {
 		const requestedDays = Math.max(1, Math.floor(days));
+		const normalizedInterval = Math.min(24, Math.max(1, Math.floor(intervalHours)));
 		const snapshots: WeatherSnapshot[] = [];
 		const failures: WeatherBackfillFailure[] = [];
 
 		if (!hasWeatherApiKey()) {
 			return {
 				requestedDays,
+				intervalHours: normalizedInterval,
 				inserted: 0,
 				mode: 'current-api-no-key',
 				failures: [
@@ -79,9 +83,11 @@ class WeatherService {
 			const unixTime = Math.floor(target.getTime() / 1000);
 
 			try {
-				const snapshot = await this.fetchHistoricalSnapshot(lat, lon, unixTime);
-				snapshots.push(snapshot);
-				await this.persistSnapshot(snapshot);
+				const dailySnapshots = await this.fetchHistoricalSnapshots(lat, lon, unixTime, normalizedInterval);
+				for (const snapshot of dailySnapshots) {
+					snapshots.push(snapshot);
+					await this.persistSnapshot(snapshot);
+				}
 			} catch (error) {
 				failures.push({
 					dayOffset,
@@ -92,6 +98,7 @@ class WeatherService {
 
 		return {
 			requestedDays,
+			intervalHours: normalizedInterval,
 			inserted: snapshots.length,
 			mode: 'onecall-timemachine',
 			failures,
@@ -131,7 +138,12 @@ class WeatherService {
 		}
 	}
 
-	private async fetchHistoricalSnapshot(lat: number, lon: number, unixTime: number): Promise<WeatherSnapshot> {
+	private async fetchHistoricalSnapshots(
+		lat: number,
+		lon: number,
+		unixTime: number,
+		intervalHours: number
+	): Promise<WeatherSnapshot[]> {
 		const { data } = await axios.get<OpenWeatherHistoricalResponse>(
 			'https://api.openweathermap.org/data/3.0/onecall/timemachine',
 			{
@@ -146,13 +158,32 @@ class WeatherService {
 			}
 		);
 
-		const point = data.data?.[0];
-		if (!point || typeof point.temp !== 'number' || typeof point.humidity !== 'number') {
+		const points = (data.data ?? [])
+			.filter((point) => typeof point.temp === 'number' && typeof point.humidity === 'number')
+			.sort((a, b) => (a.dt ?? 0) - (b.dt ?? 0));
+
+		if (points.length === 0) {
 			throw new Error('Historical weather response did not include valid temp/humidity fields.');
 		}
 
-		const temperatureC = Number(point.temp.toFixed(1));
-		const humidityPercent = Number(point.humidity.toFixed(0));
+		const stride = Math.min(24, Math.max(1, Math.floor(intervalHours)));
+		const snapshots: WeatherSnapshot[] = [];
+
+		for (let index = 0; index < points.length; index += stride) {
+			const point = points[index];
+			snapshots.push(this.toHistoricalSnapshot(point, data.timezone, unixTime));
+		}
+
+		return snapshots;
+	}
+
+	private toHistoricalSnapshot(
+		point: NonNullable<OpenWeatherHistoricalResponse['data']>[number],
+		timezone: string | undefined,
+		unixTime: number
+	): WeatherSnapshot {
+		const temperatureC = Number(point.temp?.toFixed(1) ?? 0);
+		const humidityPercent = Number(point.humidity?.toFixed(0) ?? 0);
 		const heatIndexC = Number(this.calculateHeatIndexC(temperatureC, humidityPercent).toFixed(1));
 
 		return {
@@ -160,8 +191,7 @@ class WeatherService {
 			location: 'Mayamot Elementary School',
 			temperatureC,
 			humidityPercent,
-			condition:
-				point.weather?.[0]?.description ?? point.weather?.[0]?.main ?? data.timezone ?? 'historical clear',
+			condition: point.weather?.[0]?.description ?? point.weather?.[0]?.main ?? timezone ?? 'historical clear',
 			windSpeedMps: Number((point.wind_speed ?? 0).toFixed(1)),
 			pressureHpa: Number((point.pressure ?? 0).toFixed(0)),
 			heatIndexC,
