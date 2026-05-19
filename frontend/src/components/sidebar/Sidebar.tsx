@@ -32,7 +32,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     { path: '/parent/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['parent'], badge: null },
     { path: '/parent/questions-concerns', icon: <MdForum />, label: 'Questions and Concerns', roles: ['parent'], badge: 4 },
     { path: '/parent/announcements', icon: <MdCampaign />, label: 'Announcements', roles: ['parent'], badge: 2 },
-    { path: '/parent/advisory', icon: <MdAutoAwesome />, label: 'AI Advisory', roles: ['parent'], badge: null },
     { path: '/parent/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['parent'], badge: null },
     { path: '/parent/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['parent'], badge: null },
   ];

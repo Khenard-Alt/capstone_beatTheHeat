@@ -20,7 +20,6 @@ import { Settings } from './pages/Settings';
 import { SchoolManagement } from './pages/SchoolManagement';
 import { ParentQuestionsConcerns } from './pages/parentDash/ParentQuestionsConcerns';
 import { ParentAnnouncements } from './pages/parentDash/ParentAnnouncements';
-import { ParentAdvisory } from './pages/parentDash/ParentAdvisory';
 import { ParentChatbot } from './pages/parentDash/ParentChatbot';
 import { FloatingAdvisoryWidget } from './components/FloatingAdvisoryWidget';
 import { GlobalAdvisoryNudge } from './components/GlobalAdvisoryNudge';
@@ -289,17 +288,6 @@ const AppRoutes: React.FC = () => {
           <ParentRoute>
             <AppLayout>
               <ParentAnnouncements />
-            </AppLayout>
-          </ParentRoute>
-        }
-      />
-
-      <Route
-        path="/parent/advisory"
-        element={
-          <ParentRoute>
-            <AppLayout>
-              <ParentAdvisory />
             </AppLayout>
           </ParentRoute>
         }

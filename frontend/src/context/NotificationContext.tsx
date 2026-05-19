@@ -1,6 +1,8 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Notification } from '../types';
+import { fetchNotifications, markNotificationRead, clearNotifications } from '../services/notifications.service';
+import { useAuth } from '../hooks/useAuth';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -16,43 +18,40 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
-// Mock notifications
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    userId: '1',
-    type: 'heat-alert',
-    title: 'High Heat Index Alert',
-    message: 'Current heat index has reached 38°C. Please take necessary precautions.',
-    status: 'unread',
-    priority: 'high',
-    sentAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
-  },
-  {
-    id: '2',
-    userId: '1',
-    type: 'advisory',
-    title: 'New Health Advisory',
-    message: 'A new health advisory has been issued for today.',
-    status: 'unread',
-    priority: 'medium',
-    sentAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
-  },
-  {
-    id: '3',
-    userId: '1',
-    type: 'info',
-    title: 'System Update',
-    message: 'Weather data has been successfully updated.',
-    status: 'read',
-    priority: 'low',
-    sentAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
-    readAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-  },
-];
-
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      if (!user?.id) {
+        setNotifications([]);
+        return;
+      }
+
+      try {
+        const data = await fetchNotifications(user.id);
+        if (mounted) {
+          setNotifications(data);
+        }
+      } catch (error) {
+        console.error('Failed to load notifications:', error);
+        if (mounted) {
+          setNotifications([]);
+        }
+      }
+    };
+
+    void load();
+    const interval = window.setInterval(load, 60 * 1000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, [user?.id]);
 
   const addNotification = (notification: Omit<Notification, 'id' | 'sentAt'>) => {
     const newNotification: Notification = {
@@ -64,6 +63,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   };
 
   const markAsRead = (id: string) => {
+    void markNotificationRead(id).catch((error) => {
+      console.error('Failed to mark notification as read:', error);
+    });
+
     setNotifications((prev) =>
       prev.map((n) =>
         n.id === id
@@ -74,6 +77,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   };
 
   const clearAll = () => {
+    if (user?.id) {
+      void clearNotifications(user.id).catch((error) => {
+        console.error('Failed to clear notifications:', error);
+      });
+    }
     setNotifications([]);
   };
 

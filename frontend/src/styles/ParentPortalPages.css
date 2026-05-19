@@ -74,6 +74,12 @@
   gap: 16px;
 }
 
+.parent-portal-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .parent-portal-highlights {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }

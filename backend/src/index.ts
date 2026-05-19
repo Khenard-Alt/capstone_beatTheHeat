@@ -16,6 +16,7 @@ import announcementsRoutes from './routes/announcements.routes';
 import parentMessagesRoutes from './routes/parentMessages.routes';
 import incidentsRoutes from './routes/incidents.routes';
 import { weatherService } from './services/weather.service';
+import { aiAnalysisService } from './services/aiAnalysis.service';
 
 // Import routes (to be created)
 // import schoolRoutes from './routes/school.routes';
@@ -26,6 +27,7 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 const WEATHER_SNAPSHOT_INTERVAL_MINUTES = Number(process.env.WEATHER_SNAPSHOT_INTERVAL_MINUTES ?? 15);
+const AI_ADVISORY_INTERVAL_MINUTES = Number(process.env.AI_ADVISORY_INTERVAL_MINUTES ?? 1);
 
 // Middleware
 app.use(cors());
@@ -87,13 +89,37 @@ const startWeatherSnapshotScheduler = (): void => {
   }, intervalMs);
 };
 
+const startAdvisoryScheduler = (): void => {
+  const intervalMs = Math.max(1, AI_ADVISORY_INTERVAL_MINUTES) * 60 * 1000;
+  const advisoryQuery = 'Realtime health advisory update for current heat index.';
+
+  const generateAdvisory = async (): Promise<void> => {
+    try {
+      const weather = await weatherService.getCurrentWeather();
+      await aiAnalysisService.generateScopedAdvisory({
+        query: advisoryQuery,
+        weather,
+      });
+    } catch (error) {
+      console.error('AI advisory scheduler error:', error);
+    }
+  };
+
+  void generateAdvisory();
+  setInterval(() => {
+    void generateAdvisory();
+  }, intervalMs);
+};
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`🌡️  Beat the Heat API initialized`);
   console.log(`⏱️  Weather snapshot scheduler: every ${Math.max(1, WEATHER_SNAPSHOT_INTERVAL_MINUTES)} minute(s)`);
+  console.log(`🤖 AI advisory scheduler: every ${Math.max(1, AI_ADVISORY_INTERVAL_MINUTES)} minute(s)`);
   startWeatherSnapshotScheduler();
+  startAdvisoryScheduler();
 });
 
 export default app;

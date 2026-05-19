@@ -79,15 +79,20 @@ export const GlobalAdvisoryNudge: React.FC = () => {
     setIsThinking(true);
     try {
       const scoped = await generateScopedAdvisory(trimmed);
-      const summaryLower = scoped.summary.toLowerCase();
-      const isScopeReply =
-        summaryLower.includes('outside scope') ||
-        summaryLower.includes('out of scope') ||
-        summaryLower.includes('hindi sakop') ||
-        summaryLower.includes('scope');
-      const replyText = isScopeReply
-        ? `${scoped.summary}\n\nScope: heat, weather, advisories only.`
-        : scoped.summary;
+      const actions = (scoped.actions ?? []).slice(0, 3).map((item) => `- ${item}`).join('\n');
+      const tips = (scoped.safetyTips ?? []).slice(0, 3).map((item) => `- ${item}`).join('\n');
+      const replyParts = [
+        scoped.summary,
+        '',
+        'Recommended steps:',
+        actions || '- Keep hydrated and avoid peak heat exposure.',
+        '',
+        'Quick safety tips:',
+        tips || '- Follow school advisories and monitor symptoms.',
+        '',
+        scoped.scopeNote,
+      ];
+      const replyText = replyParts.join('\n');
       const aiMessage = {
         id: Date.now() + 1,
         text: replyText,

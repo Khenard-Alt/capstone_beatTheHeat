@@ -19,6 +19,7 @@ export const FloatingAdvisoryWidget: React.FC = () => {
   const [advisory, setAdvisory] = useState<AdvisoryState | null>(null);
   const [tick, setTick] = useState(0);
   const [isAttention, setIsAttention] = useState(true);
+  const openLabel = user?.role === 'parent' ? 'Open advisory history' : 'Open advisory chatbot';
 
   useEffect(() => {
     let mounted = true;
@@ -86,7 +87,7 @@ export const FloatingAdvisoryWidget: React.FC = () => {
 
   const handleOpen = () => {
     if (user?.role === 'parent') {
-      navigate('/parent/chatbot');
+      navigate('/parent/announcements');
       return;
     }
 
@@ -102,8 +103,8 @@ export const FloatingAdvisoryWidget: React.FC = () => {
     <button
       className={`floating-advisory-header${isAttention ? ' attention' : ''}`}
       onClick={handleOpen}
-      title="Open advisory chatbot"
-      aria-label="Open advisory chatbot"
+      title={openLabel}
+      aria-label={openLabel}
     >
       <span className="floating-advisory-header-left">
         <span className="floating-advisory-badge">Advisory</span>

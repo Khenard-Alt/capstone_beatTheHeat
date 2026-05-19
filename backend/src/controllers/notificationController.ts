@@ -2,6 +2,44 @@ import { Request, Response, NextFunction } from 'express';
 import { sendHeatAlertEmail, sendAdvisoryNotificationEmail } from '../services/email.service';
 import { getSupabaseAdminClient } from '../config/supabase';
 
+const toPriority = (level?: string): 'low' | 'medium' | 'high' => {
+  const normalized = String(level ?? '').toLowerCase();
+  if (['danger', 'extreme-danger', 'critical', 'high'].includes(normalized)) {
+    return 'high';
+  }
+  if (['caution', 'extreme-caution', 'medium'].includes(normalized)) {
+    return 'medium';
+  }
+  return 'low';
+};
+
+const insertNotifications = async (
+  userIds: string[],
+  payload: { type: 'heat-alert' | 'advisory' | 'system' | 'info'; title: string; message: string; priority: 'low' | 'medium' | 'high' }
+): Promise<void> => {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const rows = userIds.map((userId) => ({
+    user_id: userId,
+    type: payload.type,
+    title: payload.title,
+    message: payload.message,
+    status: 'unread',
+    priority: payload.priority,
+    sent_at: now,
+    created_at: now,
+  }));
+
+  const { error } = await supabase.from('notifications').insert(rows);
+  if (error) {
+    console.error('Failed to insert notifications:', error.message);
+  }
+};
+
 export const notificationController = {
   /**
    * Send heat alert email to users
@@ -55,6 +93,13 @@ export const notificationController = {
         });
         return;
       }
+
+      await insertNotifications([userId], {
+        type: 'heat-alert',
+        title: `Heat Alert: ${String(heatLevel).toUpperCase()}`,
+        message: `Current heat index is ${heatIndex}°C. Please follow the recommended safety measures.`,
+        priority: toPriority(heatLevel),
+      });
 
       res.json({
         success: true,
@@ -125,6 +170,16 @@ export const notificationController = {
       );
 
       const successCount = results.filter((r) => r).length;
+
+      await insertNotifications(
+        users.map((user) => user.id),
+        {
+          type: 'advisory',
+          title: advisoryTitle,
+          message: advisoryText,
+          priority: toPriority(riskLevel),
+        }
+      );
 
       res.json({
         success: true,
@@ -198,6 +253,16 @@ export const notificationController = {
 
       const successCount = results.filter((r) => r).length;
 
+      await insertNotifications(
+        users.map((user) => user.id),
+        {
+          type: 'heat-alert',
+          title: `Heat Alert: ${String(heatLevel).toUpperCase()}`,
+          message: `Current heat index is ${heatIndex}°C. Please follow the recommended safety measures.`,
+          priority: toPriority(heatLevel),
+        }
+      );
+
       res.json({
         success: true,
         message: `Heat alert broadcast to ${successCount} of ${users.length} users`,
@@ -212,6 +277,120 @@ export const notificationController = {
     } catch (error) {
       next(error);
       return;
+    }
+  },
+  /**
+   * Get notifications for a user
+   */
+  getNotifications: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = String(req.query.userId ?? '').trim();
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      if (!userId) {
+        res.status(400).json({ success: false, message: 'userId is required' });
+        return;
+      }
+
+      const supabase = getSupabaseAdminClient();
+      if (!supabase) {
+        res.status(200).json({ success: true, data: [] });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('id, user_id, type, title, message, status, priority, sent_at, read_at')
+        .eq('user_id', userId)
+        .order('sent_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        res.status(500).json({ success: false, message: 'Failed to fetch notifications', error: error.message });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: (data || []).map((row: any) => ({
+          id: row.id,
+          userId: row.user_id,
+          type: row.type,
+          title: row.title,
+          message: row.message,
+          status: row.status,
+          priority: row.priority,
+          sentAt: row.sent_at,
+          readAt: row.read_at ?? undefined,
+        })),
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+  /**
+   * Mark notification as read
+   */
+  markAsRead: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        res.status(400).json({ success: false, message: 'Notification id is required' });
+        return;
+      }
+
+      const supabase = getSupabaseAdminClient();
+      if (!supabase) {
+        res.status(200).json({ success: true });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('notifications')
+        .update({ status: 'read', read_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        res.status(500).json({ success: false, message: 'Failed to update notification', error: error.message });
+        return;
+      }
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  },
+  /**
+   * Clear notifications for a user
+   */
+  clearAll: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = String(req.query.userId ?? '').trim();
+      if (!userId) {
+        res.status(400).json({ success: false, message: 'userId is required' });
+        return;
+      }
+
+      const supabase = getSupabaseAdminClient();
+      if (!supabase) {
+        res.status(200).json({ success: true });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) {
+        res.status(500).json({ success: false, message: 'Failed to clear notifications', error: error.message });
+        return;
+      }
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      next(error);
     }
   },
 };

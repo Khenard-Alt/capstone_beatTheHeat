@@ -12,6 +12,8 @@ import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../utils/constants';
 import { FaHeartbeat, FaExclamationTriangle, FaCheckCircle, FaClock } from 'react-icons/fa';
 import { MdLocalHospital } from 'react-icons/md';
 import { fetchCurrentWeather } from '../services/weather.service';
+import { fetchRealtimeAdvisory } from '../services/healthAdvisory.service';
+import { mapRealtimeAdvisory } from '../utils/advisory';
 import '../styles/Dashboard.css';
 
 export const Dashboard: React.FC = () => {
@@ -38,6 +40,7 @@ export const Dashboard: React.FC = () => {
     humidity: number;
     heatIndex: number;
   }>>([]);
+  const [aiAdvisory, setAiAdvisory] = useState<HealthAdvisory | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -77,6 +80,29 @@ export const Dashboard: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAdvisory = async () => {
+      try {
+        const data = await fetchRealtimeAdvisory();
+        if (mounted) {
+          setAiAdvisory(mapRealtimeAdvisory(data));
+        }
+      } catch (error) {
+        console.error('Failed to load AI advisory:', error);
+      }
+    };
+
+    void loadAdvisory();
+    const intervalId = window.setInterval(loadAdvisory, 60 * 1000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   // Calculate heat index data
   const heatIndexData = useMemo<HeatIndexData>(() => {
     const heatIndex = calculateHeatIndex(currentWeather.temperature, currentWeather.humidity);
@@ -94,7 +120,7 @@ export const Dashboard: React.FC = () => {
   }, [currentWeather]);
 
   // Generate advisory
-  const advisory = useMemo<HealthAdvisory>(() => {
+  const localAdvisory = useMemo<HealthAdvisory>(() => {
     const level = heatIndexData.level;
     return {
       id: '1',
@@ -107,6 +133,8 @@ export const Dashboard: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
   }, [heatIndexData]);
+
+  const advisory = aiAdvisory ?? localAdvisory;
 
   // Use REAL weather data for charts (not mock data)
   const chartData = weatherHistory.length > 0 ? weatherHistory : [

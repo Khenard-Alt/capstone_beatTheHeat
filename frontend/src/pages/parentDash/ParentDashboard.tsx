@@ -7,11 +7,12 @@ import { Card } from '../../components/Card';
 import { fetchAnnouncements, Announcement } from '../../services/announcements.service';
 import { fetchIncidents } from '../../services/incidents.service';
 import { fetchCurrentWeather } from '../../services/weather.service';
-import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
+import { fetchRealtimeAdvisory, generateScopedAdvisory } from '../../services/healthAdvisory.service';
 import type { HeatIndexData, WeatherData, HealthAdvisory, StudentHealthIncident } from '../../types';
 import { calculateHeatIndex, getHeatLevel } from '../../utils/helpers';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
+import { mapRealtimeAdvisory } from '../../utils/advisory';
 import { MdClose, MdSend, MdChat, MdSearch } from 'react-icons/md';
 import '../../styles/ParentDashboard.css';
 
@@ -64,6 +65,7 @@ export const ParentDashboard: React.FC = () => {
   const [healthIncidents, setHealthIncidents] = useState<StudentHealthIncident[]>([]);
   const [incidentsLoading, setIncidentsLoading] = useState(true);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [aiAdvisory, setAiAdvisory] = useState<HealthAdvisory | null>(null);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -91,6 +93,29 @@ export const ParentDashboard: React.FC = () => {
     // Then poll every 1 minute
     const interval = setInterval(fetchWeather, 1 * 60 * 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAdvisory = async () => {
+      try {
+        const data = await fetchRealtimeAdvisory();
+        if (mounted) {
+          setAiAdvisory(mapRealtimeAdvisory(data));
+        }
+      } catch (error) {
+        console.error('Failed to load AI advisory:', error);
+      }
+    };
+
+    void loadAdvisory();
+    const interval = window.setInterval(loadAdvisory, 60 * 1000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -157,7 +182,7 @@ export const ParentDashboard: React.FC = () => {
     };
   }, [currentWeather]);
 
-  const advisory = useMemo<HealthAdvisory>(() => {
+  const localAdvisory = useMemo<HealthAdvisory>(() => {
     const level = heatIndexData.level;
     return {
       id: '1',
@@ -170,6 +195,8 @@ export const ParentDashboard: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
   }, [heatIndexData]);
+
+  const advisory = aiAdvisory ?? localAdvisory;
 
   useEffect(() => {
     const elevatedLevels = ['caution', 'extreme-caution', 'danger', 'extreme-danger'];

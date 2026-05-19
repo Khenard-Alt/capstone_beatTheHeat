@@ -7,10 +7,12 @@ import { Card } from '../../components/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchCurrentWeather } from '../../services/weather.service';
 import { apiClient } from '../../services/api';
+import { fetchRealtimeAdvisory } from '../../services/healthAdvisory.service';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import type { HeatIndexData, WeatherData, HealthAdvisory } from '../../types';
 import { calculateHeatIndex, getHeatLevel, getGreeting } from '../../utils/helpers';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
+import { mapRealtimeAdvisory } from '../../utils/advisory';
 import '../../styles/AdminDashboard.css';
 
 interface Trend {
@@ -36,6 +38,7 @@ export const PrincipalDashboard: React.FC = () => {
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [principalStats, setPrincipalStats] = useState<PrincipalStats | null>(null);
   const [incidentTrends, setIncidentTrends] = useState<IncidentTrend[]>([]);
+  const [aiAdvisory, setAiAdvisory] = useState<HealthAdvisory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +51,13 @@ export const PrincipalDashboard: React.FC = () => {
         const weatherData = await fetchCurrentWeather();
         if (weatherData) {
           setCurrentWeather(weatherData);
+        }
+
+        try {
+          const realtime = await fetchRealtimeAdvisory();
+          setAiAdvisory(mapRealtimeAdvisory(realtime));
+        } catch (err) {
+          console.warn('AI advisory unavailable:', err);
         }
 
         // Fetch principal stats
@@ -110,7 +120,7 @@ export const PrincipalDashboard: React.FC = () => {
     };
   }, [currentWeather]);
 
-  const advisory = useMemo<HealthAdvisory>(() => {
+  const localAdvisory = useMemo<HealthAdvisory>(() => {
     const level = heatIndexData.level;
     return {
       id: '1',
@@ -124,6 +134,8 @@ export const PrincipalDashboard: React.FC = () => {
       createdBy: 'System',
     };
   }, [heatIndexData]);
+
+  const advisory = aiAdvisory ?? localAdvisory;
 
   const systemStats = [
     { label: 'Active Advisories', value: principalStats?.activeAdvisories || '0', note: 'This period' },

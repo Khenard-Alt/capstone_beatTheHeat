@@ -12,6 +12,7 @@ interface ParentSectionPageProps {
   highlights: Array<{ label: string; value: string }>;
   sections: Array<{ title: string; body: string; bullets?: string[]; tone?: 'default' | 'alert' | 'success' }>;
   footerNote: string;
+  children?: React.ReactNode;
 }
 
 export const ParentSectionPage: React.FC<ParentSectionPageProps> = ({
@@ -22,6 +23,7 @@ export const ParentSectionPage: React.FC<ParentSectionPageProps> = ({
   highlights,
   sections,
   footerNote,
+  children,
 }) => {
   return (
     <div className="parent-portal-page">
@@ -63,6 +65,12 @@ export const ParentSectionPage: React.FC<ParentSectionPageProps> = ({
           </Card>
         ))}
       </div>
+
+      {children && (
+        <div className="parent-portal-extra">
+          {children}
+        </div>
+      )}
 
       <Card className="parent-portal-footer-card">
         <div className="parent-portal-footer">

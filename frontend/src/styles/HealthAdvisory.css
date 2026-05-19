@@ -60,6 +60,89 @@
 	color: #64748b;
 }
 
+.advisory-table-wrap {
+	overflow-x: auto;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+}
+
+.advisory-table {
+	width: 100%;
+	border-collapse: collapse;
+	min-width: 640px;
+}
+
+.advisory-table thead {
+	background: #f8fafc;
+}
+
+.advisory-table th,
+.advisory-table td {
+	text-align: left;
+	padding: 12px 14px;
+	border-bottom: 1px solid #e2e8f0;
+	font-size: 14px;
+	color: #0f172a;
+	vertical-align: top;
+}
+
+.advisory-table tbody tr:nth-child(even) {
+	background: #f9fbff;
+}
+
+.advisory-level {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	border: 1px solid transparent;
+}
+
+.advisory-level.badge-normal {
+	background: #ecfdf5;
+	color: #047857;
+	border-color: #a7f3d0;
+}
+
+.advisory-level.badge-caution {
+	background: #fffbeb;
+	color: #b45309;
+	border-color: #fde68a;
+}
+
+.advisory-level.badge-extreme-caution {
+	background: #fff7ed;
+	color: #c2410c;
+	border-color: #fed7aa;
+}
+
+.advisory-level.badge-danger,
+.advisory-level.badge-extreme-danger {
+	background: #fef2f2;
+	color: #b91c1c;
+	border-color: #fecaca;
+}
+
+.advisory-risk {
+	font-weight: 600;
+}
+
+.advisory-risk.risk-low {
+	color: #15803d;
+}
+
+.advisory-risk.risk-medium {
+	color: #b45309;
+}
+
+.advisory-risk.risk-high {
+	color: #b91c1c;
+}
+
 .ai-evidence-panel {
 	display: flex;
 	flex-direction: column;

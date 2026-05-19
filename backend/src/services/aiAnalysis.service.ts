@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { execFile } from 'child_process';
-import { access, mkdtemp, rm, writeFile } from 'fs/promises';
+import { access, mkdtemp, readFile, rm, writeFile } from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import { promisify } from 'util';
@@ -38,26 +38,31 @@ const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-2.0-fl
 const execFileAsync = promisify(execFile);
 
 class AIAnalysisService {
+	private knowledgeCache: { handbook: string | null; docs: Map<string, string> } | null = null;
+
 	public async generateScopedAdvisory(input: AdvisoryInput): Promise<AdvisoryResult> {
 		const rawQuery = typeof input.query === 'string' ? input.query : '';
 		const scopedQuery = this.scopeUserQuery(rawQuery);
 		const languageStyle = this.detectLanguageStyle(rawQuery || scopedQuery);
 		const intent = this.detectConversationIntent(rawQuery);
+		const variationSeed = this.getVariationSeed();
 
 		if (this.classifyScope(rawQuery) === 'out-of-scope') {
 			const refusal = this.buildScopeRefusalAdvisory(input.weather, languageStyle);
-			await this.logAdvisoryAudit(input, scopedQuery, refusal, 'fallback', 'scope-guard');
-			return refusal;
+			const variedRefusal = this.applyVariation(refusal, variationSeed, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, variedRefusal, 'fallback', 'scope-guard');
+			return variedRefusal;
 		}
 
 		const scenarioTemplate = this.buildScenarioTemplateAdvisory(intent, input.weather, languageStyle);
 		if (scenarioTemplate) {
-			await this.logAdvisoryAudit(input, scopedQuery, scenarioTemplate, 'fallback', 'intent-template');
-			return scenarioTemplate;
+			const variedTemplate = this.applyVariation(scenarioTemplate, variationSeed, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, variedTemplate, 'fallback', 'intent-template');
+			return variedTemplate;
 		}
 
 		if (env.aiModelProvider === 'python') {
-			const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle);
+			const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle, variationSeed);
 			if (pythonResult) {
 				return pythonResult;
 			}
@@ -66,24 +71,27 @@ class AIAnalysisService {
 		if (env.aiModelProvider === 'fallback') {
 			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
 			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
-			await this.logAdvisoryAudit(input, scopedQuery, adjustedFallback, 'fallback', 'fallback-only');
-			return adjustedFallback;
+			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', 'fallback-only');
+			return variedFallback;
 		}
 
 		if (!hasGeminiApiKey()) {
 			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
 			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
-			await this.logAdvisoryAudit(input, scopedQuery, adjustedFallback, 'fallback', GEMINI_MODELS[0]);
-			return adjustedFallback;
+			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', GEMINI_MODELS[0]);
+			return variedFallback;
 		}
 
 		try {
-			const systemPrompt = this.systemPrompt();
+			const knowledgeContext = await this.buildKnowledgeContext(scopedQuery);
+			const systemPrompt = this.systemPrompt(knowledgeContext);
 			const userPrompt = JSON.stringify({
 				query: scopedQuery,
 				languageStyle,
 				weather: input.weather,
-				timestamp: new Date().toISOString(),
+				variationHint: this.buildVariationHint(variationSeed, languageStyle),
 			});
 
 			const requestBody = {
@@ -112,11 +120,12 @@ class AIAnalysisService {
 			const parsed = this.parseAdvisory(content, input.weather, languageStyle);
 			const result = this.enforceOutputScope(parsed, input.weather.heatLevel, languageStyle);
 			const adjustedResult = this.applyQueryPolicy(result, input, scopedQuery, languageStyle);
+			const variedResult = this.applyVariation(adjustedResult, variationSeed, languageStyle);
 
 			await this.logAdvisoryAudit(
 				input,
 				scopedQuery,
-				adjustedResult,
+				variedResult,
 				'gemini',
 				modelUsed,
 				data.usageMetadata?.promptTokenCount,
@@ -124,13 +133,14 @@ class AIAnalysisService {
 				data.usageMetadata?.totalTokenCount
 			);
 
-			return adjustedResult;
+			return variedResult;
 		} catch (error) {
 			console.error('AI advisory generation failed, using fallback:', error);
 			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
 			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
-			await this.logAdvisoryAudit(input, scopedQuery, adjustedFallback, 'fallback', GEMINI_MODELS[0]);
-			return adjustedFallback;
+			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', GEMINI_MODELS[0]);
+			return variedFallback;
 		}
 	}
 
@@ -138,22 +148,25 @@ class AIAnalysisService {
 		const rawQuery = typeof input.query === 'string' ? input.query : '';
 		const scopedQuery = this.scopeUserQuery(rawQuery);
 		const languageStyle = this.detectLanguageStyle(rawQuery || scopedQuery);
+		const variationSeed = this.getVariationSeed();
 
 		if (this.classifyScope(rawQuery) === 'out-of-scope') {
 			const refusal = this.buildScopeRefusalAdvisory(input.weather, languageStyle);
-			await this.logAdvisoryAudit(input, scopedQuery, refusal, 'fallback', 'scope-guard');
-			return refusal;
+			const variedRefusal = this.applyVariation(refusal, variationSeed, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, variedRefusal, 'fallback', 'scope-guard');
+			return variedRefusal;
 		}
 
-		const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle);
+		const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle, variationSeed);
 		if (pythonResult) {
 			return pythonResult;
 		}
 
 		const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
 		const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
-		await this.logAdvisoryAudit(input, scopedQuery, adjustedFallback, 'fallback', 'python-fallback');
-		return adjustedFallback;
+		const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
+		await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', 'python-fallback');
+		return variedFallback;
 	}
 
 	private async requestGeminiContent(
@@ -232,7 +245,8 @@ class AIAnalysisService {
 	private async generatePythonAdvisory(
 		input: AdvisoryInput,
 		scopedQuery: string,
-		languageStyle: LanguageStyle
+		languageStyle: LanguageStyle,
+		variationSeed: number
 	): Promise<AdvisoryResult | null> {
 		const resolved = await this.resolvePythonModelPaths();
 		if (!resolved) {
@@ -274,9 +288,10 @@ class AIAnalysisService {
 			const parsed = this.parseAdvisory(String(stdout).trim(), input.weather, languageStyle);
 			const result = this.enforceOutputScope(parsed, input.weather.heatLevel, languageStyle);
 			const adjustedResult = this.applyQueryPolicy(result, input, scopedQuery, languageStyle);
+			const variedResult = this.applyVariation(adjustedResult, variationSeed, languageStyle);
 
-			await this.logAdvisoryAudit(input, scopedQuery, adjustedResult, 'python', 'local-sklearn');
-			return adjustedResult;
+			await this.logAdvisoryAudit(input, scopedQuery, variedResult, 'python', 'local-sklearn');
+			return variedResult;
 		} catch (error) {
 			console.error('Python advisory generation failed:', error);
 			return null;
@@ -334,14 +349,15 @@ class AIAnalysisService {
 		}
 	}
 
-	private systemPrompt(): string {
+	private systemPrompt(knowledgeContext: string): string {
 		const policyKnowledge = this.buildPolicyKnowledgeBlock();
 
 		return [
 			'You are a school heat safety advisory assistant for Beat The Heat.',
-			'You can ONLY answer using provided weather and heat-index data.',
-			'DO NOT use outside knowledge, web facts, diagnosis, or unrelated medical advice.',
-			'If query is outside scope, respond with a scope reminder and safe redirection.',
+			'Prioritize the provided weather and heat-index data when giving heat safety guidance.',
+			'Avoid medical diagnosis, legal advice, or unsafe instructions.',
+			'If a question is not about heat safety, respond in a friendly, supportive tone and gently steer back to heat and school safety topics.',
+			'Keep responses human, brief, and supportive. You may acknowledge feelings and ask a clarifying question before giving guidance.',
 			'Return strict JSON object with keys: summary, riskLevel, actions, safetyTips, scopeNote, confidenceScore, decisionBasis, modelProfile.',
 			'decisionBasis must include: heatIndexC, temperatureC, humidityPercent, heatLevel, dataSource, rationale.',
 			'modelProfile must include: mode and scope.',
@@ -350,9 +366,150 @@ class AIAnalysisService {
 			'If user asks about class suspension, answer directly with current heat-level implication and remind that final suspension decision is by school leadership and local DepEd authority.',
 			'Always follow the language style of the user query: English to English, Tagalog to Tagalog, mixed Taglish to Taglish.',
 			'Answer any question that is within heat safety, school advisories, weather impact, class activity safety, or parent/student precaution scope.',
+			'If a variationHint is provided, use it to vary phrasing subtly without mentioning it.',
 			`PROJECT POLICY KNOWLEDGE: ${policyKnowledge}`,
+			knowledgeContext ? `KNOWLEDGE BASE: ${knowledgeContext}` : '',
 			'Keep tone practical for school administrators, teachers, and parents.',
 		].join(' ');
+	}
+
+	private getVariationSeed(): number {
+		return Math.floor(Date.now() / 60000) % 3;
+	}
+
+	private buildVariationHint(seed: number, languageStyle: LanguageStyle): string {
+		const styles = languageStyle === 'tagalog'
+			? ['Maikli at diretso.', 'Praktikal at mahinahon.', 'May kaunting urgency pero calm.']
+			: languageStyle === 'taglish'
+				? ['Short and direct.', 'Practical and calm.', 'Slightly urgent but calm.']
+				: ['Short and direct.', 'Practical and calm.', 'Slightly urgent but calm.'];
+
+		return styles[Math.abs(seed) % styles.length];
+	}
+
+	private applyVariation(result: AdvisoryResult, seed: number, languageStyle: LanguageStyle): AdvisoryResult {
+		const suffix = this.getVariationSuffix(seed, languageStyle);
+		const summary = suffix && !result.summary.includes(suffix)
+			? `${result.summary} ${suffix}`.trim()
+			: result.summary;
+
+		return {
+			...result,
+			summary,
+			actions: this.rotateList(result.actions, seed),
+			safetyTips: this.rotateList(result.safetyTips, seed),
+		};
+	}
+
+	private rotateList(list: string[], seed: number): string[] {
+		if (list.length <= 1) {
+			return list;
+		}
+
+		const offset = Math.abs(seed) % list.length;
+		return [...list.slice(offset), ...list.slice(0, offset)];
+	}
+
+	private getVariationSuffix(seed: number, languageStyle: LanguageStyle): string {
+		const suffixes = languageStyle === 'tagalog'
+			? ['Bantayan ang hydration ngayon.', 'Mag-abang ng school updates.', 'Iwasan ang peak heat exposure.']
+			: languageStyle === 'taglish'
+				? ['Keep hydration in mind today.', 'Stand by for school updates.', 'Avoid peak heat exposure.']
+				: ['Keep hydration in mind today.', 'Stand by for school updates.', 'Avoid peak heat exposure.'];
+
+		return suffixes[Math.abs(seed) % suffixes.length];
+	}
+
+	private async buildKnowledgeContext(query: string): Promise<string> {
+		const { handbook, docs } = await this.getKnowledgeCache();
+		const relevant = this.extractRelevantNotes(query, docs);
+		const blocks = [];
+		if (handbook) {
+			blocks.push(`Handbook: ${handbook}`);
+		}
+		if (relevant) {
+			blocks.push(`Relevant notes: ${relevant}`);
+		}
+		return blocks.join(' ');
+	}
+
+	private async getKnowledgeCache(): Promise<{ handbook: string | null; docs: Map<string, string> }> {
+		if (this.knowledgeCache) {
+			return this.knowledgeCache;
+		}
+
+		const docs = new Map<string, string>();
+		const handbookPath = path.resolve(process.cwd(), 'docs', 'text', 'AI_ASSISTANT_HANDBOOK.md');
+		const handbook = await this.readTextFileSafe(handbookPath);
+		const docPaths = [
+			path.resolve(process.cwd(), 'docs', 'text', 'PROJECT_SCOPE.md'),
+			path.resolve(process.cwd(), 'docs', 'text', 'PRINCIPAL_SPEC.md'),
+			path.resolve(process.cwd(), 'docs', 'text', 'DEVELOPMENT_GUIDE.md'),
+			path.resolve(process.cwd(), 'docs', 'text', 'CAPSTONE_DOCUMENTATION.md'),
+		];
+
+		for (const docPath of docPaths) {
+			const content = await this.readTextFileSafe(docPath);
+			if (content) {
+				docs.set(path.basename(docPath), content);
+			}
+		}
+
+		this.knowledgeCache = { handbook, docs };
+		return this.knowledgeCache;
+	}
+
+	private async readTextFileSafe(filePath: string): Promise<string | null> {
+		try {
+			const content = await readFile(filePath, 'utf-8');
+			const normalized = content.replace(/\r\n/g, '\n').trim();
+			return normalized.slice(0, 6000);
+		} catch {
+			return null;
+		}
+	}
+
+	private extractRelevantNotes(query: string, docs: Map<string, string>): string {
+		const tokens = query
+			.toLowerCase()
+			.split(/[^a-z0-9]+/)
+			.filter((token) => token.length >= 3);
+
+		if (tokens.length === 0 || docs.size === 0) {
+			return '';
+		}
+
+		type ScoredSnippet = { source: string; text: string; score: number };
+		const snippets: ScoredSnippet[] = [];
+
+		for (const [source, content] of docs.entries()) {
+			const paragraphs = content.split(/\n\s*\n/).map((paragraph) => paragraph.trim());
+			for (const paragraph of paragraphs) {
+				if (!paragraph) continue;
+				const normalized = paragraph.toLowerCase();
+				let score = 0;
+				for (const token of tokens) {
+					if (normalized.includes(token)) {
+						score += 1;
+					}
+				}
+				if (score > 0) {
+					snippets.push({
+						source,
+						text: paragraph.replace(/\s+/g, ' ').slice(0, 280),
+						score,
+					});
+				}
+			}
+		}
+
+		const topSnippets = snippets
+			.sort((a, b) => b.score - a.score)
+			.slice(0, 3)
+			.map((snippet) => `${snippet.source}: ${snippet.text}`)
+			.join(' | ');
+
+		return topSnippets;
 	}
 
 	private classifyScope(query: string): 'in-scope' | 'out-of-scope' {
@@ -394,6 +551,16 @@ class AIAnalysisService {
 			'nahihilo',
 			'hilo',
 			'tubig',
+			'ano gagawin',
+			'gagawin ko',
+			'help',
+			'tulong',
+			'natatakot',
+			'takot',
+			'kabado',
+			'panic',
+			'hindi ko alam',
+			'ano dapat',
 		];
 
 		if (inScopeSignals.some((token) => lowered.includes(token))) {
@@ -426,10 +593,10 @@ class AIAnalysisService {
 		];
 
 		if (outOfScopeSignals.some((token) => lowered.includes(token))) {
-			return 'out-of-scope';
+			return 'in-scope';
 		}
 
-		return 'out-of-scope';
+		return 'in-scope';
 	}
 
 	private buildPolicyKnowledgeBlock(): string {
@@ -738,36 +905,36 @@ class AIAnalysisService {
 	} {
 		if (languageStyle === 'tagalog') {
 			return {
-				summary: 'Pasensya na, hindi sakop ng assistant na ito ang tanong na iyan. Nakatuon lang ito sa heat index, weather impact, at school health advisories.',
+				summary: 'Naiintindihan ko. Para makatulong, pwede mo bang i-share kung tungkol ito sa init sa school o safety ng bata?',
 				actions: [
-					'Maaari kang magtanong tungkol sa heat index level ngayon at kaukulang school safety actions.',
-					'Maaari rin akong tumulong sa parent precautions para sa init (hydration, outdoor activity limits, warning signs).',
+					'Pwede kang magtanong tungkol sa kasalukuyang heat index at anong dapat gawin ng school at parents.',
+					'Kung may nararamdaman ang bata (hilo, pagsusuka), sabihin mo para makapagbigay ako ng guidance.',
 				],
 				safetyTips: [
-					'Itanong ang kasalukuyang heat condition para sa mas eksaktong advisory.',
+					'Itanong ang current heat condition para sa mas eksaktong advisory.',
 					'Sundin ang official school at DepEd announcements para sa class schedule decisions.',
 				],
-				scopeNote: 'Strict scope mode: heat, weather, advisories, at parent/student precautions lang ang sakop.',
+				scopeNote: 'Scope: heat, weather, advisories, at parent/student precautions lamang.',
 			};
 		}
 
 		if (languageStyle === 'taglish') {
 			return {
-				summary: 'Sorry, outside scope yung question na yan. This assistant is focused only on heat index, weather impact, and school health advisories.',
+				summary: 'Gets. Para makatulong, can you share if this is about heat or school safety?',
 				actions: [
-					'You can ask about current heat level and recommended school safety actions.',
+					'Ask about current heat level and recommended school safety actions.',
 					'You can also ask parent precautions during hot weather (hydration, outdoor limits, warning signs).',
 				],
 				safetyTips: [
 					'Ask for current heat condition para mas accurate ang advisory.',
 					'Follow official school and DepEd announcements for schedule decisions.',
 				],
-				scopeNote: 'Strict scope mode: heat, weather, advisories, and parent/student precautions only.',
+				scopeNote: 'Scope: heat, weather, advisories, and parent/student precautions only.',
 			};
 		}
 
 		return {
-			summary: 'Sorry, that question is outside this assistant\'s scope. I can only handle heat index, weather impact, and school health advisory concerns.',
+			summary: 'I hear you. Can you tell me if this is about heat, weather, or school safety so I can help?',
 			actions: [
 				'Ask about current heat level and recommended safety actions for students and parents.',
 				'Ask about class activity adjustments, hydration, and warning signs of heat stress.',
@@ -776,7 +943,7 @@ class AIAnalysisService {
 				'Use current heat conditions to get a focused advisory response.',
 				'Follow official school and DepEd communication channels for class schedule decisions.',
 			],
-			scopeNote: 'Strict scope mode: heat, weather, advisories, and parent/student precautions only.',
+			scopeNote: 'Scope: heat, weather, advisories, and parent/student precautions only.',
 		};
 	}
 

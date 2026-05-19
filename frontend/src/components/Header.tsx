@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MdNotifications, MdAccountCircle, MdClose, MdCheckCircle, MdWarning, MdInfo } from 'react-icons/md';
+import { MdAccountCircle, MdNotifications, MdClose, MdCheckCircle, MdWarning, MdInfo } from 'react-icons/md';
+import { useNotification } from '../hooks/useNotification';
+import { getTimeAgo } from '../utils/helpers';
 import '../styles/Header.css';
-
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  type: 'info' | 'warning' | 'danger';
-  time: string;
-  read: boolean;
-}
 
 interface HeaderProps {
   user?: {
@@ -21,69 +14,29 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ user }) => {
+  const { notifications, markAsRead, clearAll } = useNotification();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      title: 'High Heat Index Alert',
-      message: 'Heat index reached 35°C at Main Building. Exercise caution.',
-      type: 'warning',
-      time: '5 minutes ago',
-      read: false
-    },
-    {
-      id: 2,
-      title: 'System Update',
-      message: 'New AI prediction model has been deployed successfully.',
-      type: 'info',
-      time: '1 hour ago',
-      read: false
-    },
-    {
-      id: 3,
-      title: 'Health Advisory',
-      message: 'Students advised to stay hydrated. Water stations checked.',
-      type: 'danger',
-      time: '2 hours ago',
-      read: true
-    },
-    {
-      id: 4,
-      title: 'Weather Update',
-      message: 'Temperature expected to rise in the afternoon. Monitor closely.',
-      type: 'info',
-      time: '3 hours ago',
-      read: true
-    }
-  ]);
 
   const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
-  };
-
-  const markAsRead = (id: number) => {
-    setNotifications(notifications.map(notif => 
-      notif.id === id ? { ...notif, read: true } : notif
-    ));
+    setShowNotifications((prev) => !prev);
   };
 
   const markAllAsRead = () => {
-    setNotifications(notifications.map(notif => ({ ...notif, read: true })));
+    notifications
+      .filter((notif) => notif.status === 'unread')
+      .forEach((notif) => markAsRead(notif.id));
   };
 
-  const deleteNotification = (id: number) => {
-    setNotifications(notifications.filter(notif => notif.id !== id));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((notif) => notif.status === 'unread').length;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'warning':
+      case 'heat-alert':
         return <MdWarning className="notif-icon warning" />;
-      case 'danger':
+      case 'advisory':
         return <MdWarning className="notif-icon danger" />;
-      case 'info':
+      case 'system':
+        return <MdInfo className="notif-icon info" />;
       default:
         return <MdInfo className="notif-icon info" />;
     }
@@ -132,8 +85,13 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                             <MdCheckCircle /> Mark all as read
                           </button>
                         )}
-                        <button 
-                          className="close-notif-btn" 
+                        {notifications.length > 0 && (
+                          <button className="mark-all-read" onClick={clearAll}>
+                            <MdClose /> Clear all
+                          </button>
+                        )}
+                        <button
+                          className="close-notif-btn"
                           onClick={toggleNotifications}
                           title="Close notifications"
                           aria-label="Close notifications"
@@ -154,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                         notifications.map((notif) => (
                           <div
                             key={notif.id}
-                            className={`notification-item ${!notif.read ? 'unread' : ''}`}
+                            className={`notification-item ${notif.status === 'unread' ? 'unread' : ''}`}
                             onClick={() => markAsRead(notif.id)}
                           >
                             <div className="notification-item-icon">
@@ -163,22 +121,11 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                             <div className="notification-item-content">
                               <div className="notification-item-header">
                                 <h4>{notif.title}</h4>
-                                {!notif.read && <span className="unread-dot"></span>}
+                                {notif.status === 'unread' && <span className="unread-dot"></span>}
                               </div>
                               <p>{notif.message}</p>
-                              <span className="notification-time">{notif.time}</span>
+                              <span className="notification-time">{getTimeAgo(notif.sentAt)}</span>
                             </div>
-                            <button
-                              className="delete-notif-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteNotification(notif.id);
-                              }}
-                              title="Delete notification"
-                              aria-label="Delete notification"
-                            >
-                              <MdClose />
-                            </button>
                           </div>
                         ))
                       )}
