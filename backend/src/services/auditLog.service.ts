@@ -17,7 +17,7 @@ interface AILogInput {
   tokenOutput?: number;
   tokenTotal?: number;
   estimatedCostUsd?: number;
-  source: 'gemini' | 'fallback';
+  source: 'gemini' | 'fallback' | 'python';
 }
 
 class AuditLogService {

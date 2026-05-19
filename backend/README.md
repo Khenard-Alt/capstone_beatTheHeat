@@ -47,7 +47,7 @@ Backfill last 3 days:
 curl -X POST "https://your-domain/api/weather/scheduled/backfill" \
 	-H "x-scheduler-token: YOUR_TOKEN" \
 	-H "Content-Type: application/json" \
-	-d '{"days":3}'
+	-d '{"days":3,"intervalHours":3}'
 ```
 
 Backfill last 7 days:
@@ -56,9 +56,19 @@ Backfill last 7 days:
 curl -X POST "https://your-domain/api/weather/scheduled/backfill" \
 	-H "x-scheduler-token: YOUR_TOKEN" \
 	-H "Content-Type: application/json" \
-	-d '{"days":7}'
+	-d '{"days":7,"intervalHours":3}'
+```
+
+More frequent points (hourly) for the last 3 days:
+
+```bash
+curl -X POST "https://your-domain/api/weather/scheduled/backfill" \
+	-H "x-scheduler-token: YOUR_TOKEN" \
+	-H "Content-Type: application/json" \
+	-d '{"days":3,"intervalHours":1}'
 ```
 
 Notes:
 - Historical backfill depends on OpenWeather account access to `onecall/timemachine`.
 - If access is not enabled, the endpoint returns failures and no fake historical data is inserted.
+- `intervalHours` controls the sampling stride across hourly historical points (1 = every hour, 3 = every 3 hours).
