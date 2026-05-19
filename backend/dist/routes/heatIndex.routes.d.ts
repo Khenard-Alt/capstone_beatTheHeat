@@ -1,0 +1,1 @@
+//# sourceMappingURL=heatIndex.routes.d.ts.map

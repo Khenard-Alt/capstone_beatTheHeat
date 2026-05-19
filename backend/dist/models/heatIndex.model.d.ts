@@ -1,0 +1,1 @@
+//# sourceMappingURL=heatIndex.model.d.ts.map
