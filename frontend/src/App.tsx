@@ -23,6 +23,9 @@ import { ParentAnnouncements } from './pages/parentDash/ParentAnnouncements';
 import { ParentAdvisory } from './pages/parentDash/ParentAdvisory';
 import { ParentChatbot } from './pages/parentDash/ParentChatbot';
 import { ParentProfileSettings } from './pages/parentDash/ParentProfileSettings';
+import { PrincipalDashboard } from './pages/principalDash/PrincipalDashboard';
+import { HeadTeacherDashboard } from './pages/headTeacherDash/HeadTeacherDashboard';
+import { TeacherDashboard } from './pages/teacherDash/TeacherDashboard';
 import './App.css';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -75,6 +78,60 @@ const ParentRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+const PrincipalRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'principal') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const HeadTeacherRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'head-teacher') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const TeacherRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'teacher') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const HomeRoute: React.FC = () => {
   const { user, isLoading } = useAuth();
 
@@ -86,6 +143,18 @@ const HomeRoute: React.FC = () => {
     return <Navigate to="/admin" replace />;
   }
 
+  if (user?.role === 'principal') {
+    return <Navigate to="/principal/dashboard" replace />;
+  }
+
+  if (user?.role === 'head-teacher') {
+    return <Navigate to="/head-teacher/dashboard" replace />;
+  }
+
+  if (user?.role === 'teacher') {
+    return <Navigate to="/teacher/dashboard" replace />;
+  }
+
   if (user?.role === 'parent') {
     return <Navigate to="/parent/dashboard" replace />;
   }
@@ -93,7 +162,7 @@ const HomeRoute: React.FC = () => {
   return <Dashboard />;
 };
 
-const LandingRoute: React.FC = () => {
+  const LandingRoute: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -105,6 +174,18 @@ const LandingRoute: React.FC = () => {
       return <Navigate to="/admin" replace />;
     }
 
+    if (user?.role === 'principal') {
+      return <Navigate to="/principal/dashboard" replace />;
+    }
+
+    if (user?.role === 'head-teacher') {
+      return <Navigate to="/head-teacher/dashboard" replace />;
+    }
+
+    if (user?.role === 'teacher') {
+      return <Navigate to="/teacher/dashboard" replace />;
+    }
+
     if (user?.role === 'parent') {
       return <Navigate to="/parent/dashboard" replace />;
     }
@@ -114,7 +195,7 @@ const LandingRoute: React.FC = () => {
 
   return (
     <PublicLayout>
-      <ParentDashboard />
+      <Login />
     </PublicLayout>
   );
 };
@@ -159,6 +240,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Navigate to="/login" replace />} />
 
       <Route path="/" element={<LandingRoute />} />
 
@@ -247,6 +329,39 @@ const AppRoutes: React.FC = () => {
               <AdminDashboard />
             </AppLayout>
           </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/principal/dashboard"
+        element={
+          <PrincipalRoute>
+            <AppLayout>
+              <PrincipalDashboard />
+            </AppLayout>
+          </PrincipalRoute>
+        }
+      />
+
+      <Route
+        path="/head-teacher/dashboard"
+        element={
+          <HeadTeacherRoute>
+            <AppLayout>
+              <HeadTeacherDashboard />
+            </AppLayout>
+          </HeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/dashboard"
+        element={
+          <TeacherRoute>
+            <AppLayout>
+              <TeacherDashboard />
+            </AppLayout>
+          </TeacherRoute>
         }
       />
 

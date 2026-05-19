@@ -37,6 +37,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     { path: '/parent/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['parent'], badge: null },
   ];
 
+  const principalMenuItems = [
+    { path: '/principal/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['principal'], badge: null },
+    { path: '/principal/reports', icon: <MdCampaign />, label: 'Overall Reports', roles: ['principal'], badge: null },
+    { path: '/principal/incident-trends', icon: <MdHealthAndSafety />, label: 'Incident Trends', roles: ['principal'], badge: null },
+    { path: '/principal/advisories', icon: <MdAutoAwesome />, label: 'Heat Data & Advisories', roles: ['principal'], badge: null },
+    { path: '/principal/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['principal'], badge: null },
+    { path: '/principal/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['principal'], badge: null },
+  ];
+
+  const headTeacherMenuItems = [
+    { path: '/head-teacher/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['head-teacher'], badge: null },
+    { path: '/head-teacher/incident-review', icon: <MdHealthAndSafety />, label: 'Incident Review', roles: ['head-teacher'], badge: 3 },
+    { path: '/head-teacher/incident-reports', icon: <MdCampaign />, label: 'Incident Reports', roles: ['head-teacher'], badge: null },
+    { path: '/head-teacher/advisories', icon: <MdAutoAwesome />, label: 'Heat Data & Advisories', roles: ['head-teacher'], badge: null },
+    { path: '/head-teacher/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['head-teacher'], badge: null },
+    { path: '/head-teacher/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['head-teacher'], badge: null },
+  ];
+
+  const teacherMenuItems = [
+    { path: '/teacher/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['teacher'], badge: null },
+    { path: '/teacher/conduct-form', icon: <MdForum />, label: 'Conduct Form', roles: ['teacher'], badge: null },
+    { path: '/teacher/incident-reports', icon: <MdCampaign />, label: 'Incident Reports', roles: ['teacher'], badge: null },
+    { path: '/teacher/advisories', icon: <MdAutoAwesome />, label: 'Heat Data & Advisories', roles: ['teacher'], badge: null },
+    { path: '/teacher/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['teacher'], badge: null },
+    { path: '/teacher/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['teacher'], badge: null },
+  ];
+
   const defaultMenuItems = [
     { path: '/admin', icon: <MdDashboard />, label: 'Admin Dashboard', roles: ['admin'], badge: null },
     { path: '/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['teacher', 'staff'], badge: null },
@@ -48,7 +75,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     { path: '/settings', icon: <MdSettings />, label: 'Settings', roles: ['admin', 'teacher', 'staff'], badge: null },
   ];
 
-  const menuItems = userRole === 'parent' ? parentMenuItems : defaultMenuItems;
+  const getMenuItems = () => {
+    if (userRole === 'parent') {
+      return parentMenuItems;
+    } else if (userRole === 'principal') {
+      return principalMenuItems;
+    } else if (userRole === 'head-teacher') {
+      return headTeacherMenuItems;
+    } else if (userRole === 'teacher') {
+      return teacherMenuItems;
+    }
+    return defaultMenuItems;
+  };
+
+  const menuItems = getMenuItems();
 
   const filteredItems = menuItems.filter((item) =>
     userRole ? item.roles.includes(userRole) : true

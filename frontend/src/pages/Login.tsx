@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { apiClient } from '../services/api';
+import { Input } from '../components/Input';
+import { Button } from '../components/Button';
 import { isValidEmail } from '../utils/validators';
-import { MdEmail, MdLock, MdClose, MdSend } from 'react-icons/md';
+import { STORAGE_KEYS } from '../utils/constants';
+import { MdEmail, MdLock, MdClose, MdSend, MdAdminPanelSettings } from 'react-icons/md';
 import { generateScopedAdvisory } from '../services/healthAdvisory.service';
 import '../styles/Login.css';
+import RegisterModal from './Register';
+
+const ADMIN_AUTH_STORAGE_KEY = 'school_management_admin_unlocked';
 
 interface ChatMessage {
   id: number;
@@ -26,6 +33,13 @@ export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [showAdminAuth, setShowAdminAuth] = useState(false);
+  const [adminAuthEmail, setAdminAuthEmail] = useState('admin@beattheheat.local');
+  const [adminAuthSecret, setAdminAuthSecret] = useState('');
+  const [adminAuthError, setAdminAuthError] = useState('');
+  const [adminAuthSuccess, setAdminAuthSuccess] = useState('');
+  const [isAuthenticatingAdmin, setIsAuthenticatingAdmin] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -41,16 +55,38 @@ export const Login: React.FC = () => {
   ]);
   const [userInput, setUserInput] = useState('');
 
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'a') {
+        event.preventDefault();
+        setShowAdminAuth(true);
+        setAdminAuthError('');
+        setAdminAuthSuccess('');
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+
+    return () => {
+      window.removeEventListener('keydown', handleShortcut);
+    };
+  }, []);
+
   const getLandingPath = (role: string): string => {
-    if (role === 'parent') {
-      return '/parent/dashboard';
+    switch (role) {
+      case 'parent':
+        return '/parent/dashboard';
+      case 'principal':
+        return '/principal/dashboard';
+      case 'head-teacher':
+        return '/head-teacher/dashboard';
+      case 'teacher':
+        return '/teacher/dashboard';
+      case 'admin':
+        return '/admin';
+      default:
+        return '/dashboard';
     }
-
-    if (role === 'admin') {
-      return '/admin';
-    }
-
-    return '/dashboard';
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,8 +244,102 @@ export const Login: React.FC = () => {
     setIsChatOpen(!isChatOpen);
   };
 
+  const handleAdminAuth = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setAdminAuthError('');
+    setAdminAuthSuccess('');
+    setIsAuthenticatingAdmin(true);
+
+    try {
+      const response = await apiClient.post('/api/users/admin-auth', {
+        email: adminAuthEmail,
+        secret: adminAuthSecret,
+      });
+
+      if (!response.data?.success) {
+        throw new Error('Admin authentication failed.');
+      }
+
+      localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, 'true');
+      
+      const adminUser = {
+        id: 'admin-auth-session',
+        email: adminAuthEmail,
+        firstName: 'Admin',
+        lastName: 'Panel',
+        role: 'admin' as const,
+        schoolId: 'school-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(adminUser));
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'admin-auth-token');
+      
+      setAdminAuthSecret('');
+      setAdminAuthSuccess('Admin authenticated. Redirecting to admin panel...');
+      
+      setTimeout(() => {
+        navigate('/schools');
+      }, 800);
+    } catch (authError) {
+      setAdminAuthError(authError instanceof Error ? authError.message : 'Admin authentication failed.');
+    } finally {
+      setIsAuthenticatingAdmin(false);
+    }
+  };
+
   return (
     <div className="login-page">
+      {showAdminAuth && (
+        <div className="admin-auth-overlay" role="dialog" aria-modal="true">
+          <form className="admin-auth-modal" onSubmit={handleAdminAuth}>
+            <div className="admin-auth-modal-header">
+              <div>
+                <div className="admin-auth-eyebrow">Login Shortcut</div>
+                <h2>Admin Authentication</h2>
+              </div>
+              <button
+                type="button"
+                className="admin-auth-close"
+                onClick={() => setShowAdminAuth(false)}
+                aria-label="Close admin auth"
+              >
+                <MdClose />
+              </button>
+            </div>
+
+            <p className="admin-auth-copy">This modal appears only on Login. Use Ctrl + Shift + A to open admin authentication.</p>
+
+            {adminAuthError && <div className="admin-inline-alert error">{adminAuthError}</div>}
+            {adminAuthSuccess && <div className="admin-inline-alert success">{adminAuthSuccess}</div>}
+
+            <Input
+              label="Admin Email"
+              value={adminAuthEmail}
+              onChange={(event) => setAdminAuthEmail(event.target.value)}
+              placeholder="admin@example.com"
+            />
+            <Input
+              label="Admin Secret"
+              type="password"
+              value={adminAuthSecret}
+              onChange={(event) => setAdminAuthSecret(event.target.value)}
+              placeholder="Enter admin auth secret"
+            />
+
+            <div className="admin-auth-actions">
+              <Button variant="secondary" type="button" onClick={() => setShowAdminAuth(false)}>
+                Close
+              </Button>
+              <Button variant="primary" type="submit" loading={isAuthenticatingAdmin} icon={<MdAdminPanelSettings />}>
+                Verify Admin Auth
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="login-split-container">
         {/* Left Side - Branding */}
         <div className="login-brand-section">
@@ -337,25 +467,14 @@ export const Login: React.FC = () => {
               </button>
             </form>
 
-            <div className="login-demo-credentials">
-              <div className="demo-header">
-                <span className="demo-icon"></span>
-                <strong>Demo Credentials:</strong>
-              </div>
-              <div className="demo-info">
-                <p><strong>Email:</strong> admin@mayamot.edu.ph</p>
-                <p><strong>Password:</strong> Admin123</p>
-              </div>
-            </div>
-
-            <div className="login-public-access">
-              <p className="public-access-label">No login needed for parents:</p>
-              <Link to="/" className="public-access-btn">
-                View Parent Dashboard
-              </Link>
+            <div className="login-signup">
+              <p className="signup-prompt">Don't have an account?</p>
+              <button className="signup-btn btn btn-secondary" onClick={() => setIsRegisterOpen(true)}>Create an account</button>
             </div>
           </div>
         </div>
+
+        <RegisterModal open={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} />
       </div>
 
       {/* AI Chatbot */}

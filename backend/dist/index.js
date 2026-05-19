@@ -13,11 +13,13 @@ const weather_routes_1 = __importDefault(require("./routes/weather.routes"));
 const healthAdvisory_routes_1 = __importDefault(require("./routes/healthAdvisory.routes"));
 const heatIndex_routes_1 = __importDefault(require("./routes/heatIndex.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const principal_routes_1 = __importDefault(require("./routes/principal.routes"));
+const user_routes_1 = __importDefault(require("./routes/user.routes"));
+const student_routes_1 = __importDefault(require("./routes/student.routes"));
+const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 const weather_service_1 = require("./services/weather.service");
 // Import routes (to be created)
-// import userRoutes from './routes/user.routes';
 // import schoolRoutes from './routes/school.routes';
-// import notificationRoutes from './routes/notification.routes';
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -39,13 +41,15 @@ app.get('/health', (req, res) => {
     });
 });
 // API Routes
-// app.use('/api/users', userRoutes);
+app.use('/api/users', user_routes_1.default);
+app.use('/api/students', student_routes_1.default);
 app.use('/api/weather', weather_routes_1.default);
 app.use('/api/heat-index', heatIndex_routes_1.default);
+app.use('/api/notifications', notification_routes_1.default);
 // app.use('/api/schools', schoolRoutes);
-// app.use('/api/notifications', notificationRoutes);
 app.use('/api/health-advisories', healthAdvisory_routes_1.default);
 app.use('/api/admin', admin_routes_1.default);
+app.use('/api/principal', principal_routes_1.default);
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({

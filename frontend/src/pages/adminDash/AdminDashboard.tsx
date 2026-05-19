@@ -36,6 +36,11 @@ interface ParentQuestionInsight {
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
 
+  const isAdmin = user?.role === 'admin';
+
+  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+  const [schoolReports, setSchoolReports] = useState<any[]>([]);
+
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [parentQuestionInsights, setParentQuestionInsights] = useState<ParentQuestionInsight[]>([]);
@@ -71,6 +76,22 @@ export const AdminDashboard: React.FC = () => {
         }
 
         setError(null);
+        // If user is an admin, fetch admin-specific overview data.
+        if (isAdmin) {
+          try {
+            const approvalsRes = await apiClient.get('/api/principal/approvals', { params: { status: 'pending' } });
+            if (approvalsRes.data && approvalsRes.data.success) {
+              setPendingApprovals(approvalsRes.data.data || []);
+            }
+
+            const reportsRes = await apiClient.get('/api/principal/reports', { params: { period: 'month' } });
+            if (reportsRes.data && reportsRes.data.success) {
+              setSchoolReports(reportsRes.data.data || []);
+            }
+          } catch (err) {
+            console.warn('Principal endpoints unavailable or returned error:', err);
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch admin data:', err);
         setError('Failed to load admin data');
@@ -83,7 +104,7 @@ export const AdminDashboard: React.FC = () => {
     const interval = setInterval(fetchData, 15 * 60 * 1000); // Refresh every 15 minutes
     
     return () => clearInterval(interval);
-  }, []);
+  }, [isAdmin]);
 
   const heatIndexData = useMemo<HeatIndexData>(() => {
     if (!currentWeather) {
@@ -154,6 +175,26 @@ export const AdminDashboard: React.FC = () => {
     { type: 'Preventive', count: adminStats?.activeAdvisories || 0 },
     { type: 'Pending', count: 0 },
   ];
+
+  if (!isAdmin) {
+    return (
+      <div className="admin-dashboard">
+        <div className="admin-dashboard-header">
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p>{getGreeting()}, {user?.firstName}. System overview for Mayamot Elementary School.</p>
+          </div>
+        </div>
+
+        <div className="admin-access-denied">
+          <Card>
+            <h3>Access restricted</h3>
+            <p>This view is reserved for users with the Admin role. If you believe this is an error, please contact your system administrator.</p>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard">
@@ -230,6 +271,24 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="admin-dashboard-side">
+          <Card title="Admin Actions">
+            <div className="principal-actions">
+              <div className="principal-approval-count">
+                <strong>Pending Approvals:</strong> {pendingApprovals.length}
+              </div>
+              <button className="btn btn-primary">Review Approvals</button>
+            </div>
+          </Card>
+
+          <Card title="School Reports">
+            {schoolReports.length === 0 && <div className="empty-state">No reports available</div>}
+            {schoolReports.map((r: any, idx: number) => (
+              <div key={idx} className="report-item">
+                <div className="report-title">{r.title || `Report ${idx + 1}`}</div>
+                <div className="report-meta">{r.summary || r.date || ''}</div>
+              </div>
+            ))}
+          </Card>
           <Card title="Incident Summary (Today)">
             <div className="admin-incident-list">
               {incidentSummary.map((item) => (

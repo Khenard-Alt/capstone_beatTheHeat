@@ -40,6 +40,8 @@ export const HEAT_LABELS = {
 // User Roles
 export const USER_ROLES = {
   ADMIN: 'admin',
+  PRINCIPAL: 'principal',
+  HEAD_TEACHER: 'head-teacher',
   TEACHER: 'teacher',
   STAFF: 'staff',
   PARENT: 'parent',

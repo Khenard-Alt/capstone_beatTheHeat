@@ -8,12 +8,14 @@ import weatherRoutes from './routes/weather.routes';
 import healthAdvisoryRoutes from './routes/healthAdvisory.routes';
 import heatIndexRoutes from './routes/heatIndex.routes';
 import adminRoutes from './routes/admin.routes';
+import principalRoutes from './routes/principal.routes';
+import userRoutes from './routes/user.routes';
+import studentRoutes from './routes/student.routes';
+import notificationRoutes from './routes/notification.routes';
 import { weatherService } from './services/weather.service';
 
 // Import routes (to be created)
-// import userRoutes from './routes/user.routes';
 // import schoolRoutes from './routes/school.routes';
-// import notificationRoutes from './routes/notification.routes';
 
 // Load environment variables
 dotenv.config();
@@ -40,13 +42,15 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-// app.use('/api/users', userRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/students', studentRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/heat-index', heatIndexRoutes);
+app.use('/api/notifications', notificationRoutes);
 // app.use('/api/schools', schoolRoutes);
-// app.use('/api/notifications', notificationRoutes);
 app.use('/api/health-advisories', healthAdvisoryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/principal', principalRoutes);
 
 // 404 handler
 app.use((req, res) => {

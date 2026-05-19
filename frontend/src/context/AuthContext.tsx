@@ -2,6 +2,8 @@ import React, { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types';
 import { STORAGE_KEYS } from '../utils/constants';
+import axios from 'axios';
+import { apiClient } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -38,31 +40,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, _password: string): Promise<User> => {
     setIsLoading(true);
     try {
-      const normalizedEmail = email.trim().toLowerCase();
-      const inferredRole: User['role'] = normalizedEmail.includes('parent')
-        ? 'parent'
-        : normalizedEmail.includes('teacher')
-          ? 'teacher'
-          : normalizedEmail.includes('staff')
-            ? 'staff'
-            : 'admin';
-
-      const mockUser: User = {
-        id: '1',
+      const { data } = await apiClient.post('/api/users/login', {
         email,
-        role: inferredRole,
-        firstName: 'John',
-        lastName: 'Doe',
-        schoolId: 'school-1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+        password: _password,
+      });
+
+      const mockUser: User = data.user;
 
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mockUser));
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'mock-token');
       setUser(mockUser);
       return mockUser;
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const responseData = error.response?.data;
+        const message =
+          responseData && typeof responseData === 'object' && 'message' in responseData
+            ? String(responseData.message)
+            : error.message || 'Login failed';
+        console.error('Login error:', error);
+        throw new Error(message);
+      }
       console.error('Login error:', error);
       throw error;
     } finally {
@@ -79,18 +77,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (data: any) => {
     setIsLoading(true);
     try {
-      // Mock registration - replace with actual API call
+      const { data: result } = await apiClient.post('/api/users/register', {
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role,
+        phone: data.phone,
+        childId: data.childId,
+      });
+
       const newUser: User = {
-        id: Date.now().toString(),
-        ...data,
-        schoolId: 'school-1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        id: result.user.id,
+        email: result.user.email,
+        role: result.user.role,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        schoolId: result.user.schoolId,
+        createdAt: result.user.createdAt,
+        updatedAt: result.user.updatedAt,
       };
 
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(newUser));
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'auth-token');
       setUser(newUser);
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const responseData = error.response?.data;
+        const message =
+          responseData && typeof responseData === 'object' && 'message' in responseData
+            ? String(responseData.message)
+            : error.message || 'Registration failed';
+        console.error('Registration error:', error);
+        throw new Error(message);
+      }
       console.error('Registration error:', error);
       throw error;
     } finally {

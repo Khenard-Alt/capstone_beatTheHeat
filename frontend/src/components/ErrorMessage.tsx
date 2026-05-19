@@ -1,10 +1,10 @@
 import React from 'react';
-import { MdError, MdWarning, MdInfo } from 'react-icons/md';
+import { MdError, MdWarning, MdInfo, MdCheckCircle } from 'react-icons/md';
 import '../styles/ErrorMessage.css';
 
 interface ErrorMessageProps {
   message: string;
-  type?: 'error' | 'warning' | 'info';
+  type?: 'error' | 'warning' | 'info' | 'success';
   onClose?: () => void;
   className?: string;
 }
@@ -19,6 +19,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
     error: <MdError />,
     warning: <MdWarning />,
     info: <MdInfo />,
+    success: <MdCheckCircle />,
   };
 
   const classes = ['error-message', `error-message-${type}`, className]
