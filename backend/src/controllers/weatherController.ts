@@ -38,7 +38,7 @@ const ensureSchedulerAuth = (req: Request, res: Response): boolean => {
 };
 
 export const getCurrentWeather = async (
-	req: Request,
+	_req: Request,
 	res: Response,
 	next: NextFunction
 ): Promise<void> => {

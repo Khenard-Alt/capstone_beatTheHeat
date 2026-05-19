@@ -12,5 +12,17 @@ export declare const notificationController: {
      * Broadcast heat alert to all users in a school
      */
     broadcastHeatAlert: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    /**
+     * Get notifications for a user
+     */
+    getNotifications: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    /**
+     * Mark notification as read
+     */
+    markAsRead: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    /**
+     * Clear notifications for a user
+     */
+    clearAll: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 };
 //# sourceMappingURL=notificationController.d.ts.map

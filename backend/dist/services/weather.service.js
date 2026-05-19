@@ -8,6 +8,9 @@ const axios_1 = __importDefault(require("axios"));
 const environment_1 = require("../config/environment");
 const auditLog_service_1 = require("./auditLog.service");
 class WeatherService {
+    constructor() {
+        this.schoolLocationName = 'Mayamot Elementary School, Antipolo City';
+    }
     async collectScheduledSnapshot(lat = environment_1.env.schoolLat, lon = environment_1.env.schoolLon) {
         return this.getCurrentWeather(lat, lon);
     }
@@ -117,7 +120,7 @@ class WeatherService {
         const heatIndexC = Number(this.calculateHeatIndexC(temperatureC, humidityPercent).toFixed(1));
         return {
             source: 'openweathermap',
-            location: 'Mayamot Elementary School',
+            location: this.schoolLocationName,
             temperatureC,
             humidityPercent,
             condition: point.weather?.[0]?.description ?? point.weather?.[0]?.main ?? timezone ?? 'historical clear',
@@ -142,7 +145,7 @@ class WeatherService {
         const heatIndexC = Number(this.calculateHeatIndexC(temperatureC, humidityPercent).toFixed(1));
         return {
             source: 'openweathermap',
-            location: data.name || 'Mayamot Elementary School',
+            location: this.schoolLocationName,
             temperatureC,
             humidityPercent,
             condition: data.weather?.[0]?.description ?? data.weather?.[0]?.main ?? 'Unknown',
@@ -159,7 +162,7 @@ class WeatherService {
         const heatIndexC = Number(this.calculateHeatIndexC(temperatureC, humidityPercent).toFixed(1));
         return {
             source: 'fallback',
-            location: 'Mayamot Elementary School',
+            location: this.schoolLocationName,
             temperatureC,
             humidityPercent,
             condition: 'partly cloudy',

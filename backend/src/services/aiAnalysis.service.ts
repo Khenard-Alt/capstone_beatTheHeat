@@ -66,6 +66,12 @@ class AIAnalysisService {
 			if (pythonResult) {
 				return pythonResult;
 			}
+
+			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
+			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
+			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', 'python-fallback');
+			return variedFallback;
 		}
 
 		if (env.aiModelProvider === 'fallback') {
@@ -282,7 +288,7 @@ class AIAnalysisService {
 					'--language',
 					pythonLanguage,
 				],
-				{ timeout: 15000 }
+				{ timeout: 45000 }
 			);
 
 			const parsed = this.parseAdvisory(String(stdout).trim(), input.weather, languageStyle);

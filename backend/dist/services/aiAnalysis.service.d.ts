@@ -1,6 +1,8 @@
 import { AdvisoryInput, AdvisoryResult } from '../types';
 declare class AIAnalysisService {
+    private knowledgeCache;
     generateScopedAdvisory(input: AdvisoryInput): Promise<AdvisoryResult>;
+    generatePythonOnlyAdvisory(input: AdvisoryInput): Promise<AdvisoryResult>;
     private requestGeminiContent;
     private logAdvisoryAudit;
     private estimateCostUsd;
@@ -10,6 +12,15 @@ declare class AIAnalysisService {
     private pickExistingPath;
     private pathExists;
     private systemPrompt;
+    private getVariationSeed;
+    private buildVariationHint;
+    private applyVariation;
+    private rotateList;
+    private getVariationSuffix;
+    private buildKnowledgeContext;
+    private getKnowledgeCache;
+    private readTextFileSafe;
+    private extractRelevantNotes;
     private classifyScope;
     private buildPolicyKnowledgeBlock;
     private detectConversationIntent;

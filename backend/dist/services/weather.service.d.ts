@@ -12,6 +12,7 @@ export interface WeatherBackfillResult {
     snapshots: WeatherSnapshot[];
 }
 declare class WeatherService {
+    private readonly schoolLocationName;
     collectScheduledSnapshot(lat?: number, lon?: number): Promise<WeatherSnapshot>;
     backfillRecentDays(days: number, lat?: number, lon?: number, intervalHours?: number): Promise<WeatherBackfillResult>;
     getCurrentWeather(lat?: number, lon?: number): Promise<WeatherSnapshot>;

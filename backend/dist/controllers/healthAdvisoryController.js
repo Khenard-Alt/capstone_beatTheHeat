@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHealthAdvisories = exports.generateHealthAdvisory = void 0;
+exports.getHealthAdvisories = exports.getRealtimeAdvisory = exports.generateHealthAdvisory = void 0;
 const promises_1 = require("fs/promises");
 const path_1 = __importDefault(require("path"));
 const aiAnalysis_service_1 = require("../services/aiAnalysis.service");
@@ -130,6 +130,27 @@ const generateHealthAdvisory = async (req, res, next) => {
     }
 };
 exports.generateHealthAdvisory = generateHealthAdvisory;
+const getRealtimeAdvisory = async (req, res, next) => {
+    try {
+        const query = typeof req.query?.query === 'string' ? req.query.query : 'Realtime heat advisory update.';
+        const weather = await weather_service_1.weatherService.getCurrentWeather();
+        const advisory = await aiAnalysis_service_1.aiAnalysisService.generatePythonOnlyAdvisory({
+            query,
+            weather,
+        });
+        res.status(200).json({
+            success: true,
+            data: {
+                ...advisory,
+                generatedAt: new Date().toISOString(),
+            },
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getRealtimeAdvisory = getRealtimeAdvisory;
 const getHealthAdvisories = async (req, res, next) => {
     try {
         const limit = parseInt(req.query.limit) || 10;

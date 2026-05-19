@@ -32,11 +32,9 @@ const ensureSchedulerAuth = (req, res) => {
     }
     return true;
 };
-const getCurrentWeather = async (req, res, next) => {
+const getCurrentWeather = async (_req, res, next) => {
     try {
-        const lat = req.query.lat ? Number(req.query.lat) : undefined;
-        const lon = req.query.lon ? Number(req.query.lon) : undefined;
-        const weather = await weather_service_1.weatherService.getCurrentWeather(lat, lon);
+        const weather = await weather_service_1.weatherService.getCurrentWeather();
         res.status(200).json({
             success: true,
             data: weather,
@@ -52,9 +50,7 @@ const runScheduledSnapshot = async (req, res, next) => {
         return;
     }
     try {
-        const lat = req.body?.lat ? Number(req.body.lat) : undefined;
-        const lon = req.body?.lon ? Number(req.body.lon) : undefined;
-        const weather = await weather_service_1.weatherService.collectScheduledSnapshot(lat, lon);
+        const weather = await weather_service_1.weatherService.collectScheduledSnapshot();
         res.status(200).json({
             success: true,
             data: weather,
@@ -77,9 +73,7 @@ const runWeatherBackfill = async (req, res, next) => {
         const intervalHours = Number.isFinite(rawInterval)
             ? Math.min(24, Math.max(1, Math.floor(rawInterval)))
             : 3;
-        const lat = req.body?.lat ? Number(req.body.lat) : undefined;
-        const lon = req.body?.lon ? Number(req.body.lon) : undefined;
-        const result = await weather_service_1.weatherService.backfillRecentDays(days, lat, lon, intervalHours);
+        const result = await weather_service_1.weatherService.backfillRecentDays(days, undefined, undefined, intervalHours);
         res.status(200).json({
             success: true,
             data: result,

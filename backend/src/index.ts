@@ -26,7 +26,7 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
-const WEATHER_SNAPSHOT_INTERVAL_MINUTES = Number(process.env.WEATHER_SNAPSHOT_INTERVAL_MINUTES ?? 15);
+const WEATHER_SNAPSHOT_INTERVAL_MINUTES = Number(process.env.WEATHER_SNAPSHOT_INTERVAL_MINUTES ?? 1);
 const AI_ADVISORY_INTERVAL_MINUTES = Number(process.env.AI_ADVISORY_INTERVAL_MINUTES ?? 1);
 
 // Middleware
