@@ -1,1 +1,1 @@
-{"version":3,"file":"heatIndexController.d.ts","sourceRoot":"","sources":["../../src/controllers/heatIndexController.ts"],"names":[],"mappings":""}
+{"version":3,"file":"heatIndexController.d.ts","sourceRoot":"","sources":["../../src/controllers/heatIndexController.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AA8B1D,eAAO,MAAM,mBAAmB,GAC/B,KAAK,OAAO,EACZ,KAAK,QAAQ,EACb,MAAM,YAAY,KAChB,OAAO,CAAC,IAAI,CA+Jd,CAAC"}

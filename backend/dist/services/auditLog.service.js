@@ -8,11 +8,12 @@ const promises_1 = require("fs/promises");
 const path_1 = __importDefault(require("path"));
 const crypto_1 = require("crypto");
 const supabase_1 = require("../config/supabase");
+const DEFAULT_SCHOOL_ID = process.env.DEFAULT_SCHOOL_ID ?? '00000000-0000-0000-0000-000000000001';
 class AuditLogService {
     constructor() {
         this.localAuditPath = path_1.default.resolve(process.cwd(), 'logs', 'audit-events.jsonl');
     }
-    async logWeatherSnapshot(snapshot, schoolId = 'school-1') {
+    async logWeatherSnapshot(snapshot, schoolId = DEFAULT_SCHOOL_ID) {
         const event = {
             id: (0, crypto_1.randomUUID)(),
             type: 'weather_snapshot',
@@ -32,7 +33,7 @@ class AuditLogService {
         const event = {
             id: (0, crypto_1.randomUUID)(),
             type: 'ai_analysis',
-            schoolId: input.schoolId ?? 'school-1',
+            schoolId: input.schoolId ?? DEFAULT_SCHOOL_ID,
             payload: input,
             createdAt: new Date().toISOString(),
         };

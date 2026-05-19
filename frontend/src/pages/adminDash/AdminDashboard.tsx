@@ -1,17 +1,17 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { HeatIndexCard } from '../components/HeatIndexCard';
-import { WeatherWidget } from '../components/WeatherWidget';
-import { AdvisoryAlert } from '../components/AdvisoryAlert';
-import { Chart } from '../components/Chart';
-import { Card } from '../components/Card';
-import { useAuth } from '../hooks/useAuth';
-import { fetchCurrentWeather } from '../services/weather.service';
-import { apiClient } from '../services/api';
-import { formatDateTimeCompact, formatDateTimeGlobal } from '../utils/formatters';
-import type { HeatIndexData, WeatherData, HealthAdvisory } from '../types';
-import { calculateHeatIndex, getHeatLevel, getGreeting } from '../utils/helpers';
-import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../utils/constants';
-import '../styles/AdminDashboard.css';
+import { HeatIndexCard } from '../../components/HeatIndexCard';
+import { WeatherWidget } from '../../components/WeatherWidget';
+import { AdvisoryAlert } from '../../components/AdvisoryAlert';
+import { Chart } from '../../components/Chart';
+import { Card } from '../../components/Card';
+import { useAuth } from '../../hooks/useAuth';
+import { fetchCurrentWeather } from '../../services/weather.service';
+import { apiClient } from '../../services/api';
+import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
+import type { HeatIndexData, WeatherData, HealthAdvisory } from '../../types';
+import { calculateHeatIndex, getHeatLevel, getGreeting } from '../../utils/helpers';
+import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
+import '../../styles/AdminDashboard.css';
 
 interface Trend {
   timestamp: string;

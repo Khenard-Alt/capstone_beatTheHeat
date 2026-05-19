@@ -8,6 +8,57 @@ const axios_1 = __importDefault(require("axios"));
 const environment_1 = require("../config/environment");
 const auditLog_service_1 = require("./auditLog.service");
 class WeatherService {
+    async collectScheduledSnapshot(lat = environment_1.env.schoolLat, lon = environment_1.env.schoolLon) {
+        return this.getCurrentWeather(lat, lon);
+    }
+    async backfillRecentDays(days, lat = environment_1.env.schoolLat, lon = environment_1.env.schoolLon, intervalHours = 3) {
+        const requestedDays = Math.max(1, Math.floor(days));
+        const normalizedInterval = Math.min(24, Math.max(1, Math.floor(intervalHours)));
+        const snapshots = [];
+        const failures = [];
+        if (!(0, environment_1.hasWeatherApiKey)()) {
+            return {
+                requestedDays,
+                intervalHours: normalizedInterval,
+                inserted: 0,
+                mode: 'current-api-no-key',
+                failures: [
+                    {
+                        dayOffset: 0,
+                        reason: 'OPENWEATHER_API_KEY is missing. Historical backfill requires an active OpenWeather key with timemachine access.',
+                    },
+                ],
+                snapshots,
+            };
+        }
+        for (let dayOffset = requestedDays; dayOffset >= 1; dayOffset -= 1) {
+            const target = new Date();
+            target.setUTCDate(target.getUTCDate() - dayOffset);
+            target.setUTCHours(12, 0, 0, 0);
+            const unixTime = Math.floor(target.getTime() / 1000);
+            try {
+                const dailySnapshots = await this.fetchHistoricalSnapshots(lat, lon, unixTime, normalizedInterval);
+                for (const snapshot of dailySnapshots) {
+                    snapshots.push(snapshot);
+                    await this.persistSnapshot(snapshot);
+                }
+            }
+            catch (error) {
+                failures.push({
+                    dayOffset,
+                    reason: this.toErrorMessage(error),
+                });
+            }
+        }
+        return {
+            requestedDays,
+            intervalHours: normalizedInterval,
+            inserted: snapshots.length,
+            mode: 'onecall-timemachine',
+            failures,
+            snapshots,
+        };
+    }
     async getCurrentWeather(lat = environment_1.env.schoolLat, lon = environment_1.env.schoolLon) {
         if (!(0, environment_1.hasWeatherApiKey)()) {
             const snapshot = this.getFallbackWeather();
@@ -34,6 +85,48 @@ class WeatherService {
             await this.persistSnapshot(snapshot);
             return snapshot;
         }
+    }
+    async fetchHistoricalSnapshots(lat, lon, unixTime, intervalHours) {
+        const { data } = await axios_1.default.get('https://api.openweathermap.org/data/3.0/onecall/timemachine', {
+            params: {
+                lat,
+                lon,
+                dt: unixTime,
+                units: 'metric',
+                appid: environment_1.env.openWeatherApiKey,
+            },
+            timeout: 8000,
+        });
+        const points = (data.data ?? [])
+            .filter((point) => typeof point.temp === 'number' && typeof point.humidity === 'number')
+            .sort((a, b) => (a.dt ?? 0) - (b.dt ?? 0));
+        if (points.length === 0) {
+            throw new Error('Historical weather response did not include valid temp/humidity fields.');
+        }
+        const stride = Math.min(24, Math.max(1, Math.floor(intervalHours)));
+        const snapshots = [];
+        for (let index = 0; index < points.length; index += stride) {
+            const point = points[index];
+            snapshots.push(this.toHistoricalSnapshot(point, data.timezone, unixTime));
+        }
+        return snapshots;
+    }
+    toHistoricalSnapshot(point, timezone, unixTime) {
+        const temperatureC = Number(point.temp?.toFixed(1) ?? 0);
+        const humidityPercent = Number(point.humidity?.toFixed(0) ?? 0);
+        const heatIndexC = Number(this.calculateHeatIndexC(temperatureC, humidityPercent).toFixed(1));
+        return {
+            source: 'openweathermap',
+            location: 'Mayamot Elementary School',
+            temperatureC,
+            humidityPercent,
+            condition: point.weather?.[0]?.description ?? point.weather?.[0]?.main ?? timezone ?? 'historical clear',
+            windSpeedMps: Number((point.wind_speed ?? 0).toFixed(1)),
+            pressureHpa: Number((point.pressure ?? 0).toFixed(0)),
+            heatIndexC,
+            heatLevel: this.getHeatLevel(heatIndexC),
+            timestamp: new Date((point.dt ?? unixTime) * 1000).toISOString(),
+        };
     }
     async persistSnapshot(snapshot) {
         try {
@@ -101,6 +194,16 @@ class WeatherService {
         if (heatIndexC < 54)
             return 'danger';
         return 'extreme-danger';
+    }
+    toErrorMessage(error) {
+        if (axios_1.default.isAxiosError(error)) {
+            const status = error.response?.status;
+            const payload = typeof error.response?.data === 'string'
+                ? error.response.data
+                : JSON.stringify(error.response?.data ?? {});
+            return `OpenWeather error${status ? ` (${status})` : ''}: ${payload}`;
+        }
+        return error instanceof Error ? error.message : 'Unknown historical backfill error';
     }
 }
 exports.weatherService = new WeatherService();

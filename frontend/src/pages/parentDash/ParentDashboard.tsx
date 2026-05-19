@@ -1,17 +1,17 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { HeatIndexCard } from '../components/HeatIndexCard';
-import { WeatherWidget } from '../components/WeatherWidget';
-import { AdvisoryAlert } from '../components/AdvisoryAlert';
-import { Chart } from '../components/Chart';
-import { Card } from '../components/Card';
-import { fetchCurrentWeather } from '../services/weather.service';
-import { generateScopedAdvisory } from '../services/healthAdvisory.service';
-import type { HeatIndexData, WeatherData, HealthAdvisory, StudentHealthIncident } from '../types';
-import { calculateHeatIndex, getHeatLevel } from '../utils/helpers';
-import { formatDateTimeCompact, formatDateTimeGlobal } from '../utils/formatters';
-import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../utils/constants';
+import { HeatIndexCard } from '../../components/HeatIndexCard';
+import { WeatherWidget } from '../../components/WeatherWidget';
+import { AdvisoryAlert } from '../../components/AdvisoryAlert';
+import { Chart } from '../../components/Chart';
+import { Card } from '../../components/Card';
+import { fetchCurrentWeather } from '../../services/weather.service';
+import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
+import type { HeatIndexData, WeatherData, HealthAdvisory, StudentHealthIncident } from '../../types';
+import { calculateHeatIndex, getHeatLevel } from '../../utils/helpers';
+import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
+import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { MdClose, MdSend, MdChat, MdSearch } from 'react-icons/md';
-import '../styles/ParentDashboard.css';
+import '../../styles/ParentDashboard.css';
 
 interface ParentChatMessage {
   id: number;

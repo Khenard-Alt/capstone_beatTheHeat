@@ -2,7 +2,7 @@
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'teacher' | 'staff';
+  role: 'admin' | 'teacher' | 'staff' | 'parent';
   firstName: string;
   lastName: string;
   schoolId: string;
@@ -114,7 +114,7 @@ export interface RegisterData {
   confirmPassword: string;
   firstName: string;
   lastName: string;
-  role: 'teacher' | 'staff';
+  role: 'teacher' | 'staff' | 'parent';
 }
 
 export interface AuthResponse {

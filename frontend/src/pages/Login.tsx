@@ -41,6 +41,18 @@ export const Login: React.FC = () => {
   ]);
   const [userInput, setUserInput] = useState('');
 
+  const getLandingPath = (role: string): string => {
+    if (role === 'parent') {
+      return '/parent/dashboard';
+    }
+
+    if (role === 'admin') {
+      return '/admin';
+    }
+
+    return '/dashboard';
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -75,8 +87,8 @@ export const Login: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await login(formData.email, formData.password);
-      navigate('/dashboard');
+      const signedInUser = await login(formData.email, formData.password);
+      navigate(getLandingPath(signedInUser.role));
     } catch {
       setErrorMessage('Invalid email or password. Please try again.');
     } finally {

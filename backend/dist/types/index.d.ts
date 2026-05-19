@@ -20,5 +20,18 @@ export interface AdvisoryResult {
     actions: string[];
     safetyTips: string[];
     scopeNote: string;
+    confidenceScore: number;
+    decisionBasis: {
+        heatIndexC: number;
+        temperatureC: number;
+        humidityPercent: number;
+        heatLevel: string;
+        dataSource: string;
+        rationale: string[];
+    };
+    modelProfile: {
+        mode: 'rule-grounded-ai';
+        scope: 'system-only';
+    };
 }
 //# sourceMappingURL=index.d.ts.map

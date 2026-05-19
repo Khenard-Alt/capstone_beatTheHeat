@@ -2,17 +2,21 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   MdDashboard,
+  MdForum,
+  MdCampaign,
+  MdAutoAwesome,
+  MdChat,
+  MdPerson,
+  MdSettings,
   MdThermostat,
   MdHealthAndSafety,
   MdNotifications,
   MdSchool,
-  MdSettings,
-  MdPerson,
   MdLogout,
   MdCheckCircle,
 } from 'react-icons/md';
-import { useAuth } from '../hooks/useAuth';
-import '../styles/Sidebar.css';
+import { useAuth } from '../../hooks/useAuth';
+import '../../styles/Sidebar.css';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -24,7 +28,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
   const { user } = useAuth();
   const sidebarClasses = ['sidebar', isOpen ? 'sidebar-open' : ''].filter(Boolean).join(' ');
 
-  const menuItems = [
+  const parentMenuItems = [
+    { path: '/parent/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['parent'], badge: null },
+    { path: '/parent/questions-concerns', icon: <MdForum />, label: 'Questions and Concerns', roles: ['parent'], badge: 4 },
+    { path: '/parent/announcements', icon: <MdCampaign />, label: 'Announcements', roles: ['parent'], badge: 2 },
+    { path: '/parent/advisory', icon: <MdAutoAwesome />, label: 'AI Advisory', roles: ['parent'], badge: null },
+    { path: '/parent/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['parent'], badge: null },
+    { path: '/parent/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['parent'], badge: null },
+  ];
+
+  const defaultMenuItems = [
     { path: '/admin', icon: <MdDashboard />, label: 'Admin Dashboard', roles: ['admin'], badge: null },
     { path: '/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['teacher', 'staff'], badge: null },
     { path: '/heat-index', icon: <MdThermostat />, label: 'Heat Index', roles: ['admin', 'teacher', 'staff'], badge: null },
@@ -34,6 +47,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     { path: '/profile', icon: <MdPerson />, label: 'Profile', roles: ['admin', 'teacher', 'staff'], badge: null },
     { path: '/settings', icon: <MdSettings />, label: 'Settings', roles: ['admin', 'teacher', 'staff'], badge: null },
   ];
+
+  const menuItems = userRole === 'parent' ? parentMenuItems : defaultMenuItems;
 
   const filteredItems = menuItems.filter((item) =>
     userRole ? item.roles.includes(userRole) : true

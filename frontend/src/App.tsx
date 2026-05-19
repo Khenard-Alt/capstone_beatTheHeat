@@ -5,12 +5,12 @@ import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { useAuth } from './hooks/useAuth';
 import { Header } from './components/Header';
-import { Sidebar } from './components/Sidebar';
+import { Sidebar } from './components/sidebar/Sidebar';
 import { Footer } from './components/Footer';
 import { Loading } from './components/Loading';
 import { Dashboard } from './pages/Dashboard';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { ParentDashboard } from './pages/ParentDashboard';
+import { AdminDashboard } from './pages/adminDash/AdminDashboard';
+import { ParentDashboard } from './pages/parentDash/ParentDashboard';
 import { Login } from './pages/Login';
 import { HeatIndex } from './pages/HeatIndex';
 import { HealthAdvisory } from './pages/HealthAdvisory';
@@ -18,6 +18,11 @@ import { Notifications } from './pages/Notifications';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
 import { SchoolManagement } from './pages/SchoolManagement';
+import { ParentQuestionsConcerns } from './pages/parentDash/ParentQuestionsConcerns';
+import { ParentAnnouncements } from './pages/parentDash/ParentAnnouncements';
+import { ParentAdvisory } from './pages/parentDash/ParentAdvisory';
+import { ParentChatbot } from './pages/parentDash/ParentChatbot';
+import { ParentProfileSettings } from './pages/parentDash/ParentProfileSettings';
 import './App.css';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -52,6 +57,24 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+const ParentRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'parent') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const HomeRoute: React.FC = () => {
   const { user, isLoading } = useAuth();
 
@@ -63,7 +86,37 @@ const HomeRoute: React.FC = () => {
     return <Navigate to="/admin" replace />;
   }
 
+  if (user?.role === 'parent') {
+    return <Navigate to="/parent/dashboard" replace />;
+  }
+
   return <Dashboard />;
+};
+
+const LandingRoute: React.FC = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (isAuthenticated) {
+    if (user?.role === 'admin') {
+      return <Navigate to="/admin" replace />;
+    }
+
+    if (user?.role === 'parent') {
+      return <Navigate to="/parent/dashboard" replace />;
+    }
+
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <PublicLayout>
+      <ParentDashboard />
+    </PublicLayout>
+  );
 };
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -107,14 +160,7 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/"
-        element={
-          <PublicLayout>
-            <ParentDashboard />
-          </PublicLayout>
-        }
-      />
+      <Route path="/" element={<LandingRoute />} />
 
       <Route
         path="/dashboard"
@@ -124,6 +170,72 @@ const AppRoutes: React.FC = () => {
               <HomeRoute />
             </AppLayout>
           </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/parent/dashboard"
+        element={
+          <ParentRoute>
+            <AppLayout>
+              <ParentDashboard />
+            </AppLayout>
+          </ParentRoute>
+        }
+      />
+
+      <Route
+        path="/parent/questions-concerns"
+        element={
+          <ParentRoute>
+            <AppLayout>
+              <ParentQuestionsConcerns />
+            </AppLayout>
+          </ParentRoute>
+        }
+      />
+
+      <Route
+        path="/parent/announcements"
+        element={
+          <ParentRoute>
+            <AppLayout>
+              <ParentAnnouncements />
+            </AppLayout>
+          </ParentRoute>
+        }
+      />
+
+      <Route
+        path="/parent/advisory"
+        element={
+          <ParentRoute>
+            <AppLayout>
+              <ParentAdvisory />
+            </AppLayout>
+          </ParentRoute>
+        }
+      />
+
+      <Route
+        path="/parent/chatbot"
+        element={
+          <ParentRoute>
+            <AppLayout>
+              <ParentChatbot />
+            </AppLayout>
+          </ParentRoute>
+        }
+      />
+
+      <Route
+        path="/parent/profile-settings"
+        element={
+          <ParentRoute>
+            <AppLayout>
+              <ParentProfileSettings />
+            </AppLayout>
+          </ParentRoute>
         }
       />
 

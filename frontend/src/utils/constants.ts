@@ -42,6 +42,7 @@ export const USER_ROLES = {
   ADMIN: 'admin',
   TEACHER: 'teacher',
   STAFF: 'staff',
+  PARENT: 'parent',
 } as const;
 
 // Notification Types

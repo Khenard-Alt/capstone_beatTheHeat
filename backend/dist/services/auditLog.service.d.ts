@@ -9,7 +9,7 @@ interface AILogInput {
     tokenOutput?: number;
     tokenTotal?: number;
     estimatedCostUsd?: number;
-    source: 'gemini' | 'fallback';
+    source: 'gemini' | 'fallback' | 'python';
 }
 declare class AuditLogService {
     private readonly localAuditPath;

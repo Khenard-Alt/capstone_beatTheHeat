@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => void;
   register: (data: any) => Promise<void>;
 }
@@ -35,14 +35,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, _password: string) => {
+  const login = async (email: string, _password: string): Promise<User> => {
     setIsLoading(true);
     try {
-      // Mock login - replace with actual API call
+      const normalizedEmail = email.trim().toLowerCase();
+      const inferredRole: User['role'] = normalizedEmail.includes('parent')
+        ? 'parent'
+        : normalizedEmail.includes('teacher')
+          ? 'teacher'
+          : normalizedEmail.includes('staff')
+            ? 'staff'
+            : 'admin';
+
       const mockUser: User = {
         id: '1',
         email,
-        role: 'admin',
+        role: inferredRole,
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 'school-1',
@@ -53,6 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mockUser));
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'mock-token');
       setUser(mockUser);
+      return mockUser;
     } catch (error) {
       console.error('Login error:', error);
       throw error;

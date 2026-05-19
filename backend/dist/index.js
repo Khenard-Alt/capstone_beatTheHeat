@@ -11,15 +11,18 @@ const errorHandler_middleware_1 = require("./middleware/errorHandler.middleware"
 const logger_middleware_1 = require("./middleware/logger.middleware");
 const weather_routes_1 = __importDefault(require("./routes/weather.routes"));
 const healthAdvisory_routes_1 = __importDefault(require("./routes/healthAdvisory.routes"));
+const heatIndex_routes_1 = __importDefault(require("./routes/heatIndex.routes"));
+const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const weather_service_1 = require("./services/weather.service");
 // Import routes (to be created)
 // import userRoutes from './routes/user.routes';
-// import heatIndexRoutes from './routes/heatIndex.routes';
 // import schoolRoutes from './routes/school.routes';
 // import notificationRoutes from './routes/notification.routes';
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
+const WEATHER_SNAPSHOT_INTERVAL_MINUTES = Number(process.env.WEATHER_SNAPSHOT_INTERVAL_MINUTES ?? 15);
 // Middleware
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -38,10 +41,11 @@ app.get('/health', (req, res) => {
 // API Routes
 // app.use('/api/users', userRoutes);
 app.use('/api/weather', weather_routes_1.default);
-// app.use('/api/heat-index', heatIndexRoutes);
+app.use('/api/heat-index', heatIndex_routes_1.default);
 // app.use('/api/schools', schoolRoutes);
 // app.use('/api/notifications', notificationRoutes);
 app.use('/api/health-advisories', healthAdvisory_routes_1.default);
+app.use('/api/admin', admin_routes_1.default);
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({
@@ -51,11 +55,29 @@ app.use((req, res) => {
 });
 // Error handler middleware (must be last)
 app.use(errorHandler_middleware_1.errorHandler);
+const startWeatherSnapshotScheduler = () => {
+    const intervalMs = Math.max(1, WEATHER_SNAPSHOT_INTERVAL_MINUTES) * 60 * 1000;
+    const collectSnapshot = async () => {
+        try {
+            await weather_service_1.weatherService.getCurrentWeather();
+        }
+        catch (error) {
+            console.error('Weather snapshot scheduler error:', error);
+        }
+    };
+    // Prime one reading on startup, then continue on schedule.
+    void collectSnapshot();
+    setInterval(() => {
+        void collectSnapshot();
+    }, intervalMs);
+};
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`📍 Health check: http://localhost:${PORT}/health`);
     console.log(`🌡️  Beat the Heat API initialized`);
+    console.log(`⏱️  Weather snapshot scheduler: every ${Math.max(1, WEATHER_SNAPSHOT_INTERVAL_MINUTES)} minute(s)`);
+    startWeatherSnapshotScheduler();
 });
 exports.default = app;
 //# sourceMappingURL=index.js.map
