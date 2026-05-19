@@ -1,7 +1,7 @@
 import React from 'react';
 import type { HeatLevel } from '../types';
 import { getHeatLabel } from '../utils/helpers';
-import { formatTemperature, formatHumidity, formatDateTimeGlobal } from '../utils/formatters';
+import { formatTemperature, formatDateTimeGlobal } from '../utils/formatters';
 import '../styles/HeatIndexCard.css';
 
 interface HeatIndexCardProps {
@@ -47,14 +47,6 @@ export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
             <div className="metric-content">
               <div className="metric-value">{formatTemperature(temperature)}</div>
               <div className="metric-label">Temperature</div>
-            </div>
-          </div>
-
-          <div className="metric">
-            <span className="metric-icon">💧</span>
-            <div className="metric-content">
-              <div className="metric-value">{formatHumidity(humidity)}</div>
-              <div className="metric-label">Humidity</div>
             </div>
           </div>
         </div>

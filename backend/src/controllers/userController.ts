@@ -143,8 +143,9 @@ export const registerUser = async (
           phone,
           school_id: 'school-1',
           metadata: {
-            childId: role === 'parent' ? childId : undefined,
-            idProofUrl: role === 'teacher' ? idProofUrl : undefined,
+            child_id: role === 'parent' ? childId : undefined,
+            id_proof_url: role === 'teacher' ? idProofUrl : undefined,
+            registration_verified: role === 'parent' ? false : true // Parents might need manual verification or OTP
           },
         },
       ])
@@ -153,8 +154,35 @@ export const registerUser = async (
 
     if (insertError) {
       console.error('Insert user error:', insertError);
-      res.status(500).json({ success: false, message: 'Registration failed' });
+      res.status(500).json({ success: false, message: 'Registration failed', error: insertError.message });
       return;
+    }
+
+    // Map the parent to the student if childId is provided
+    if (role === 'parent' && childId) {
+      const { error: studentUpdateError } = await client
+        .from('students')
+        .update({ parent_user_id: newUser.id })
+        .eq('id', childId);
+
+      if (studentUpdateError) {
+        console.error('Failed to link parent to student:', studentUpdateError);
+      }
+
+      // Also add to parent_student_guardians join table if it exists
+      const { error: guardianError } = await client
+        .from('parent_student_guardians')
+        .insert({
+          parent_user_id: newUser.id,
+          student_id: childId,
+          relationship_type: 'parent',
+          is_primary: true
+        });
+
+      if (guardianError) {
+        // Log but don't fail registration as the main user record is created
+        console.error('Guardian link error:', guardianError);
+      }
     }
 
     // Return user (without password hash)
@@ -588,6 +616,82 @@ export const deleteUser = async (
     });
   } catch (error) {
     console.error('Delete user error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Update user profile
+ * PUT /api/users/:id
+ */
+export const updateUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, phone, newEmail, preferences } = req.body;
+
+    if (!id) {
+      res.status(400).json({ success: false, message: 'User ID is required' });
+      return;
+    }
+
+    const client = getSupabaseAdminClient();
+
+    if (!client) {
+      // Fallback: pretend update succeeded
+      res.status(200).json({ success: true, message: 'Profile updated (fallback mode)', user: { id, firstName, lastName, phone, email: newEmail || null, preferences } });
+      return;
+    }
+
+    const updatePayload: any = {};
+    if (typeof firstName === 'string') updatePayload.first_name = firstName;
+    if (typeof lastName === 'string') updatePayload.last_name = lastName;
+    if (typeof phone === 'string') updatePayload.phone = phone;
+
+    // If changing email, require OTP verification for the new email
+    if (typeof newEmail === 'string' && newEmail.trim().length > 0) {
+      const verified = isOTPVerified(newEmail);
+      if (!verified) {
+        res.status(400).json({ success: false, message: 'New email not verified via OTP' });
+        return;
+      }
+      updatePayload.email = newEmail.trim();
+    }
+
+    if (preferences && typeof preferences === 'object') {
+      updatePayload.metadata = preferences;
+    }
+
+    const { data, error } = await client
+      .from('users')
+      .update(updatePayload)
+      .eq('id', id)
+      .select('id, email, role, first_name, last_name, phone, school_id, created_at, updated_at')
+      .single();
+
+    if (error) {
+      res.status(500).json({ success: false, message: 'Failed to update user', error: error.message });
+      return;
+    }
+
+    const safeUser = {
+      id: data.id,
+      email: data.email,
+      role: data.role,
+      firstName: data.first_name,
+      lastName: data.last_name,
+      phone: data.phone,
+      schoolId: data.school_id,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+
+    res.status(200).json({ success: true, message: 'User updated', user: safeUser });
+  } catch (error) {
+    console.error('Update user error:', error);
     next(error);
   }
 };

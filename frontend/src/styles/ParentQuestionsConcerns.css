@@ -1,0 +1,11 @@
+.parent-messaging-section{margin:20px 0;background:#fff;padding:16px;border-radius:8px;box-shadow:var(--shadow)}
+.parent-message-form{display:flex;flex-direction:column;gap:8px}
+.parent-message-form input,.parent-message-form textarea{width:100%;padding:10px;border:1px solid #e6edf3;border-radius:6px;font-size:14px}
+.parent-message-form textarea{min-height:120px}
+.parent-message-actions{display:flex;justify-content:flex-end}
+.parent-message-list{margin-top:16px}
+.parent-message-item{padding:12px;border-bottom:1px solid #f1f5f9}
+.parent-message-item strong{display:block}
+.parent-message-item p{margin:6px 0}
+.parent-message-item small{color:#64748b}
+.empty-state{padding:12px;color:#64748b}

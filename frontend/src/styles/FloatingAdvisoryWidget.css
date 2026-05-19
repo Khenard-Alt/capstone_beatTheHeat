@@ -1,0 +1,13 @@
+.floating-advisory-header{position:fixed;right:24px;top:84px;z-index:900;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;min-width:320px;max-width:420px;padding:12px 14px;border:none;border-radius:999px;background:#0f172a;color:#fff;box-shadow:0 14px 30px rgba(15,23,42,0.35);cursor:pointer;font-weight:600;line-height:1.2}
+.floating-advisory-header:hover{background:#111827}
+.floating-advisory-header-left{display:flex;flex-direction:column;gap:4px;min-width:0}
+.floating-advisory-badge{align-self:flex-start;background:#f97316;color:#fff;border-radius:999px;padding:4px 8px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase}
+.floating-advisory-text{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
+.floating-advisory-icon{display:grid;place-items:center;background:#0ea5e9;border-radius:999px;width:34px;height:34px}
+.floating-advisory-icon svg{font-size:18px}
+.floating-advisory-time{font-size:10px;color:#dbeafe;opacity:0.9}
+
+@media (max-width: 768px){
+  .floating-advisory-header{right:16px;left:16px;top:72px;max-width:none}
+  .floating-advisory-text{max-width:none}
+}

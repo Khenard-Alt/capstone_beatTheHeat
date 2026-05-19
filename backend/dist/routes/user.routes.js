@@ -47,6 +47,11 @@ router.get('/otp-status/:email', userController_1.getOTPStatus);
  */
 router.get('/:id', userController_1.getUserProfile);
 /**
+ * PUT /api/users/:id
+ * Update user profile (name, phone, email change requires OTP verified)
+ */
+router.put('/:id', userController_1.updateUser);
+/**
  * DELETE /api/users/:id
  * Delete a user by ID
  */

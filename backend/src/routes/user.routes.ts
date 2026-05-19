@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { registerUser, loginUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser } from '../controllers/userController';
+import { registerUser, loginUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser } from '../controllers/userController';
 
 const router: Router = express.Router();
 
@@ -50,6 +50,12 @@ router.get('/otp-status/:email', getOTPStatus);
  * Get user profile by ID
  */
 router.get('/:id', getUserProfile);
+
+/**
+ * PUT /api/users/:id
+ * Update user profile (name, phone, email change requires OTP verified)
+ */
+router.put('/:id', updateUser);
 
 /**
  * DELETE /api/users/:id

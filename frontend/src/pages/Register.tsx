@@ -5,6 +5,7 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { useAuth } from '../hooks/useAuth';
 import { isValidEmail, isValidPassword } from '../utils/validators';
 import { apiClient } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { MdEmail, MdLock, MdPerson, MdClose, MdCheckCircle, MdSearch } from 'react-icons/md';
 import '../styles/Register.css';
 
@@ -23,6 +24,7 @@ interface StudentOption {
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) => {
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>('basic');
   const [students, setStudents] = useState<StudentOption[]>([]);
@@ -55,14 +57,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
     const fetchStudents = async () => {
       try {
         const { data } = await apiClient.get('/api/students');
+        // The backend now filters students who already have a parent_user_id
         setStudents(data.students || []);
       } catch (err) {
-        console.warn('Using fallback students:', err);
-        setStudents([
-          { id: 's1', name: 'Juan Dela Cruz', grade: 'Grade 3' },
-          { id: 's2', name: 'Maria Santos', grade: 'Grade 5' },
-          { id: 's3', name: 'Carlos Reyes', grade: 'Grade 4' },
-        ]);
+        console.error('Failed to fetch students from database:', err);
+        setStudents([]);
+        setErrorMessage('Could not load student list. Please check your connection.');
       }
     };
     if (open) fetchStudents();
@@ -214,7 +214,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
         role: 'parent',
       });
       setSuccessMessage('Registration complete!');
-      setTimeout(() => onClose(), 1500);
+
+      // Close modal and redirect to parent dashboard
+      setTimeout(() => {
+        onClose();
+        navigate('/parent/dashboard');
+      }, 1500);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -299,8 +304,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
         {/* Step 3: Child Search & Selection */}
         {step === 'child-search' && (
           <div className="modal-step">
-            <h3>Find Your Child</h3>
-            <p>Search and select your child from the school database</p>
+            <h3>Please double check your selection</h3>
+            <p>Kindly verify the child's information before proceeding</p>
 
             {errorMessage && <ErrorMessage message={errorMessage} type="error" onClose={() => setErrorMessage('')} />}
 

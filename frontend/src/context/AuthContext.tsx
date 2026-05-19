@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   logout: () => void;
   register: (data: any) => Promise<void>;
+  setAdminAuthSession: (user: User) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,6 +24,12 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const setAdminAuthSession = (adminUser: User) => {
+    setUser(adminUser);
+    localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(adminUser));
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'admin-auth-token');
+  };
 
   useEffect(() => {
     // Check for stored user data on mount
@@ -127,6 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         logout,
         register,
+        setAdminAuthSession,
       }}
     >
       {children}

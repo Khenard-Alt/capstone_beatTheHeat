@@ -87,7 +87,10 @@ insert into public.students (id, student_number, first_name, last_name, grade_le
 values
 	('s1', '2026-0001', 'Juan', 'Dela Cruz', 'Grade 3', 'A', 'school-1', 'active'),
 	('s2', '2026-0002', 'Maria', 'Santos', 'Grade 5', 'B', 'school-1', 'active'),
-	('s3', '2026-0003', 'Carlos', 'Reyes', 'Grade 4', 'C', 'school-1', 'active')
+	('s3', '2026-0003', 'Carlos', 'Reyes', 'Grade 4', 'C', 'school-1', 'active'),
+	('s4', '2026-0004', 'Ana', 'Rizal', 'Grade 1', 'D', 'school-1', 'active'),
+	('s5', '2026-0005', 'Pedro', 'Penduko', 'Grade 6', 'Alpha', 'school-1', 'active'),
+	('s6', '2026-0006', 'Sofia', 'Loren', 'Grade 2', 'Newton', 'school-1', 'active')
 on conflict (id) do update set
 	student_number = excluded.student_number,
 	first_name = excluded.first_name,

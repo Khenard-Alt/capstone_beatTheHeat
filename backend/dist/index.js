@@ -17,6 +17,8 @@ const principal_routes_1 = __importDefault(require("./routes/principal.routes"))
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const student_routes_1 = __importDefault(require("./routes/student.routes"));
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
+const announcements_routes_1 = __importDefault(require("./routes/announcements.routes"));
+const parentMessages_routes_1 = __importDefault(require("./routes/parentMessages.routes"));
 const weather_service_1 = require("./services/weather.service");
 // Import routes (to be created)
 // import schoolRoutes from './routes/school.routes';
@@ -46,6 +48,8 @@ app.use('/api/students', student_routes_1.default);
 app.use('/api/weather', weather_routes_1.default);
 app.use('/api/heat-index', heatIndex_routes_1.default);
 app.use('/api/notifications', notification_routes_1.default);
+app.use('/api/announcements', announcements_routes_1.default);
+app.use('/api/parent-messages', parentMessages_routes_1.default);
 // app.use('/api/schools', schoolRoutes);
 app.use('/api/health-advisories', healthAdvisory_routes_1.default);
 app.use('/api/admin', admin_routes_1.default);

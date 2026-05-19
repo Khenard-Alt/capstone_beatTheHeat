@@ -1,6 +1,6 @@
 import React from 'react';
 import type { WeatherData } from '../types';
-import { formatTemperature, formatHumidity, formatWindSpeed, formatDateTimeGlobal } from '../utils/formatters';
+import { formatTemperature, formatDateTimeGlobal } from '../utils/formatters';
 import { WEATHER_ICONS } from '../utils/constants';
 import '../styles/WeatherWidget.css';
 
@@ -26,33 +26,10 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
           <div className="weather-conditions">{weather.conditions}</div>
         </div>
 
-        <div className="weather-details">
+        <div className="weather-details minimal">
           <div className="weather-detail">
-            <span className="weather-detail-label">Feels Like</span>
-            <span className="weather-detail-value">
-              {formatTemperature(weather.feelsLike)}
-            </span>
-          </div>
-
-          <div className="weather-detail">
-            <span className="weather-detail-label">Humidity</span>
-            <span className="weather-detail-value">
-              {formatHumidity(weather.humidity)}
-            </span>
-          </div>
-
-          <div className="weather-detail">
-            <span className="weather-detail-label">Wind Speed</span>
-            <span className="weather-detail-value">
-              {formatWindSpeed(weather.windSpeed)}
-            </span>
-          </div>
-
-          <div className="weather-detail">
-            <span className="weather-detail-label">Pressure</span>
-            <span className="weather-detail-value">
-              {weather.pressure} hPa
-            </span>
+            <span className="weather-detail-label">Temperature</span>
+            <span className="weather-detail-value">{formatTemperature(weather.temperature)}</span>
           </div>
         </div>
       </div>

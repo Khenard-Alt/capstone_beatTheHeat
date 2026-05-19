@@ -178,6 +178,31 @@ export const generateHealthAdvisory = async (
 	}
 };
 
+export const getRealtimeAdvisory = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+): Promise<void> => {
+	try {
+		const query = typeof req.query?.query === 'string' ? req.query.query : 'Realtime heat advisory update.';
+		const weather = await weatherService.getCurrentWeather();
+		const advisory = await aiAnalysisService.generatePythonOnlyAdvisory({
+			query,
+			weather,
+		});
+
+		res.status(200).json({
+			success: true,
+			data: {
+				...advisory,
+				generatedAt: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 export const getHealthAdvisories = async (
 	req: Request,
 	res: Response,

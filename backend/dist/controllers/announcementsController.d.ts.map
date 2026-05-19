@@ -1,0 +1,1 @@
+{"version":3,"file":"announcementsController.d.ts","sourceRoot":"","sources":["../../src/controllers/announcementsController.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AAwC1D,eAAO,MAAM,uBAAuB;4BACJ,OAAO,OAAO,QAAQ,QAAQ,YAAY,KAAG,OAAO,CAAC,IAAI,CAAC;CA6BzF,CAAC;AAEF,eAAe,uBAAuB,CAAC"}

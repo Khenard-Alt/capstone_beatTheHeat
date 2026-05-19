@@ -22,7 +22,8 @@ interface ChatMessage {
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const auth = useAuth();
+  const { login } = auth;
 
   const [formData, setFormData] = useState({
     email: '',
@@ -273,14 +274,20 @@ export const Login: React.FC = () => {
         updatedAt: new Date().toISOString(),
       };
       
-      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(adminUser));
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'admin-auth-token');
+      // Use the context setter to update the global auth state immediately
+      if (auth && 'setAdminAuthSession' in auth) {
+        auth.setAdminAuthSession(adminUser as any);
+      } else {
+        // Fallback if context is tricky, though we'll ensure it works
+        localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(adminUser));
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'admin-auth-token');
+      }
       
       setAdminAuthSecret('');
       setAdminAuthSuccess('Admin authenticated. Redirecting to admin panel...');
       
       setTimeout(() => {
-        navigate('/schools');
+        navigate('/admin');
       }, 800);
     } catch (authError) {
       setAdminAuthError(authError instanceof Error ? authError.message : 'Admin authentication failed.');
@@ -296,7 +303,7 @@ export const Login: React.FC = () => {
           <form className="admin-auth-modal" onSubmit={handleAdminAuth}>
             <div className="admin-auth-modal-header">
               <div>
-                <div className="admin-auth-eyebrow">Login Shortcut</div>
+                {/* <div className="admin-auth-eyebrow">Login Shortcut</div> */}
                 <h2>Admin Authentication</h2>
               </div>
               <button
@@ -309,8 +316,6 @@ export const Login: React.FC = () => {
               </button>
             </div>
 
-            <p className="admin-auth-copy">This modal appears only on Login. Use Ctrl + Shift + A to open admin authentication.</p>
-
             {adminAuthError && <div className="admin-inline-alert error">{adminAuthError}</div>}
             {adminAuthSuccess && <div className="admin-inline-alert success">{adminAuthSuccess}</div>}
 
@@ -321,11 +326,11 @@ export const Login: React.FC = () => {
               placeholder="admin@example.com"
             />
             <Input
-              label="Admin Secret"
+              label="Password"
               type="password"
               value={adminAuthSecret}
               onChange={(event) => setAdminAuthSecret(event.target.value)}
-              placeholder="Enter admin auth secret"
+              placeholder="Enter admin password"
             />
 
             <div className="admin-auth-actions">

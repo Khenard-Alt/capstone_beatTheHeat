@@ -95,9 +95,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
     <header className="header">
       <div className="header-left">
         <Link to={homePath} className="header-logo">
-          <div className="header-logo-placeholder">
-            <span className="header-logo-icon">☀️</span>
-          </div>
+          <span className="header-logo-icon" style={{ fontSize: '1.8rem' }}>🔥</span>
           <div className="header-logo-content">
             <span className="header-logo-text">Beat The Heat</span>
             <span className="header-logo-subtitle">Mayamot Elementary School</span>

@@ -11,6 +11,7 @@ insert into public.users (email, password_hash, first_name, last_name, role, pho
 values
 	('admin@beattheheat.local', '$2b$10$sbjgoAiiMij60xhnlGmjSO5t8jJomulvQCdAvF3HEkq2qmI9j17KS', 'System', 'Administrator', 'admin', '+63 912 000 0001', 'school-1', '{"seeded": true}'::jsonb),
 	('parent@beattheheat.local', '$2b$10$hzqmbAY8YFlKYKJc8y4mJ.a7G0pdQ5sLRNluYR0nSsuNj6uyeckCK', 'Maria', 'Parent', 'parent', '+63 912 000 0002', 'school-1', '{"seeded": true}'::jsonb),
+	('parent2@beattheheat.local', '$2b$10$hzqmbAY8YFlKYKJc8y4mJ.a7G0pdQ5sLRNluYR0nSsuNj6uyeckCK', 'Elena', 'Gonzales', 'parent', '+63 912 000 0005', 'school-1', '{"seeded": true}'::jsonb),
 	('teacher@beattheheat.local', '$2b$10$51n6u285G7vKzITbmW4Avu0nMO6nOoeTy0FpjLcjY7Aa5c/nRg3l6', 'Tomas', 'Teacher', 'teacher', '+63 912 000 0003', 'school-1', '{"seeded": true}'::jsonb),
 	('principal@beattheheat.local', '$2b$10$51n6u285G7vKzITbmW4Avu0nMO6nOoeTy0FpjLcjY7Aa5c/nRg3l6', 'Paula', 'Principal', 'principal', '+63 912 000 0004', 'school-1', '{"seeded": true}'::jsonb)
 on conflict (email) do update set
@@ -35,13 +36,28 @@ update public.students
 set parent_user_id = (
 	select id from public.users where email = 'parent@beattheheat.local' limit 1
 )
-where id in ('s1', 's2');
+where id in ('s1', 's2', 's3');
+
+update public.students
+set parent_user_id = (
+	select id from public.users where email = 'parent2@beattheheat.local' limit 1
+)
+where id in ('s4', 's5', 's6');
 
 insert into public.parent_student_guardians (parent_user_id, student_id, relationship_type, is_primary)
 select u.id, s.id, 'parent', true
 from public.users u
-join public.students s on s.id in ('s1', 's2')
+join public.students s on s.id in ('s1', 's2', 's3')
 where u.email = 'parent@beattheheat.local'
+on conflict (parent_user_id, student_id) do update set
+	relationship_type = excluded.relationship_type,
+	is_primary = excluded.is_primary;
+
+insert into public.parent_student_guardians (parent_user_id, student_id, relationship_type, is_primary)
+select u.id, s.id, 'parent', true
+from public.users u
+join public.students s on s.id in ('s4', 's5', 's6')
+where u.email = 'parent2@beattheheat.local'
 on conflict (parent_user_id, student_id) do update set
 	relationship_type = excluded.relationship_type,
 	is_primary = excluded.is_primary;

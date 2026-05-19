@@ -50,40 +50,39 @@ export const getStudents = async (
   try {
     const client = getSupabaseAdminClient();
 
-    // If no database, return fallback students
     if (!client) {
-      res.status(200).json({
-        success: true,
-        message: 'Students (fallback mode)',
-        students: fallbackStudents,
+      res.status(500).json({
+        success: false,
+        message: 'Database connection not configured',
       });
       return;
     }
 
     const { data, error } = await client
       .from('students')
-      .select('id, first_name, last_name, grade_level, school_id')
+      .select('id, first_name, last_name, grade_level, school_id, parent_user_id')
+      .is('parent_user_id', null)
       .order('last_name', { ascending: true })
       .order('first_name', { ascending: true });
 
     if (error) {
-      console.warn('Students table query failed, using fallback data:', error);
-      res.status(200).json({
-        success: true,
-        message: 'Students (fallback mode)',
-        students: fallbackStudents,
+      console.error('Database query error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch students from database',
+        error: error.message
       });
       return;
     }
 
     res.status(200).json({
       success: true,
-      message: 'Students',
+      message: 'Students without parents',
       students: (data ?? []).map(mapStudentRow),
     });
   } catch (error) {
     console.error('Get students error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch students' });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 

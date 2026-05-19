@@ -12,6 +12,9 @@ import principalRoutes from './routes/principal.routes';
 import userRoutes from './routes/user.routes';
 import studentRoutes from './routes/student.routes';
 import notificationRoutes from './routes/notification.routes';
+import announcementsRoutes from './routes/announcements.routes';
+import parentMessagesRoutes from './routes/parentMessages.routes';
+import incidentsRoutes from './routes/incidents.routes';
 import { weatherService } from './services/weather.service';
 
 // Import routes (to be created)
@@ -47,6 +50,9 @@ app.use('/api/students', studentRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/heat-index', heatIndexRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/announcements', announcementsRoutes);
+app.use('/api/parent-messages', parentMessagesRoutes);
+app.use('/api/incidents', incidentsRoutes);
 // app.use('/api/schools', schoolRoutes);
 app.use('/api/health-advisories', healthAdvisoryRoutes);
 app.use('/api/admin', adminRoutes);

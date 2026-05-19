@@ -4,6 +4,8 @@ import { WeatherWidget } from '../../components/WeatherWidget';
 import { AdvisoryAlert } from '../../components/AdvisoryAlert';
 import { Chart } from '../../components/Chart';
 import { Card } from '../../components/Card';
+import { fetchAnnouncements, Announcement } from '../../services/announcements.service';
+import { fetchIncidents } from '../../services/incidents.service';
 import { fetchCurrentWeather } from '../../services/weather.service';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
 import type { HeatIndexData, WeatherData, HealthAdvisory, StudentHealthIncident } from '../../types';
@@ -59,72 +61,9 @@ export const ParentDashboard: React.FC = () => {
     'Taglish: safe ba mag-recess sa ganitong init?',
   ];
 
-  const [healthIncidents] = useState<StudentHealthIncident[]>(() => {
-    const now = Date.now();
-
-    return [
-      {
-        id: '1',
-        studentName: 'Maria Santos',
-        gradeLevel: 'Grade 5',
-        section: 'Mabini',
-        incidentType: 'heat-exhaustion',
-        severity: 'moderate',
-        symptoms: ['Dizziness', 'Excessive sweating', 'Weakness'],
-        heatIndex: 42,
-        temperature: 35,
-        timestamp: new Date(now - 3600000).toISOString(),
-        actionTaken: 'Moved to shaded area, provided water and rest',
-        reportedBy: 'Ms. Cruz',
-        status: 'monitoring',
-      },
-      {
-        id: '2',
-        studentName: 'Juan Dela Cruz',
-        gradeLevel: 'Grade 4',
-        section: 'Rizal',
-        incidentType: 'asthma-attack',
-        severity: 'severe',
-        symptoms: ['Difficulty breathing', 'Wheezing', 'Chest tightness'],
-        heatIndex: 39,
-        temperature: 34,
-        timestamp: new Date(now - 7200000).toISOString(),
-        actionTaken: 'Administered inhaler, contacted parents, monitoring in clinic',
-        reportedBy: 'Ms. Reyes',
-        status: 'treated',
-      },
-      {
-        id: '3',
-        studentName: 'Ana Garcia',
-        gradeLevel: 'Grade 6',
-        section: 'Bonifacio',
-        incidentType: 'dehydration',
-        severity: 'mild',
-        symptoms: ['Dry mouth', 'Headache', 'Fatigue'],
-        heatIndex: 38,
-        temperature: 33,
-        timestamp: new Date(now - 10800000).toISOString(),
-        actionTaken: 'Provided oral rehydration solution, rest in cool area',
-        reportedBy: 'Mr. Lopez',
-        status: 'resolved',
-      },
-      {
-        id: '4',
-        studentName: 'Pedro Ramos',
-        gradeLevel: 'Grade 3',
-        section: 'Luna',
-        incidentType: 'nausea',
-        severity: 'mild',
-        symptoms: ['Nausea', 'Dizziness', 'Pale skin'],
-        heatIndex: 41,
-        temperature: 35,
-        timestamp: new Date(now - 1800000).toISOString(),
-        actionTaken: 'Rest in clinic, cold compress applied',
-        reportedBy: 'Ms. Santos',
-        status: 'monitoring',
-      },
-    ];
-  });
+  const [healthIncidents, setHealthIncidents] = useState<StudentHealthIncident[]>([]);
+  const [incidentsLoading, setIncidentsLoading] = useState(true);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -149,9 +88,46 @@ export const ParentDashboard: React.FC = () => {
     // Fetch immediately
     fetchWeather();
 
-    // Then poll every 15 minutes
-    const interval = setInterval(fetchWeather, 15 * 60 * 1000);
+    // Then poll every 1 minute
+    const interval = setInterval(fetchWeather, 1 * 60 * 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const data = await fetchAnnouncements(5, 0);
+        if (mounted) setAnnouncements(data);
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        setIncidentsLoading(true);
+        const data = await fetchIncidents(20, 0);
+        if (mounted) setHealthIncidents(data);
+      } catch (err) {
+        if (mounted) setHealthIncidents([]);
+      } finally {
+        if (mounted) setIncidentsLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const heatIndexData = useMemo<HeatIndexData>(() => {
@@ -464,7 +440,11 @@ export const ParentDashboard: React.FC = () => {
               </p>
 
               <div className="parent-incidents-list">
-                {filteredHealthIncidents.map((incident) => (
+                {incidentsLoading && (
+                  <div className="parent-incidents-empty">Loading incidents...</div>
+                )}
+
+                {!incidentsLoading && filteredHealthIncidents.map((incident) => (
                   <article key={incident.id} className="parent-incident-item">
                     <div className="parent-incident-head">
                       <h4>{incident.studentName}</h4>
@@ -477,7 +457,7 @@ export const ParentDashboard: React.FC = () => {
                   </article>
                 ))}
 
-                {filteredHealthIncidents.length === 0 && (
+                {!incidentsLoading && filteredHealthIncidents.length === 0 && (
                   <div className="parent-incidents-empty">
                     No matching student incident found. Try another name, grade, or section.
                   </div>
@@ -522,7 +502,7 @@ export const ParentDashboard: React.FC = () => {
             )}
             {chartData.length === 0 && (
               <div className="empty-state">
-                Waiting for weather data... (refreshes every 15 minutes)
+                Waiting for weather data... (refreshes every minute)
               </div>
             )}
           </Card>
@@ -536,6 +516,19 @@ export const ParentDashboard: React.FC = () => {
               <li>Monitor for dizziness or fatigue during high heat.</li>
               <li>Follow school announcements for schedule changes.</li>
             </ul>
+          </Card>
+
+          <Card title="Announcements">
+            <div className="parent-announcements">
+              {announcements.length === 0 && <div className="empty-state">No announcements</div>}
+              {announcements.map((a) => (
+                <article key={a.id} className="parent-announcement-item">
+                  <h4>{a.title}</h4>
+                  <p className="parent-announcement-body">{a.body}</p>
+                  <small className="parent-announcement-meta">{a.created_at ? new Date(a.created_at).toLocaleString() : ''}</small>
+                </article>
+              ))}
+            </div>
           </Card>
 
           <Card title="School Status">
@@ -580,19 +573,7 @@ export const ParentDashboard: React.FC = () => {
         </div>
       )}
 
-      {!showParentPopup && !showParentChat && (
-        <button
-          className="parent-ai-nudge"
-          onClick={openParentChat}
-          title="Ask AI about heat index"
-          aria-label="Ask AI about heat index"
-        >
-          <span className="parent-ai-nudge-text">Ask me about heat index</span>
-          <span className="parent-ai-nudge-icon-wrap">
-            <MdChat className="parent-ai-nudge-icon" />
-          </span>
-        </button>
-      )}
+      {!showParentPopup && !showParentChat && null}
 
       {showParentChat && (
         <div className="parent-chat-panel">

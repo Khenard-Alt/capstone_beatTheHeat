@@ -11,40 +11,49 @@ exports.notificationController = {
         try {
             const { userId, heatLevel, heatIndex, recommendations, schoolName } = req.body;
             if (!userId || !heatLevel || heatIndex === undefined) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: 'Missing required fields: userId, heatLevel, heatIndex',
                 });
+                return;
             }
             // Get user email from Supabase
             const supabase = (0, supabase_1.getSupabaseAdminClient)();
+            if (!supabase) {
+                res.status(503).json({ success: false, message: 'Database not available (fallback mode)' });
+                return;
+            }
             const { data: user, error: userError } = await supabase
                 .from('users')
                 .select('email, first_name')
                 .eq('id', userId)
                 .single();
             if (userError || !user) {
-                return res.status(404).json({
+                res.status(404).json({
                     success: false,
                     message: 'User not found',
                 });
+                return;
             }
             // Send email
             const emailSent = await (0, email_service_1.sendHeatAlertEmail)(user.email, user.first_name || 'User', schoolName || 'Your School', heatLevel, heatIndex, recommendations || []);
             if (!emailSent) {
-                return res.status(500).json({
+                res.status(500).json({
                     success: false,
                     message: 'Failed to send heat alert email',
                 });
+                return;
             }
             res.json({
                 success: true,
                 message: 'Heat alert email sent successfully',
                 data: { userId, email: user.email },
             });
+            return;
         }
         catch (error) {
             next(error);
+            return;
         }
     },
     /**
@@ -54,28 +63,35 @@ exports.notificationController = {
         try {
             const { userIds, advisoryTitle, advisoryText, riskLevel, schoolName } = req.body;
             if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: 'userIds must be a non-empty array',
                 });
+                return;
             }
             if (!advisoryTitle || !advisoryText) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: 'Missing required fields: advisoryTitle, advisoryText',
                 });
+                return;
             }
             // Get user emails from Supabase
             const supabase = (0, supabase_1.getSupabaseAdminClient)();
+            if (!supabase) {
+                res.status(503).json({ success: false, message: 'Database not available (fallback mode)' });
+                return;
+            }
             const { data: users, error: usersError } = await supabase
                 .from('users')
                 .select('id, email, first_name')
                 .in('id', userIds);
             if (usersError || !users || users.length === 0) {
-                return res.status(404).json({
+                res.status(404).json({
                     success: false,
                     message: 'No users found',
                 });
+                return;
             }
             // Send emails to all users
             const results = await Promise.all(users.map((user) => (0, email_service_1.sendAdvisoryNotificationEmail)(user.email, user.first_name || 'User', schoolName || 'Your School', advisoryTitle, advisoryText, riskLevel || 'medium')));
@@ -89,9 +105,11 @@ exports.notificationController = {
                     failedCount: users.length - successCount,
                 },
             });
+            return;
         }
         catch (error) {
             next(error);
+            return;
         }
     },
     /**
@@ -101,13 +119,18 @@ exports.notificationController = {
         try {
             const { schoolId, heatLevel, heatIndex, recommendations } = req.body;
             if (!schoolId || !heatLevel || heatIndex === undefined) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: 'Missing required fields: schoolId, heatLevel, heatIndex',
                 });
+                return;
             }
             // Get all users for the school
             const supabase = (0, supabase_1.getSupabaseAdminClient)();
+            if (!supabase) {
+                res.status(503).json({ success: false, message: 'Database not available (fallback mode)' });
+                return;
+            }
             const { data: school } = await supabase
                 .from('schools')
                 .select('name')
@@ -118,10 +141,11 @@ exports.notificationController = {
                 .select('id, email, first_name')
                 .eq('school_id', schoolId);
             if (usersError || !users || users.length === 0) {
-                return res.status(404).json({
+                res.status(404).json({
                     success: false,
                     message: 'No users found for this school',
                 });
+                return;
             }
             // Send heat alert emails to all users
             const results = await Promise.all(users.map((user) => (0, email_service_1.sendHeatAlertEmail)(user.email, user.first_name || 'User', school?.name || 'Your School', heatLevel, heatIndex, recommendations || [])));
@@ -136,9 +160,11 @@ exports.notificationController = {
                     failedCount: users.length - successCount,
                 },
             });
+            return;
         }
         catch (error) {
             next(error);
+            return;
         }
     },
 };

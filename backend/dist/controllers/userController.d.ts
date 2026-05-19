@@ -44,4 +44,9 @@ export declare const getOTPStatus: (req: Request, res: Response, next: NextFunct
  * DELETE /api/users/:id
  */
 export declare const deleteUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+/**
+ * Update user profile
+ * PUT /api/users/:id
+ */
+export declare const updateUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 //# sourceMappingURL=userController.d.ts.map

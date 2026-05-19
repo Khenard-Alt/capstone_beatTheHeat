@@ -134,6 +134,28 @@ class AIAnalysisService {
 		}
 	}
 
+	public async generatePythonOnlyAdvisory(input: AdvisoryInput): Promise<AdvisoryResult> {
+		const rawQuery = typeof input.query === 'string' ? input.query : '';
+		const scopedQuery = this.scopeUserQuery(rawQuery);
+		const languageStyle = this.detectLanguageStyle(rawQuery || scopedQuery);
+
+		if (this.classifyScope(rawQuery) === 'out-of-scope') {
+			const refusal = this.buildScopeRefusalAdvisory(input.weather, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, refusal, 'fallback', 'scope-guard');
+			return refusal;
+		}
+
+		const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle);
+		if (pythonResult) {
+			return pythonResult;
+		}
+
+		const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
+		const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
+		await this.logAdvisoryAudit(input, scopedQuery, adjustedFallback, 'fallback', 'python-fallback');
+		return adjustedFallback;
+	}
+
 	private async requestGeminiContent(
 		requestBody: Record<string, unknown>
 	): Promise<{ data: GeminiResponse; modelUsed: string }> {

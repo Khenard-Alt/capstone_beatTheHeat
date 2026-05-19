@@ -1,9 +1,43 @@
 import React from 'react';
 import { ParentSectionPage } from './ParentSectionPage';
+import { useEffect, useState } from 'react';
+import { fetchParentMessages, sendParentMessage, ParentMessage } from '../../services/parentMessages.service';
+import '../../styles/ParentQuestionsConcerns.css';
 
 export const ParentQuestionsConcerns: React.FC = () => {
+  const [messages, setMessages] = useState<ParentMessage[]>([]);
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const data = await fetchParentMessages(10, 0);
+        if (mounted) setMessages(data);
+      } catch (err) {
+        // ignore
+      }
+    };
+    void load();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleSend = async () => {
+    if (!subject.trim() || !body.trim()) return;
+    try {
+      // Using placeholder ids for now; in real app use authenticated user id and teacher id
+      const created = await sendParentMessage({ parentUserId: 'parent-1', teacherUserId: 'teacher-1', studentId: null, subject: subject.trim(), body: body.trim() });
+      setMessages((prev) => [created, ...prev]);
+      setSubject('');
+      setBody('');
+    } catch (err) {
+      console.error('Send message failed', err);
+    }
+  };
   return (
-    <ParentSectionPage
+    <>
+      <ParentSectionPage
       eyebrow="Parent Support"
       title="Questions and Concerns"
       description="A place for parents to review the most common heat-safety questions, check what to report, and understand where to escalate issues."
@@ -45,6 +79,29 @@ export const ParentQuestionsConcerns: React.FC = () => {
         },
       ]}
       footerNote="For live, scoped answers, go to the Chatbot page and ask a question in English, Tagalog, or Taglish."
-    />
+      />
+      <section className="parent-messaging-section">
+      <h2>Send a question to your child's advisory teacher</h2>
+      <div className="parent-message-form">
+        <input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
+        <textarea placeholder="Write your question or concern..." value={body} onChange={(e) => setBody(e.target.value)} />
+        <div className="parent-message-actions">
+          <button onClick={handleSend} className="primary">Send to Teacher</button>
+        </div>
+      </div>
+
+      <div className="parent-message-list">
+        <h3>Recent messages</h3>
+        {messages.length === 0 && <div className="empty-state">No messages yet</div>}
+        {messages.map((m) => (
+          <article key={m.id} className="parent-message-item">
+            <strong>{m.subject}</strong>
+            <p>{m.body}</p>
+            <small>{m.created_at ? new Date(m.created_at).toLocaleString() : ''}</small>
+          </article>
+        ))}
+      </div>
+    </section>
+    </>
   );
 };
