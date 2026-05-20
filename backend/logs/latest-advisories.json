@@ -1,0 +1,38 @@
+[
+  {
+    "location": "Mayamot Elementary School",
+    "heatIndexC": 48,
+    "heatLevel": "danger",
+    "advisory": {
+      "summary": "Current heat index is 48°C (danger). Prioritize hydration, shade, and reduced outdoor exposure. Keep hydration in mind today.",
+      "riskLevel": "danger",
+      "actions": [
+        "Review current heat index and postpone high-exertion outdoor activity if needed.",
+        "Ensure drinking water access in classrooms and activity areas.",
+        "Monitor students for early heat stress signs and escalate to clinic when needed."
+      ],
+      "safetyTips": [
+        "Encourage frequent hydration every 15 to 20 minutes during hot periods.",
+        "Use shaded or indoor alternatives for PE and assemblies when risk is elevated.",
+        "Coordinate with class advisers for at-risk students and immediate cooling response."
+      ],
+      "scopeNote": "Only system-provided weather, humidity, and heat-index inputs are used.",
+      "confidenceScore": 0.86,
+      "decisionBasis": {
+        "heatIndexC": 48,
+        "temperatureC": 34.2,
+        "humidityPercent": 71,
+        "heatLevel": "danger",
+        "dataSource": "fallback",
+        "rationale": [
+          "Heat index and humidity indicate elevated heat stress potential.",
+          "Recommendations are constrained to school operations and student safety."
+        ]
+      },
+      "modelProfile": {
+        "mode": "rule-grounded-ai",
+        "scope": "system-only"
+      }
+    }
+  }
+]

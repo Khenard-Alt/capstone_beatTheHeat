@@ -1,8 +1,10 @@
 import { getSupabaseAdminClient } from '../config/supabase';
 import { env } from '../config/environment';
 import { WeatherSnapshot } from '../types';
-import { sendHeatAlertEmail } from './email.service';
+import { sendHeatAlertEmail, sendAdvisoryNotificationEmail } from './email.service';
 import { sendHeatAlertSms } from './sms.service';
+import { aiAnalysisService } from './aiAnalysis.service';
+import { formatScheduledNotificationTitle } from '../utils/notificationFormatting';
 
 interface AlertRecipient {
 	id: string;
@@ -41,7 +43,7 @@ class NotificationService {
 			.from('users')
 			.select('id, email, first_name, last_name, phone, role, school_id')
 			.eq('school_id', schoolId)
-			.in('role', ['parent', 'principal']);
+			.in('role', ['parent', 'principal', 'teacher']);
 
 		if (error || !data) {
 			console.error('[NOTIFY] Failed to fetch parent/principal recipients:', error?.message ?? error);
@@ -62,16 +64,14 @@ class NotificationService {
 			return;
 		}
 
-		const now = new Date().toISOString();
+		const titleText = formatScheduledNotificationTitle(title);
 		const rows = recipients.map((recipient) => ({
 			user_id: recipient.id,
 			type: 'heat-alert',
-			title,
+			title: titleText,
 			message,
 			status: 'unread',
 			priority,
-			sent_at: now,
-			created_at: now,
 		}));
 
 		const { error } = await client.from('notifications').insert(rows);
@@ -137,6 +137,53 @@ class NotificationService {
 		}
 
 		this.lastDispatchBySchool.set(schoolId, Date.now());
+
+		// If heat reaches the highest severity, also generate and send an AI advisory
+		if (snapshot.heatLevel === 'extreme-danger') {
+			try {
+				await this.dispatchAdvisoryForSnapshot(snapshot);
+			} catch (err) {
+				console.error('[NOTIFY] Failed to dispatch advisory for extreme heat:', err);
+			}
+		}
+	}
+
+	public async dispatchAdvisoryForSnapshot(snapshot: WeatherSnapshot): Promise<void> {
+		// generate advisory via AI service
+		const advisoryQuery = 'Realtime health advisory update for current heat index.';
+		let advisoryResult;
+		try {
+			advisoryResult = await aiAnalysisService.generateScopedAdvisory({ query: advisoryQuery, weather: snapshot, single: true });
+		} catch (err) {
+			console.error('[NOTIFY] AI advisory generation failed:', err);
+			return;
+		}
+
+		const recipients = await this.fetchRecipients('school-1');
+		if (recipients.length === 0) return;
+
+		const title = `Health Advisory: ${advisoryResult.riskLevel?.toUpperCase() || 'Advisory'}`;
+		const message = advisoryResult.singleResponse ?? advisoryResult.summary ?? 'Please follow school guidance.';
+		const priority: 'low' | 'medium' | 'high' = snapshot.heatLevel === 'extreme-danger' ? 'high' : 'medium';
+
+		await this.saveInAppNotifications(recipients, title, message, priority);
+
+		if (env.heatAlertEmailEnabled) {
+			await Promise.all(
+				recipients
+					.filter((r) => !!r.email)
+					.map((r) =>
+						sendAdvisoryNotificationEmail(
+							String(r.email),
+							r.first_name ?? r.last_name ?? 'User',
+							snapshot.location,
+							title,
+							message,
+							priority === 'high' ? 'high' : 'medium'
+						)
+					)
+			);
+		}
 	}
 }
 

@@ -2,24 +2,32 @@ import type { StudentHealthIncident } from '../types';
 import { apiClient } from './api';
 import type { ApiEnvelope } from './api';
 
-interface BackendIncident {
+export interface IncidentRecord {
   id: string;
+  schoolId?: string | null;
+  reporterId?: string | null;
+  reporterName?: string | null;
+  reporterRole?: string | null;
+  studentId?: string | null;
   studentName: string;
-  gradeLevel: string;
-  section: string;
+  gradeLevel?: string | null;
+  section?: string | null;
+  parentName?: string | null;
+  parentEmail?: string | null;
   incidentType: StudentHealthIncident['incidentType'];
-  severity: StudentHealthIncident['severity'];
-  symptoms: string[];
-  heatIndex: number;
-  temperature: number;
+  description?: string | null;
+  severity?: StudentHealthIncident['severity'] | null;
+  symptoms?: string[];
+  heatIndex?: number | null;
+  temperature?: number | null;
   timestamp: string;
-  actionTaken: string;
-  reportedBy: string;
-  status: StudentHealthIncident['status'];
+  actionTaken?: string | null;
+  reportedBy?: string | null;
+  status: StudentHealthIncident['status'] | string;
 }
 
-export const fetchIncidents = async (limit = 20, offset = 0): Promise<StudentHealthIncident[]> => {
-  const { data } = await apiClient.get<ApiEnvelope<BackendIncident[]>>('/api/incidents', {
+export const fetchIncidents = async (limit = 20, offset = 0): Promise<IncidentRecord[]> => {
+  const { data } = await apiClient.get<ApiEnvelope<IncidentRecord[]>>('/api/incidents', {
     params: { limit, offset },
   });
   return data.data ?? [];

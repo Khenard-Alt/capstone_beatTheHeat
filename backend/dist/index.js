@@ -105,6 +105,36 @@ const startAdvisoryScheduler = () => {
         void generateAdvisory();
     }, intervalMs);
 };
+const startDailyNotificationScheduler = () => {
+    const scheduledTimes = (process.env.DAILY_NOTIFICATION_TIMES ?? '09:00,14:00,18:00')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    const lastSentForTime = new Map(); // time -> date string YYYY-MM-DD
+    const checkAndSend = async () => {
+        try {
+            const now = new Date();
+            const hhmm = now.toTimeString().slice(0, 5);
+            if (!scheduledTimes.includes(hhmm))
+                return;
+            const todayKey = now.toISOString().slice(0, 10);
+            const lastSent = lastSentForTime.get(hhmm);
+            if (lastSent === todayKey)
+                return; // already sent for this time today
+            // get current weather and dispatch advisory
+            const snapshot = await weather_service_1.weatherService.getCurrentWeather();
+            await notification_service_1.notificationService.dispatchAdvisoryForSnapshot(snapshot);
+            lastSentForTime.set(hhmm, todayKey);
+        }
+        catch (err) {
+            console.error('Daily notification scheduler error:', err);
+        }
+    };
+    // run immediately check and then every minute
+    void checkAndSend();
+    setInterval(() => void checkAndSend(), 60 * 1000);
+    console.log(`⏰ Daily notification scheduler enabled for times: ${(process.env.DAILY_NOTIFICATION_TIMES ?? '09:00,14:00,18:00')}`);
+};
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
@@ -114,6 +144,7 @@ app.listen(PORT, () => {
     console.log(`🤖 AI advisory scheduler: every ${Math.max(1, AI_ADVISORY_INTERVAL_MINUTES)} minute(s)`);
     startWeatherSnapshotScheduler();
     startAdvisoryScheduler();
+    startDailyNotificationScheduler();
 });
 exports.default = app;
 //# sourceMappingURL=index.js.map

@@ -13,6 +13,7 @@ interface AILogInput {
 }
 declare class AuditLogService {
     private readonly localAuditPath;
+    private supabaseDuplicateCountAvailable;
     logWeatherSnapshot(snapshot: WeatherSnapshot, schoolId?: string): Promise<void>;
     logAiAnalysis(input: AILogInput): Promise<void>;
     private findSimilarRecentAiAnalysis;

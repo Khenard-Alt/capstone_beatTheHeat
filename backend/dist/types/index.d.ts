@@ -36,5 +36,16 @@ export interface AdvisoryResult {
         scope: 'system-only';
     };
     singleResponse?: string;
+    healthDetails?: {
+        symptoms?: string[];
+        triagePriority?: 'urgent' | 'monitor' | 'low' | string;
+        teacherChecklist?: string[];
+        clinicActions?: string[];
+        parentChecklist?: string[];
+        recommendedFluidsAndVolumes?: string;
+        coolingProcedures?: string[];
+        whenToEscalate?: string;
+        sampleAnnouncementText?: string;
+    };
 }
 //# sourceMappingURL=index.d.ts.map

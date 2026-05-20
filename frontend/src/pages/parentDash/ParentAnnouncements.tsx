@@ -3,12 +3,17 @@ import { ParentSectionPage } from './ParentSectionPage';
 import type { HealthAdvisory as HealthAdvisoryType } from '../../types';
 import { DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { apiClient } from '../../services/api';
+import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
+import { formatDateTimeGlobal } from '../../utils/formatters';
 import '../../styles/HealthAdvisory.css';
 
 export const ParentAnnouncements: React.FC = () => {
   const [advisories, setAdvisories] = useState<HealthAdvisoryType[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [announcementsError, setAnnouncementsError] = useState<string | null>(null);
 
   const formatHeatLevelLabel = (value: string): string =>
     value
@@ -75,6 +80,25 @@ export const ParentAnnouncements: React.FC = () => {
     void fetchAdvisories();
   }, []);
 
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      try {
+        setAnnouncementsLoading(true);
+        const data = await fetchAnnouncements(10, 0);
+        setAnnouncements(data);
+        setAnnouncementsError(null);
+      } catch (err) {
+        console.error('Failed to fetch announcements:', err);
+        setAnnouncements([]);
+        setAnnouncementsError('Failed to load principal announcements');
+      } finally {
+        setAnnouncementsLoading(false);
+      }
+    };
+
+    void loadAnnouncements();
+  }, []);
+
   const activeAdvisories = useMemo(
     () => advisories.filter((advisory) => advisory.heatLevel !== 'normal' && advisory.riskLevel !== 'low'),
     [advisories]
@@ -90,16 +114,16 @@ export const ParentAnnouncements: React.FC = () => {
       eyebrow="School Updates"
       title="Announcements"
       description="A parent-facing notice board for heat advisories, school schedule changes, and operational reminders."
-      summary="This page keeps announcements short, actionable, and directly tied to school heat-safety operations and advisory history."
+      summary="This page keeps principal announcements and AI advisories short, actionable, and directly tied to school heat-safety operations."
       highlights={[
         { label: 'Latest notice', value: 'Heat monitoring active' },
         { label: 'Tone', value: 'Clear and actionable' },
-        { label: 'Coverage', value: 'Events, schedules, advisories' },
+        { label: 'Coverage', value: 'Principal notices and AI advisories' },
       ]}
       sections={[
         {
-          title: 'Current notice format',
-          body: 'Announcements should tell parents what changed, why it changed, and what students should do next.',
+          title: 'Current principal announcements',
+          body: 'These are the school announcements parents should read first for schedule updates, reminders, and urgent notices.',
           bullets: [
             'Start time or dismissal updates',
             'Activity suspensions or indoor-only reminders',
@@ -148,6 +172,43 @@ export const ParentAnnouncements: React.FC = () => {
       ]}
       footerNote="Need a conversational explanation? Open Chatbot and ask the same question in plain language."
     >
+      <div className="advisory-section">
+        <h2>Principal Announcements</h2>
+        {announcementsError && <div className="error-alert">{announcementsError}</div>}
+        {announcementsLoading && <div className="loading-state">Loading principal announcements...</div>}
+        {!announcementsLoading && announcements.length === 0 && !announcementsError && (
+          <p className="empty-state-text">No principal announcements</p>
+        )}
+        {!announcementsLoading && announcements.length > 0 && (
+          <div className="advisory-table-wrap">
+            <table className="advisory-table">
+              <thead>
+                <tr>
+                  <th scope="col">Issued</th>
+                  <th scope="col">Priority</th>
+                  <th scope="col">Title</th>
+                  <th scope="col">Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {announcements.map((announcement) => (
+                  <tr key={announcement.id}>
+                    <td>{formatDateTimeGlobal(announcement.created_at ?? new Date().toISOString())}</td>
+                    <td>
+                      <span className={`advisory-level badge-${announcement.priority ?? 'info'}`}>
+                        {(announcement.priority ?? 'info').toUpperCase()}
+                      </span>
+                    </td>
+                    <td>{announcement.title}</td>
+                    <td>{announcement.body}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {error && (
         <div className="error-alert">
           {error}

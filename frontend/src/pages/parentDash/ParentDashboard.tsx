@@ -13,6 +13,7 @@ import { calculateHeatIndex, getHeatLevel } from '../../utils/helpers';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { mapRealtimeAdvisory } from '../../utils/advisory';
+import type { IncidentRecord } from '../../services/incidents.service';
 import { MdClose, MdSend, MdChat, MdSearch } from 'react-icons/md';
 import '../../styles/ParentDashboard.css';
 
@@ -26,6 +27,54 @@ interface ParentChatMessage {
 
 type SmallTalkIntent = 'greeting' | 'thanks' | 'capability' | null;
 
+const normalizeIncidentType = (value?: string): StudentHealthIncident['incidentType'] => {
+  const allowedTypes: StudentHealthIncident['incidentType'][] = [
+    'heat-exhaustion',
+    'asthma-attack',
+    'dehydration',
+    'dizziness',
+    'nausea',
+    'headache',
+    'other',
+  ];
+
+  return allowedTypes.includes(value as StudentHealthIncident['incidentType'])
+    ? (value as StudentHealthIncident['incidentType'])
+    : 'other';
+};
+
+const normalizeSeverity = (value?: string | null): StudentHealthIncident['severity'] => {
+  if (value === 'mild' || value === 'moderate' || value === 'severe') {
+    return value;
+  }
+
+  return 'moderate';
+};
+
+const normalizeStatus = (value?: string | null): StudentHealthIncident['status'] => {
+  if (value === 'reported' || value === 'treated' || value === 'monitoring' || value === 'resolved') {
+    return value;
+  }
+
+  return 'reported';
+};
+
+const mapIncidentRecord = (incident: IncidentRecord): StudentHealthIncident => ({
+  id: incident.id,
+  studentName: incident.studentName,
+  gradeLevel: incident.gradeLevel?.trim() || 'N/A',
+  section: incident.section?.trim() || 'N/A',
+  incidentType: normalizeIncidentType(incident.incidentType),
+  severity: normalizeSeverity(incident.severity),
+  symptoms: incident.symptoms ?? [],
+  heatIndex: incident.heatIndex ?? 0,
+  temperature: incident.temperature ?? 0,
+  timestamp: incident.timestamp,
+  actionTaken: incident.actionTaken ?? incident.description ?? 'No action recorded',
+  reportedBy: incident.reporterName ?? incident.reportedBy ?? 'Unknown reporter',
+  status: normalizeStatus(incident.status),
+});
+
 export const ParentDashboard: React.FC = () => {
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [weatherHistory, setWeatherHistory] = useState<WeatherData[]>([]);
@@ -34,7 +83,7 @@ export const ParentDashboard: React.FC = () => {
   const [showParentChat, setShowParentChat] = useState(false);
   const [hasTriggeredInitialAlert, setHasTriggeredInitialAlert] = useState(false);
   const [incidentSearchTerm, setIncidentSearchTerm] = useState('');
-  const [incidentStatusFilter, setIncidentStatusFilter] = useState<'all' | 'reported' | 'treated' | 'monitoring' | 'resolved'>('all');
+  const [incidentStatusFilter, setIncidentStatusFilter] = useState<'all' | 'reported' | 'treated' | 'monitoring' | 'resolved' | 'pending'>('all');
   const [parentQuestion, setParentQuestion] = useState('');
   const [isAskingAI, setIsAskingAI] = useState(false);
   const [lastNotifiedLevel, setLastNotifiedLevel] = useState<string>('normal');
@@ -141,7 +190,7 @@ export const ParentDashboard: React.FC = () => {
       try {
         setIncidentsLoading(true);
         const data = await fetchIncidents(20, 0);
-        if (mounted) setHealthIncidents(data);
+        if (mounted) setHealthIncidents(data.map(mapIncidentRecord));
       } catch (err) {
         if (mounted) setHealthIncidents([]);
       } finally {
@@ -456,6 +505,7 @@ export const ParentDashboard: React.FC = () => {
                 >
                   <option value="all">All status</option>
                   <option value="reported">Reported</option>
+                  <option value="pending">Pending</option>
                   <option value="monitoring">Monitoring</option>
                   <option value="treated">Treated</option>
                   <option value="resolved">Resolved</option>

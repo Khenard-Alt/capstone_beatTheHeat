@@ -22,6 +22,8 @@ interface AILogInput {
 
 class AuditLogService {
   private readonly localAuditPath = path.resolve(process.cwd(), 'logs', 'audit-events.jsonl');
+  // Cache whether the Supabase table has the `duplicate_count` column to avoid repeated errors
+  private supabaseDuplicateCountAvailable: boolean | null = null;
 
   public async logWeatherSnapshot(snapshot: WeatherSnapshot, schoolId = DEFAULT_SCHOOL_ID): Promise<void> {
     const event = {
@@ -59,16 +61,69 @@ class AuditLogService {
         if (isSupabaseConfigured()) {
           try {
             const client = getSupabaseAdminClient();
-            if (client && existing.rowId) {
-              const currentCount = Number(existing.row.duplicate_count ?? 0) || 0;
-              const { error } = await client
-                .from('ai_analysis_logs')
-                .update({ duplicate_count: currentCount + 1, updated_at: new Date().toISOString() })
-                .eq('id', existing.rowId);
-              if (error) {
-                console.warn('Failed to update duplicate_count on ai_analysis_logs:', error.message);
-              }
-            }
+                if (client && existing.rowId) {
+                  // Only attempt update if we haven't previously detected missing column
+                  if (this.supabaseDuplicateCountAvailable === false) {
+                    // Skip update; record local note instead
+                    await this.appendLocal({
+                      type: 'ai_analysis_duplicate',
+                      originalId: existing.rowId ?? null,
+                      schoolId: input.schoolId ?? DEFAULT_SCHOOL_ID,
+                      payload: input,
+                      note: 'Supabase missing duplicate_count column; recorded locally instead of updating.',
+                      createdAt: new Date().toISOString(),
+                    });
+                  } else {
+                    const currentCount = Number(existing.row.duplicate_count ?? 0) || 0;
+                    try {
+                      const { error } = await client
+                        .from('ai_analysis_logs')
+                        .update({ duplicate_count: currentCount + 1, updated_at: new Date().toISOString() })
+                        .eq('id', existing.rowId);
+                      if (error) {
+                        // If error indicates missing column, cache and fallback to local note
+                        const msg = String(error.message || error);
+                        if (msg.includes('duplicate_count')) {
+                          this.supabaseDuplicateCountAvailable = false;
+                          console.warn('Supabase schema missing `duplicate_count`; will skip future updates.');
+                          await this.appendLocal({
+                            type: 'ai_analysis_duplicate',
+                            originalId: existing.rowId ?? null,
+                            schoolId: input.schoolId ?? DEFAULT_SCHOOL_ID,
+                            payload: input,
+                            note: 'Supabase missing duplicate_count column; recorded locally instead of updating.',
+                            createdAt: new Date().toISOString(),
+                          });
+                        } else {
+                          console.warn('Failed to update duplicate_count on ai_analysis_logs:', msg);
+                        }
+                      } else {
+                        // update appeared successful; mark column as available
+                        this.supabaseDuplicateCountAvailable = true;
+                      }
+                    } catch (err) {
+                      const msg = String(err || '');
+                      if (msg.includes('duplicate_count')) {
+                        this.supabaseDuplicateCountAvailable = false;
+                        console.warn('Supabase schema missing `duplicate_count`; will skip future updates.');
+                        try {
+                          await this.appendLocal({
+                            type: 'ai_analysis_duplicate',
+                            originalId: existing.rowId ?? null,
+                            schoolId: input.schoolId ?? DEFAULT_SCHOOL_ID,
+                            payload: input,
+                            note: 'Supabase missing duplicate_count column; recorded locally instead of updating.',
+                            createdAt: new Date().toISOString(),
+                          });
+                        } catch {
+                          // ignore
+                        }
+                      } else {
+                        console.warn('Failed to update existing ai_analysis_logs row:', err);
+                      }
+                    }
+                  }
+                }
           } catch (err) {
             console.warn('Failed to update existing ai_analysis_logs row:', err);
           }

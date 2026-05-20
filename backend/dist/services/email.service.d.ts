@@ -16,6 +16,10 @@ export declare const sendWelcomeEmail: (email: string, firstName: string, studen
  */
 export declare const sendHeatAlertEmail: (email: string, recipientName: string, schoolName: string, heatLevel: string, heatIndex: number, recommendations: string[]) => Promise<boolean>;
 /**
+ * Build a branded HTML email for announcements
+ */
+export declare const buildAnnouncementHtml: (title: string, body: string) => string;
+/**
  * Send health advisory notification email
  */
 export declare const sendAdvisoryNotificationEmail: (email: string, recipientName: string, schoolName: string, advisoryTitle: string, advisoryText: string, riskLevel: "low" | "medium" | "high" | "critical") => Promise<boolean>;

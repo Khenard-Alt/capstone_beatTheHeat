@@ -23,7 +23,7 @@ import warnings
 from psycopg2.extras import RealDictCursor
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import classification_report
-from sklearn.model_selection import TimeSeriesSplit, train_test_split
+from sklearn.model_selection import StratifiedKFold, TimeSeriesSplit, train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import randint, uniform
@@ -352,11 +352,11 @@ def train_model(
 
 	feature_cols = ["temperature_c", "humidity_percent", "wind_speed_mps", "pressure_hpa", "heat_index_c"]
 
-	# TimeSeriesSplit cross-validation evaluation (robust out-of-time-like assessment)
-	tscv = TimeSeriesSplit(n_splits=4)
+	# Stratified cross-validation keeps every class represented in each fold.
+	tscv = StratifiedKFold(n_splits=4, shuffle=True, random_state=42)
 	cv_true = []
 	cv_pred = []
-	for fold, (train_idx, test_idx) in enumerate(tscv.split(features)):
+	for fold, (train_idx, test_idx) in enumerate(tscv.split(features, y)):
 		X_fold_train = features.iloc[train_idx][feature_cols].values
 		y_fold_train = y[train_idx]
 		X_fold_test = features.iloc[test_idx][feature_cols].values
@@ -517,7 +517,15 @@ def train_model(
 	# Final training: train base XGBoost with early stopping using a small holdout from the balanced training set
 	# Split balanced training into train + calib (for calibration)
 	try:
-		X_main, X_calib, y_main, y_calib = train_test_split(x_train, y_train, test_size=0.1, random_state=42, shuffle=True)
+		stratify_labels = y_train if len(np.unique(y_train)) > 1 else None
+		X_main, X_calib, y_main, y_calib = train_test_split(
+			x_train,
+			y_train,
+			test_size=0.1,
+			random_state=42,
+			shuffle=True,
+			stratify=stratify_labels,
+		)
 	except Exception:
 		X_main, y_main = x_train, y_train
 		X_calib, y_calib = x_train, y_train

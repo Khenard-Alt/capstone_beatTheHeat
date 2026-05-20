@@ -39,4 +39,17 @@ export interface AdvisoryResult {
 	};
 	// Optional single-response text when the caller requests a concise single answer
 	singleResponse?: string;
+
+	// Optional structured health-focused details to support teacher/clinic/parent actions
+	healthDetails?: {
+		symptoms?: string[];
+		triagePriority?: 'urgent' | 'monitor' | 'low' | string;
+		teacherChecklist?: string[];
+		clinicActions?: string[];
+		parentChecklist?: string[];
+		recommendedFluidsAndVolumes?: string;
+		coolingProcedures?: string[];
+		whenToEscalate?: string;
+		sampleAnnouncementText?: string;
+	};
 }

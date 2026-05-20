@@ -1,35 +1,38 @@
 {
-  "generated_at": "2026-05-20T13:37:26.612103+00:00",
+  "generated_at": "2026-05-20T20:13:48.118749+00:00",
   "status": "needs-review",
   "promotion": {
     "blocked": true,
     "reasons": [
-      "Holdout missing class: caution",
-      "Holdout missing class: danger",
-      "Holdout missing class: safe"
+      "Holdout missing class: extreme-caution",
+      "Holdout missing class: safe",
+      "Perfect f1 for caution with low support (1)",
+      "Perfect f1 for danger with low support (8)",
+      "Perfect f1 for extreme-danger with low support (3)"
     ]
   },
   "data": {
     "rows": null,
-    "min_class_count": 0,
+    "min_class_count": 10,
     "class_counts": {
-      "safe": 58,
-      "caution": 191,
-      "extreme-caution": 228,
-      "danger": 9,
-      "extreme-danger": 0
+      "safe": 25,
+      "caution": 25,
+      "extreme-caution": 25,
+      "danger": 25,
+      "extreme-danger": 25
     },
     "label_map": {
       "caution": 0,
       "danger": 1,
       "extreme-caution": 2,
-      "safe": 3
+      "extreme-danger": 3,
+      "safe": 4
     }
   },
   "metrics": {
-    "final_accuracy": 0.9772727272727273,
+    "final_accuracy": 0.9130434782608695,
     "holdout_accuracy": 1.0,
-    "stratified_accuracy": 0.9772727272727273
+    "stratified_accuracy": 0.9130434782608695
   },
   "artifacts": {
     "model": "heat_advisory_model.joblib",

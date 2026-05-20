@@ -1,15 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '../../components/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { getGreeting } from '../../utils/helpers';
-import { createIncident } from '../../services/incidents.service';
 import IncidentModal from '../../components/IncidentModal';
+import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
+import { formatDateTimeGlobal } from '../../utils/formatters';
 import '../../styles/AdminDashboard.css';
 
 export const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
   const [loading] = useState(false);
   const [isIncidentOpen, setIncidentOpen] = useState(false);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAnnouncements = async () => {
+      try {
+        setAnnouncementsLoading(true);
+        const data = await fetchAnnouncements(8, 0);
+        if (mounted) {
+          setAnnouncements(data);
+        }
+      } catch (error) {
+        console.error('Failed to load teacher announcements:', error);
+        if (mounted) {
+          setAnnouncements([]);
+        }
+      } finally {
+        if (mounted) {
+          setAnnouncementsLoading(false);
+        }
+      }
+    };
+
+    void loadAnnouncements();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="admin-dashboard">
@@ -60,8 +92,36 @@ export const TeacherDashboard: React.FC = () => {
           </Card>
 
           <Card title="Heat Data, Advisories and Announcements">
-            <div style={{padding: '20px', textAlign: 'center', color: '#64748b'}}>
+            <div style={{padding: '20px', color: '#64748b'}}>
               <p>View current heat data, safety advisories, and school announcements related to heat safety.</p>
+              {announcementsLoading ? (
+                <p style={{ marginTop: 12 }}>Loading school announcements...</p>
+              ) : announcements.length === 0 ? (
+                <p style={{ marginTop: 12 }}>No school announcements yet.</p>
+              ) : (
+                <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+                  {announcements.map((announcement) => (
+                    <div
+                      key={announcement.id}
+                      style={{
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 12,
+                        padding: 14,
+                        background: '#fff',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 6 }}>
+                        <strong style={{ color: '#0f172a' }}>{announcement.title}</strong>
+                        <span style={{ color: '#64748b', fontSize: 12 }}>{announcement.priority ?? 'info'}</span>
+                      </div>
+                      <p style={{ margin: 0, color: '#334155' }}>{announcement.body}</p>
+                      <small style={{ display: 'block', marginTop: 8, color: '#64748b' }}>
+                        {announcement.created_at ? formatDateTimeGlobal(announcement.created_at) : ''}
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Card>
 

@@ -39,8 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
   const principalMenuItems = [
     { path: '/principal/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['principal'], badge: null },
     { path: '/principal/reports', icon: <MdCampaign />, label: 'Overall Reports', roles: ['principal'], badge: null },
-    { path: '/principal/incident-trends', icon: <MdHealthAndSafety />, label: 'Incident Trends', roles: ['principal'], badge: null },
-    { path: '/principal/advisories', icon: <MdAutoAwesome />, label: 'Heat Data & Advisories', roles: ['principal'], badge: null },
+    { path: '/principal/announcements', icon: <MdCampaign />, label: 'Announcements', roles: ['principal'], badge: null },
     { path: '/principal/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['principal'], badge: null },
     { path: '/principal/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['principal'], badge: null },
   ];

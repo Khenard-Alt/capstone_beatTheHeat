@@ -2,7 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { readFile, appendFile } from 'fs/promises';
 import path from 'path';
 import { getSupabaseAdminClient } from '../config/supabase';
-import { sendEmail } from '../services/email.service';
+import { sendEmail, buildAnnouncementHtml } from '../services/email.service';
+
+const fallbackRecipients = {
+  parent: ['parent@beattheheat.local'],
+  teacher: ['teacher@beattheheat.local'],
+};
 
 const loadLocalAnnouncements = async (): Promise<any[]> => {
   const sample = [
@@ -72,7 +77,7 @@ export const announcementsController = {
 
   createAnnouncement: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { schoolId, title, body, priority } = req.body;
+      const { schoolId, title, body, priority, audience } = req.body;
       if (!title || !body) {
         res.status(400).json({ success: false, message: 'Missing required fields' });
         return;
@@ -84,6 +89,22 @@ export const announcementsController = {
         // write to logs for offline dev
         const p = path.resolve(process.cwd(), 'logs', 'announcements.jsonl');
         await appendFile(p, JSON.stringify(local) + '\n');
+
+        const audienceTarget = String(audience || '').toLowerCase();
+        const shouldNotifyParents = audienceTarget === 'global' || audienceTarget === 'parents' || req.body.notifyParents === true;
+        const shouldNotifyTeachers = audienceTarget === 'global' || audienceTarget === 'teachers' || req.body.notifyTeachers === true;
+
+        const subject = `Announcement: ${title}`;
+        const html = buildAnnouncementHtml(title, body);
+
+        if (shouldNotifyParents) {
+          await sendEmail(fallbackRecipients.parent, subject, html);
+        }
+
+        if (shouldNotifyTeachers) {
+          await sendEmail(fallbackRecipients.teacher, subject, html);
+        }
+
         res.status(201).json({ success: true, data: local });
         return;
       }
@@ -97,17 +118,43 @@ export const announcementsController = {
         return;
       }
 
-      // If announcement is marked critical or notifyParents flag set, email parents
+      const audienceTarget = String(audience || '').toLowerCase();
+      const shouldNotifyParents =
+        audienceTarget === 'global' ||
+        audienceTarget === 'parents' ||
+        req.body.notifyParents === true ||
+        (req.body.priority && req.body.priority === 'critical');
+      const shouldNotifyTeachers =
+        audienceTarget === 'global' ||
+        audienceTarget === 'teachers' ||
+        req.body.notifyTeachers === true ||
+        (req.body.priority && req.body.priority === 'critical');
+
+      // If announcement is marked critical or notify flags are set, email parents and/or teachers
       try {
-        const shouldNotify = req.body.notifyParents === true || (req.body.priority && req.body.priority === 'critical');
-        if (shouldNotify) {
-          // fetch parent emails from supabase
-          const { data: parents } = await supabase!.from('users').select('email').eq('role', 'parent').eq('school_id', insertPayload.school_id || 'school-1');
-          const emails = (parents || []).map((p: any) => p.email).filter(Boolean);
-          if (emails.length > 0) {
-            const subject = `Announcement: ${data.title}`;
-            const html = `<h3>${data.title}</h3><p>${data.body}</p>`;
-            await sendEmail(emails, subject, html);
+        const subject = `Announcement: ${data.title}`;
+        const html = buildAnnouncementHtml(data.title, data.body);
+
+          if (shouldNotifyParents) {
+            // If a school_id was set on the announcement, limit to that school; otherwise notify all parents
+            let parentQuery = supabase!.from('users').select('email').eq('role', 'parent');
+            if (insertPayload.school_id) parentQuery = parentQuery.eq('school_id', insertPayload.school_id);
+            const { data: parents } = await parentQuery;
+            const parentEmails = (parents || []).map((p: any) => p.email).filter(Boolean);
+            console.log('[ANNOUNCEMENT] parentEmails count:', parentEmails.length);
+            if (parentEmails.length > 0) {
+              await sendEmail(parentEmails, subject, html);
+            }
+          }
+
+        if (shouldNotifyTeachers) {
+          let teacherQuery = supabase!.from('users').select('email').eq('role', 'teacher');
+          if (insertPayload.school_id) teacherQuery = teacherQuery.eq('school_id', insertPayload.school_id);
+          const { data: teachers } = await teacherQuery;
+          const teacherEmails = (teachers || []).map((teacher: any) => teacher.email).filter(Boolean);
+          console.log('[ANNOUNCEMENT] teacherEmails count:', teacherEmails.length);
+          if (teacherEmails.length > 0) {
+            await sendEmail(teacherEmails, subject, html);
           }
         }
       } catch (e) {

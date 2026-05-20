@@ -1,6 +1,28 @@
 import { apiClient } from './api';
 import type { ApiEnvelope } from './api';
 
+export interface LoggedAdvisory {
+	id: string;
+	created_at: string;
+	response: string;
+	safety_level?: string;
+	risk_level?: string;
+	weather_snapshot?: unknown;
+	confidence_score?: number;
+	decision_basis?: {
+		heatIndexC?: number;
+		temperatureC?: number;
+		humidityPercent?: number;
+		heatLevel?: string;
+		dataSource?: string;
+		rationale?: string[];
+	};
+	model_profile?: {
+		mode?: string;
+		scope?: string;
+	};
+}
+
 export interface ScopedAdvisoryResponse {
 	summary: string;
 	riskLevel: string;
@@ -54,4 +76,12 @@ export const fetchRealtimeAdvisory = async (): Promise<RealtimeAdvisoryResponse>
 	);
 
 	return data.data;
+};
+
+export const fetchHealthAdvisories = async (limit = 10, offset = 0): Promise<LoggedAdvisory[]> => {
+	const { data } = await apiClient.get<ApiEnvelope<LoggedAdvisory[]>>('/api/health-advisories', {
+		params: { limit, offset },
+	});
+
+	return data.data ?? [];
 };

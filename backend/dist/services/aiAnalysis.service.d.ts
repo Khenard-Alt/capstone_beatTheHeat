@@ -45,6 +45,7 @@ declare class AIAnalysisService {
     private scopeUserQuery;
     private detectLanguageStyle;
     private parseAdvisory;
+    private fillHealthDefaults;
     private buildNormalizedAdvisoryFromText;
     private tryParseAdvisoryPayload;
     private normalizeModelText;

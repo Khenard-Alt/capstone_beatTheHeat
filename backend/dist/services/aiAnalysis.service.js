@@ -49,11 +49,18 @@ class AIAnalysisService {
             await this.logAdvisoryAudit(input, scopedQuery, variedRefusal, 'fallback', 'scope-guard');
             return this.maybeAttachSingle(variedRefusal, input);
         }
-        const scenarioTemplate = this.buildScenarioTemplateAdvisory(intent, input.weather, languageStyle);
+        let scenarioTemplate = this.buildScenarioTemplateAdvisory(intent, input.weather, languageStyle);
+        // If the user explicitly requests a highly detailed or health-focused advisory,
+        // prefer the AI model output over the short scenario template to allow expanded content.
+        const rawLower = scopedQuery.toLowerCase();
+        if (rawLower.includes('detailed') || rawLower.includes('health-focused') || rawLower.includes('long') || rawLower.includes('expand')) {
+            scenarioTemplate = null;
+        }
         if (scenarioTemplate) {
             const variedTemplate = this.applyVariation(scenarioTemplate, variationSeed, languageStyle);
-            await this.logAdvisoryAudit(input, scopedQuery, variedTemplate, 'fallback', 'intent-template');
-            return this.maybeAttachSingle(variedTemplate, input);
+            const filled = this.fillHealthDefaults(variedTemplate, input.weather);
+            await this.logAdvisoryAudit(input, scopedQuery, filled, 'fallback', 'intent-template');
+            return this.maybeAttachSingle(filled, input);
         }
         if (environment_1.env.aiModelProvider === 'python') {
             const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle, variationSeed);
@@ -100,10 +107,20 @@ class AIAnalysisService {
                 ],
                 generationConfig: {
                     temperature: 0.2,
-                    maxOutputTokens: 220,
+                    // Increase limit to allow expanded advisories (may still be limited by provider)
+                    maxOutputTokens: 1600,
                     responseMimeType: 'application/json',
                 },
             };
+            if (process.env.NODE_ENV !== 'production') {
+                try {
+                    console.log('[AI DEBUG] System prompt preview:', systemPrompt.slice(0, 400));
+                    console.log('[AI DEBUG] User prompt payload:', userPrompt);
+                }
+                catch {
+                    // ignore logging errors
+                }
+            }
             const { data, modelUsed } = await this.requestGeminiContent(requestBody);
             const parts = data?.candidates?.[0]?.content?.parts ?? [];
             const content = parts
@@ -111,19 +128,30 @@ class AIAnalysisService {
                 .join('\n')
                 .trim();
             const parsed = this.parseAdvisory(content, input.weather, languageStyle);
+            if (process.env.NODE_ENV !== 'production') {
+                try {
+                    console.log('[AI DEBUG] Raw model content:', content.slice(0, 800));
+                    console.log('[AI DEBUG] Parsed advisory:', JSON.stringify(parsed));
+                }
+                catch {
+                    // ignore logging errors
+                }
+            }
             const result = this.enforceOutputScope(parsed, input.weather.heatLevel, languageStyle);
             const adjustedResult = this.applyQueryPolicy(result, input, scopedQuery, languageStyle);
             const variedResult = this.applyVariation(adjustedResult, variationSeed, languageStyle);
-            await this.logAdvisoryAudit(input, scopedQuery, variedResult, 'gemini', modelUsed, data.usageMetadata?.promptTokenCount, data.usageMetadata?.candidatesTokenCount, data.usageMetadata?.totalTokenCount);
-            return this.maybeAttachSingle(variedResult, input);
+            const finalResult = this.fillHealthDefaults(variedResult, input.weather);
+            await this.logAdvisoryAudit(input, scopedQuery, finalResult, 'gemini', modelUsed, data.usageMetadata?.promptTokenCount, data.usageMetadata?.candidatesTokenCount, data.usageMetadata?.totalTokenCount);
+            return this.maybeAttachSingle(finalResult, input);
         }
         catch (error) {
             console.error('AI advisory generation failed, using fallback:', error);
             const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
             const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
             const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
-            await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', GEMINI_MODELS[0]);
-            return this.maybeAttachSingle(variedFallback, input);
+            const finalFallback = this.fillHealthDefaults(variedFallback, input.weather);
+            await this.logAdvisoryAudit(input, scopedQuery, finalFallback, 'fallback', GEMINI_MODELS[0]);
+            return this.maybeAttachSingle(finalFallback, input);
         }
     }
     async generatePythonOnlyAdvisory(input) {
@@ -303,11 +331,20 @@ class AIAnalysisService {
             'Avoid medical diagnosis, legal advice, or unsafe instructions.',
             'If a question is not about heat safety, respond in a friendly, supportive tone and gently steer back to heat and school safety topics.',
             'Keep responses human, brief, and supportive. You may acknowledge feelings and ask a clarifying question before giving guidance.',
-            'Return strict JSON object with keys: summary, riskLevel, actions, safetyTips, scopeNote, confidenceScore, decisionBasis, modelProfile.',
-            'decisionBasis must include: heatIndexC, temperatureC, humidityPercent, heatLevel, dataSource, rationale.',
-            'modelProfile must include: mode and scope.',
+            'Return strict JSON object with keys: summary, riskLevel, actions, safetyTips, scopeNote, confidenceScore, decisionBasis, modelProfile, and healthDetails.',
+            "decisionBasis must include: heatIndexC, temperatureC, humidityPercent, heatLevel, dataSource, rationale.",
+            "modelProfile must include: mode and scope.",
+            "healthDetails must be an object containing: symptoms (array of strings), triagePriority (one of 'urgent','high','monitor','low'), teacherChecklist (array of concise actions), clinicActions (array), parentChecklist (array), recommendedFluidsAndVolumes (string, e.g. 'water: 150-250ml every 15-20min'), coolingProcedures (array of steps), whenToEscalate (clear escalation criteria text), and sampleAnnouncementText (short announcement the school can send).",
+            "All fields should be present where applicable; if a field is not applicable, return an empty array or an empty string rather than omitting keys.",
             'confidenceScore must be a number from 0.00 to 1.00.',
             'actions and safetyTips must be arrays of concise strings.',
+            'Provide role-specific checklist items under `healthDetails.teacherChecklist`, `healthDetails.clinicActions`, and `healthDetails.parentChecklist` with short, actionable steps. Avoid vague recommendations. Use concrete cues (e.g., "If vomiting, move to clinic and give oral rehydration only if conscious").',
+            'Vary phrasing and include at least one example of a brief announcement suitable for sending to parents under `healthDetails.sampleAnnouncementText`.',
+            'You may expand each checklist into numbered steps, include sub-steps and short rationales. Aim to produce a comprehensive `healthDetails` section with rich, instructional content — the model may return long arrays and long strings. The system will accept large JSON outputs; the goal is up to ~1000 lines of advisory content when possible.',
+            'When possible, include recommended fluid types and approximate volumes for children under `recommendedFluidsAndVolumes` (use ranges).',
+            'Here are two strict JSON examples the model MUST follow (use these keys and types exactly):',
+            `EXAMPLE_HIGH_HEAT: {"summary":"Current heat index is 48°C (danger). Reduce outdoor exposure immediately.","riskLevel":"danger","actions":["Suspend high-exertion outdoor activities","Provide shade and cooling breaks every 10-15 minutes"],"safetyTips":["Encourage sips of water every 10-15 minutes","Avoid sugary drinks"],"scopeNote":"System weather inputs only.","confidenceScore":0.92,"decisionBasis":{"heatIndexC":48,"temperatureC":34.2,"humidityPercent":71,"heatLevel":"danger","dataSource":"sensor","rationale":["Heat index exceeds danger threshold"]},"modelProfile":{"mode":"rule-grounded-ai","scope":"system-only"},"healthDetails":{"symptoms":["dizziness","nausea","excessive sweating"],"triagePriority":"urgent","teacherChecklist":["Move affected students to shaded area","Start cooling (remove excess clothing, fan)"],"clinicActions":["Assess airway/breathing","Initiate oral rehydration if conscious"],"parentChecklist":["Pick up child if symptoms persist","Keep child hydrated on way home"],"recommendedFluidsAndVolumes":"water: 150-250ml every 10-15min for ages 5-12","coolingProcedures":["Move to shade","Apply cool compress to neck/armpits"],"whenToEscalate":"If child shows confusion, fainting, or vomiting, escalate to clinic immediately","sampleAnnouncementText":"Due to high heat index, outdoor activities are limited today. Please ensure children bring water."}}`,
+            `EXAMPLE_SAFE_HEAT: {"summary":"Current heat index is 26°C (safe). Normal activities may proceed with hydration reminders.","riskLevel":"safe","actions":["Encourage regular water breaks","Allow outdoor play with monitoring"],"safetyTips":["Bring water bottle","Wear light clothing"],"scopeNote":"System weather inputs only.","confidenceScore":0.8,"decisionBasis":{"heatIndexC":26,"temperatureC":25.3,"humidityPercent":73,"heatLevel":"safe","dataSource":"openweathermap","rationale":["Heat index in safe range"]},"modelProfile":{"mode":"rule-grounded-ai","scope":"system-only"},"healthDetails":{"symptoms":[],"triagePriority":"low","teacherChecklist":["Remind students to drink water every 20 minutes"],"clinicActions":[],"parentChecklist":["Provide water bottle"],"recommendedFluidsAndVolumes":"water: 50-100ml every 20min if active","coolingProcedures":[],"whenToEscalate":"If symptoms of heat stress appear, refer to clinic","sampleAnnouncementText":"Today's heat index is safe; remind students to bring water and stay shaded when possible."}}`,
             'If user asks about class suspension, answer directly with current heat-level implication and remind that final suspension decision is by school leadership and local DepEd authority.',
             'Always follow the language style of the user query: English to English, Tagalog to Tagalog, mixed Taglish to Taglish.',
             'Answer any question that is within heat safety, school advisories, weather impact, class activity safety, or parent/student precaution scope.',
@@ -1147,7 +1184,12 @@ class AIAnalysisService {
         }
         const parsed = this.tryParseAdvisoryPayload(content);
         if (parsed) {
-            return {
+            const symptoms = parsed.healthDetails?.symptoms ?? parsed.symptoms;
+            const teacherChecklist = parsed.healthDetails?.teacherChecklist ?? parsed.teacherChecklist;
+            const clinicActions = parsed.healthDetails?.clinicActions ?? parsed.clinicActions;
+            const parentChecklist = parsed.healthDetails?.parentChecklist ?? parsed.parentChecklist;
+            const coolingProcedures = parsed.healthDetails?.coolingProcedures ?? parsed.coolingProcedures;
+            const mapped = {
                 summary: parsed.summary ?? 'No summary provided.',
                 riskLevel: parsed.riskLevel ?? 'unknown',
                 actions: Array.isArray(parsed.actions) ? parsed.actions.map(String) : [],
@@ -1169,13 +1211,85 @@ class AIAnalysisService {
                     mode: 'rule-grounded-ai',
                     scope: 'system-only',
                 },
+                healthDetails: {
+                    symptoms: Array.isArray(symptoms)
+                        ? symptoms.map(String)
+                        : [],
+                    triagePriority: (parsed.healthDetails?.triagePriority ?? parsed.triagePriority) ?? (parsed.triage || ''),
+                    teacherChecklist: Array.isArray(teacherChecklist)
+                        ? teacherChecklist.map(String)
+                        : [],
+                    clinicActions: Array.isArray(clinicActions)
+                        ? clinicActions.map(String)
+                        : [],
+                    parentChecklist: Array.isArray(parentChecklist)
+                        ? parentChecklist.map(String)
+                        : [],
+                    recommendedFluidsAndVolumes: (parsed.healthDetails?.recommendedFluidsAndVolumes ?? parsed.recommendedFluids ?? parsed.fluids) ?? '',
+                    coolingProcedures: Array.isArray(coolingProcedures)
+                        ? coolingProcedures.map(String)
+                        : [],
+                    whenToEscalate: (parsed.healthDetails?.whenToEscalate ?? parsed.whenToEscalate) ?? '',
+                    sampleAnnouncementText: (parsed.healthDetails?.sampleAnnouncementText ?? parsed.sampleAnnouncementText ?? parsed.announcement) ?? '',
+                },
             };
+            return this.fillHealthDefaults(mapped, weather);
         }
         const normalizedText = this.normalizeModelText(content);
         if (!normalizedText) {
-            return this.buildNormalizedAdvisoryFromText('', weather, languageStyle);
+            return this.fillHealthDefaults(this.buildNormalizedAdvisoryFromText('', weather, languageStyle), weather);
         }
-        return this.buildNormalizedAdvisoryFromText(normalizedText, weather, languageStyle);
+        return this.fillHealthDefaults(this.buildNormalizedAdvisoryFromText(normalizedText, weather, languageStyle), weather);
+    }
+    fillHealthDefaults(result, weather) {
+        const hi = Number(weather?.heatIndexC ?? result.decisionBasis?.heatIndexC ?? 0);
+        const rd = result.healthDetails ?? {};
+        // Ensure arrays and strings are at least defaults
+        rd.symptoms = Array.isArray(rd.symptoms) ? rd.symptoms : [];
+        rd.teacherChecklist = Array.isArray(rd.teacherChecklist) ? rd.teacherChecklist : [];
+        rd.clinicActions = Array.isArray(rd.clinicActions) ? rd.clinicActions : [];
+        rd.parentChecklist = Array.isArray(rd.parentChecklist) ? rd.parentChecklist : [];
+        rd.coolingProcedures = Array.isArray(rd.coolingProcedures) ? rd.coolingProcedures : [];
+        rd.recommendedFluidsAndVolumes = rd.recommendedFluidsAndVolumes ?? '';
+        rd.whenToEscalate = rd.whenToEscalate ?? '';
+        rd.sampleAnnouncementText = rd.sampleAnnouncementText ?? '';
+        // Determine triage priority if not provided
+        if (!rd.triagePriority) {
+            if (hi >= 50)
+                rd.triagePriority = 'urgent';
+            else if (hi >= 40)
+                rd.triagePriority = 'high';
+            else if (hi >= 37)
+                rd.triagePriority = 'monitor';
+            else
+                rd.triagePriority = 'low';
+        }
+        // Fill sensible defaults for checklists when empty
+        if (rd.teacherChecklist.length === 0) {
+            rd.teacherChecklist = result.actions && result.actions.length > 0 ? result.actions.slice(0, 3) : [];
+        }
+        if (rd.clinicActions.length === 0) {
+            if (hi >= 40) {
+                rd.clinicActions = ['Assess airway/breathing', 'Initiate cooling procedures', 'Initiate oral rehydration if conscious and able to swallow'];
+            }
+            else {
+                rd.clinicActions = ['Assess and monitor for heat stress signs', 'Provide cooling and oral fluids if appropriate'];
+            }
+        }
+        if (rd.parentChecklist.length === 0) {
+            rd.parentChecklist = ['Ensure child brings water and light clothing', 'Monitor child for symptoms and pick up if symptoms persist'];
+        }
+        if (!rd.recommendedFluidsAndVolumes) {
+            if (hi >= 40)
+                rd.recommendedFluidsAndVolumes = 'water: 150-250ml every 10-15min for children (age dependent)';
+            else
+                rd.recommendedFluidsAndVolumes = 'water: 50-150ml every 15-20min during activity';
+        }
+        if (!rd.whenToEscalate) {
+            rd.whenToEscalate = 'Escalate to clinic if child shows confusion, fainting, persistent vomiting, difficulty breathing, or unresponsiveness.';
+        }
+        result.healthDetails = rd;
+        return result;
     }
     buildNormalizedAdvisoryFromText(modelText, weather, languageStyle) {
         const fallback = this.buildFallbackAdvisory({ query: '', weather }, 'Provide current school heat safety advisory based on the given weather.', languageStyle);
@@ -1287,10 +1401,9 @@ class AIAnalysisService {
         if (hasBlockedContent) {
             return this.safeScopeRedirect(heatLevel, languageStyle);
         }
+        // Preserve full detail lists generated by the model to allow expanded advisories.
         return {
             ...result,
-            actions: result.actions.slice(0, 4),
-            safetyTips: result.safetyTips.slice(0, 4),
         };
     }
     buildFallbackAdvisory(input, scopedQuery, languageStyle) {

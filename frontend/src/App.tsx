@@ -25,7 +25,17 @@ import { SmartAdvisoryBot } from './components/SmartAdvisoryBot';
 
 import { ParentProfileSettings } from './pages/parentDash/ParentProfileSettings';
 import { PrincipalDashboard } from './pages/principalDash/PrincipalDashboard';
+import PrincipalReports from './pages/principalDash/PrincipalReports';
+import AnnouncementShell from './pages/principalDash/AnnouncementShell';
+import PrincipalAdvisories from './pages/principalDash/PrincipalAdvisories';
+import PrincipalChatbot from './pages/principalDash/PrincipalChatbot';
+import PrincipalProfileSettings from './pages/principalDash/PrincipalProfileSettings';
 import { HeadTeacherDashboard } from './pages/headTeacherDash/HeadTeacherDashboard';
+import IncidentReview from './pages/headTeacherDash/IncidentReview';
+import IncidentReports from './pages/headTeacherDash/IncidentReports';
+import Advisories from './pages/headTeacherDash/Advisories';
+import Chatbot from './pages/headTeacherDash/Chatbot';
+import ProfileSettings from './pages/headTeacherDash/ProfileSettings';
 import { TeacherDashboard } from './pages/teacherDash/TeacherDashboard';
 import './App.css';
 
@@ -338,11 +348,143 @@ const AppRoutes: React.FC = () => {
       />
 
       <Route
+        path="/principal/reports"
+        element={
+          <PrincipalRoute>
+            <AppLayout>
+              <PrincipalReports />
+            </AppLayout>
+          </PrincipalRoute>
+        }
+      />
+
+      <Route
+        path="/principal/announcements"
+        element={
+          <PrincipalRoute>
+            <AppLayout>
+              <AnnouncementShell />
+            </AppLayout>
+          </PrincipalRoute>
+        }
+      />
+
+      <Route
+        path="/principal/announcements/heat-data"
+        element={
+          <PrincipalRoute>
+            <AppLayout>
+              <AnnouncementShell />
+            </AppLayout>
+          </PrincipalRoute>
+        }
+      />
+
+      <Route
+        path="/principal/announcements/advisories"
+        element={
+          <PrincipalRoute>
+            <AppLayout>
+              <AnnouncementShell />
+            </AppLayout>
+          </PrincipalRoute>
+        }
+      />
+
+      <Route
+        path="/principal/advisories"
+        element={
+          <PrincipalRoute>
+            <AppLayout>
+              <PrincipalAdvisories />
+            </AppLayout>
+          </PrincipalRoute>
+        }
+      />
+
+      <Route
+        path="/principal/chatbot"
+        element={
+          <PrincipalRoute>
+            <AppLayout>
+              <PrincipalChatbot />
+            </AppLayout>
+          </PrincipalRoute>
+        }
+      />
+
+      <Route
+        path="/principal/profile-settings"
+        element={
+          <PrincipalRoute>
+            <AppLayout>
+              <PrincipalProfileSettings />
+            </AppLayout>
+          </PrincipalRoute>
+        }
+      />
+
+      <Route
         path="/head-teacher/dashboard"
         element={
           <HeadTeacherRoute>
             <AppLayout>
               <HeadTeacherDashboard />
+            </AppLayout>
+          </HeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/head-teacher/incident-review"
+        element={
+          <HeadTeacherRoute>
+            <AppLayout>
+              <IncidentReview />
+            </AppLayout>
+          </HeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/head-teacher/incident-reports"
+        element={
+          <HeadTeacherRoute>
+            <AppLayout>
+              <IncidentReports />
+            </AppLayout>
+          </HeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/head-teacher/advisories"
+        element={
+          <HeadTeacherRoute>
+            <AppLayout>
+              <Advisories />
+            </AppLayout>
+          </HeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/head-teacher/chatbot"
+        element={
+          <HeadTeacherRoute>
+            <AppLayout>
+              <Chatbot />
+            </AppLayout>
+          </HeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/head-teacher/profile-settings"
+        element={
+          <HeadTeacherRoute>
+            <AppLayout>
+              <ProfileSettings />
             </AppLayout>
           </HeadTeacherRoute>
         }

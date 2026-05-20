@@ -1,5 +1,6 @@
 import type { HeatLevel } from '../types';
 import { HEAT_THRESHOLDS, HEAT_COLORS, HEAT_LABELS } from './constants';
+import { formatNotificationTimestamp } from './formatters';
 
 /**
  * Calculate heat index from temperature and humidity
@@ -133,13 +134,40 @@ export const getTimeAgo = (date: string | Date): string => {
   const now = new Date();
   const past = new Date(date);
   const diffMs = now.getTime() - past.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  return past.toLocaleDateString();
+  if (Number.isNaN(past.getTime())) return 'Invalid date';
+
+  if (diffMs < 0) {
+    return formatNotificationTimestamp(past);
+  }
+
+  // Less than a minute: show seconds
+  if (diffSeconds < 60) return `${Math.max(1, diffSeconds)} sec ago`;
+
+  // Less than 4 hours: show minutes, then hours when appropriate
+  if (diffHours < 4) {
+    if (diffMinutes < 60) {
+      return `${diffMinutes} min ago`;
+    }
+
+    return `${diffHours} hr${diffHours > 1 ? 's' : ''} ago`;
+  }
+
+  // 4+ hours: switch to date and time stamp
+  try {
+    const month = past.toLocaleString(undefined, { month: 'short' });
+    const day = past.getDate();
+    const year = past.getFullYear();
+    let hours = past.getHours();
+    const minutes = past.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+    return `${hours}:${minutes} ${ampm} ${month} ${day}, ${year}`;
+  } catch (err) {
+    return past.toString();
+  }
 };

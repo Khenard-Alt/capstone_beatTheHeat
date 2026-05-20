@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { sendHeatAlertEmail, sendAdvisoryNotificationEmail } from '../services/email.service';
 import { getSupabaseAdminClient } from '../config/supabase';
 import { getSmsGatewayHealth, sendHeatAlertSms } from '../services/sms.service';
+import { formatScheduledNotificationTitle } from '../utils/notificationFormatting';
 
 const toPriority = (level?: string): 'low' | 'medium' | 'high' => {
   const normalized = String(level ?? '').toLowerCase();
@@ -23,16 +24,14 @@ const insertNotifications = async (
     return;
   }
 
-  const now = new Date().toISOString();
+  const title = formatScheduledNotificationTitle(payload.title);
   const rows = userIds.map((userId) => ({
     user_id: userId,
     type: payload.type,
-    title: payload.title,
+    title,
     message: payload.message,
     status: 'unread',
     priority: payload.priority,
-    sent_at: now,
-    created_at: now,
   }));
 
   const { error } = await supabase.from('notifications').insert(rows);

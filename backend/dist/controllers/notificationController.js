@@ -4,6 +4,7 @@ exports.notificationController = void 0;
 const email_service_1 = require("../services/email.service");
 const supabase_1 = require("../config/supabase");
 const sms_service_1 = require("../services/sms.service");
+const notificationFormatting_1 = require("../utils/notificationFormatting");
 const toPriority = (level) => {
     const normalized = String(level ?? '').toLowerCase();
     if (['danger', 'extreme-danger', 'critical', 'high'].includes(normalized)) {
@@ -19,16 +20,14 @@ const insertNotifications = async (userIds, payload) => {
     if (!supabase) {
         return;
     }
-    const now = new Date().toISOString();
+    const title = (0, notificationFormatting_1.formatScheduledNotificationTitle)(payload.title);
     const rows = userIds.map((userId) => ({
         user_id: userId,
         type: payload.type,
-        title: payload.title,
+        title,
         message: payload.message,
         status: 'unread',
         priority: payload.priority,
-        sent_at: now,
-        created_at: now,
     }));
     const { error } = await supabase.from('notifications').insert(rows);
     if (error) {

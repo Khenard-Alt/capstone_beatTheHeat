@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HeatIndexCard } from '../../components/HeatIndexCard';
 import { WeatherWidget } from '../../components/WeatherWidget';
 import { AdvisoryAlert } from '../../components/AdvisoryAlert';
@@ -7,14 +8,11 @@ import { Card } from '../../components/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchCurrentWeather } from '../../services/weather.service';
 import { apiClient } from '../../services/api';
-import { createAnnouncement } from '../../services/announcements.service';
 import AnnouncementModal from '../../components/AnnouncementModal';
-import { fetchRealtimeAdvisory } from '../../services/healthAdvisory.service';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import type { HeatIndexData, WeatherData, HealthAdvisory } from '../../types';
 import { calculateHeatIndex, getHeatLevel, getGreeting } from '../../utils/helpers';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
-import { mapRealtimeAdvisory } from '../../utils/advisory';
 import '../../styles/AdminDashboard.css';
 
 interface Trend {
@@ -36,12 +34,12 @@ interface IncidentTrend {
 
 export const PrincipalDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isAnnouncementOpen, setAnnouncementOpen] = useState(false);
 
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [principalStats, setPrincipalStats] = useState<PrincipalStats | null>(null);
   const [_incidentTrends, setIncidentTrends] = useState<IncidentTrend[]>([]);
-  const [aiAdvisory, setAiAdvisory] = useState<HealthAdvisory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,13 +52,6 @@ export const PrincipalDashboard: React.FC = () => {
         const weatherData = await fetchCurrentWeather();
         if (weatherData) {
           setCurrentWeather(weatherData);
-        }
-
-        try {
-          const realtime = await fetchRealtimeAdvisory();
-          setAiAdvisory(mapRealtimeAdvisory(realtime));
-        } catch (err) {
-          console.warn('AI advisory unavailable:', err);
         }
 
         // Fetch principal stats
@@ -138,7 +129,7 @@ export const PrincipalDashboard: React.FC = () => {
     };
   }, [heatIndexData]);
 
-  const advisory = aiAdvisory ?? localAdvisory;
+  const advisory = localAdvisory;
 
   // Auto-notify parents when advisory reaches critical/high levels
   useEffect(() => {
@@ -201,6 +192,9 @@ export const PrincipalDashboard: React.FC = () => {
           <span className="admin-badge admin-badge-muted">{loading ? 'Loading...' : 'Ready'}</span>
           <button className="btn btn-secondary" style={{ marginLeft: 12 }} onClick={() => setAnnouncementOpen(true)}>
             Create Announcement
+          </button>
+          <button className="btn btn-primary" style={{ marginLeft: 12 }} onClick={() => navigate('/principal/reports')}>
+            Open Reports
           </button>
           <AnnouncementModal isOpen={isAnnouncementOpen} onClose={() => setAnnouncementOpen(false)} />
         </div>

@@ -1,7 +1,7 @@
 param(
     [string]$AuditPath = "backend/logs/audit-events.jsonl",
     [string]$DataDir = "backend/data",
-    [int]$MinClassCount = 0,
+    [int]$MinClassCount = 10,
     [switch]$Tune
 )
 
@@ -16,13 +16,15 @@ if (-not $node) { Write-Error "Node.js not found in PATH."; exit 1 }
 $exportScript = Join-Path $repoRoot 'backend\scripts\export-training.js'
 $convertScript = Join-Path $repoRoot 'backend\scripts\export-to-model-csv.js'
 $requirementsFile = Join-Path $repoRoot 'backend\components\AIModel\python\requirements.txt'
+$auditFile = Join-Path $repoRoot $AuditPath
+$dataDirPath = Join-Path $repoRoot $DataDir
 
 Write-Host "Exporting audit logs to training JSONL..."
-& node $exportScript $AuditPath $DataDir --no-redact
+& node $exportScript $auditFile $dataDirPath --no-redact
 if ($LASTEXITCODE -ne 0) { Write-Error "export-training failed."; exit 1 }
 
 Write-Host "Converting export to model CSV..."
-& node $convertScript (Join-Path $DataDir 'training_export.jsonl') (Join-Path $DataDir 'model_training.csv')
+& node $convertScript (Join-Path $dataDirPath 'training_export.jsonl') (Join-Path $dataDirPath 'model_training.csv') --balance --balance-target=25
 if ($LASTEXITCODE -ne 0) { Write-Error "export-to-model-csv failed."; exit 1 }
 
 # Locate python executable (prefer .venv)
@@ -50,8 +52,8 @@ try {
 }
 
 $trainer = Join-Path $repoRoot 'backend\components\AIModel\python\ai.py'
-Write-Host "Training model using CSV: $DataDir\model_training.csv"
-$args = @('train', '--train-csv', (Join-Path $DataDir 'model_training.csv'), '--output-dir', (Join-Path $repoRoot 'backend\components\AIModel\python\model'), '--min-class-count', $MinClassCount, '--apply-best')
+Write-Host "Training model using CSV: $(Join-Path $dataDirPath 'model_training.csv')"
+$args = @('train', '--train-csv', (Join-Path $dataDirPath 'model_training.csv'), '--output-dir', (Join-Path $repoRoot 'backend\components\AIModel\python\model'), '--min-class-count', $MinClassCount, '--apply-best')
 if ($Tune) { $args += '--tune' }
 & $python $trainer $args
 $code = $LASTEXITCODE

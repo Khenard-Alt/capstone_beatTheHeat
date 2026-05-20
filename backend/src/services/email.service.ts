@@ -11,34 +11,10 @@ const initializeTransporter = async (): Promise<nodemailer.Transporter | null> =
   if (transporter) return transporter;
 
   try {
-    // For development: use Ethereal test account
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('[EMAIL] Initializing Ethereal test account...');
-      const testAccount = await nodemailer.createTestAccount();
-      
-      transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false, // Use TLS, not SSL
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-      
-      console.log('[EMAIL] ✓ Ethereal test account ready');
-      console.log('[EMAIL] Test credentials:', {
-        email: testAccount.user,
-        password: testAccount.pass,
-      });
-      return transporter;
-    } else {
-      // Production: use Gmail or configured email service
-      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-        console.error('[EMAIL] ✗ Production email credentials not configured');
-        return null;
-      }
+    const hasSmtpCredentials = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
 
+    // Prefer configured SMTP in every environment so real deliveries can work during development.
+    if (hasSmtpCredentials) {
       transporter = nodemailer.createTransport({
         service: process.env.EMAIL_SERVICE || 'gmail',
         auth: {
@@ -47,9 +23,31 @@ const initializeTransporter = async (): Promise<nodemailer.Transporter | null> =
         },
       });
 
-      console.log('[EMAIL] ✓ Production email service initialized');
+      console.log('[EMAIL] ✓ Configured SMTP service initialized');
       return transporter;
     }
+
+    // Fall back to Ethereal only when no SMTP credentials are available.
+    console.log('[EMAIL] Initializing Ethereal test account...');
+    const testAccount = await nodemailer.createTestAccount();
+
+    transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+
+    console.log('[EMAIL] ✓ Ethereal test account ready');
+    console.log('[EMAIL] Test credentials:', {
+      email: testAccount.user,
+      password: testAccount.pass,
+    });
+    return transporter;
+    
   } catch (error) {
     console.error('[EMAIL] Failed to initialize transporter:', error);
     return null;
@@ -290,6 +288,38 @@ export const sendHeatAlertEmail = async (
     console.error('[EMAIL] ✗ Failed to send heat alert:', error);
     return false;
   }
+};
+
+/**
+ * Build a branded HTML email for announcements
+ */
+export const buildAnnouncementHtml = (title: string, body: string) => {
+  const appUrl = process.env.APP_URL || 'https://beattheheat.com';
+  const safeBody = String(body).replace(/\n/g, '<br/>');
+  return `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color: #0f172a; background:#f8fafc; padding:20px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 18px rgba(2,6,23,0.08);">
+        <div style="padding:22px; background:linear-gradient(90deg,#0f766e 0%,#1e40af 100%); color:#fff; text-align:center;">
+          <h1 style="margin:0; font-size:20px; line-height:1.1;">Beat The Heat</h1>
+          <p style="margin:6px 0 0 0; opacity:0.9; font-size:13px;">Important Announcement</p>
+        </div>
+
+        <div style="padding:20px;">
+          <h2 style="font-size:18px; margin:0 0 10px 0; color:#0f172a;">${title}</h2>
+          <div style="color:#334155; font-size:14px; line-height:1.45;">${safeBody}</div>
+
+          <div style="margin-top:20px; text-align:left;">
+            <a href="${appUrl}/dashboard" style="display:inline-block; background:#0f766e; color:#fff; text-decoration:none; padding:10px 16px; border-radius:6px; font-weight:600;">Open Dashboard</a>
+          </div>
+        </div>
+
+        <div style="padding:14px 20px; background:#f8fafc; border-top:1px solid #eef2f7; font-size:12px; color:#64748b; text-align:center;">
+          <div>You're receiving this because you're subscribed to Beat The Heat notifications.</div>
+          <div style="margin-top:6px;">Manage preferences in the app or contact <a href="mailto:support@beattheheat.com">support@beattheheat.com</a></div>
+        </div>
+      </div>
+    </div>
+  `;
 };
 
 /**
