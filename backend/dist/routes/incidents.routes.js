@@ -11,5 +11,7 @@ const router = express_1.default.Router();
  * List student health incidents
  */
 router.get('/', incidentsController_1.incidentsController.list);
+// POST /api/incidents
+router.post('/', express_1.default.json(), incidentsController_1.incidentsController.create);
 exports.default = router;
 //# sourceMappingURL=incidents.routes.js.map

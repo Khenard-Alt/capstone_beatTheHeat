@@ -366,7 +366,7 @@ beatTheHeat/
 ### Backend Setup
 ```bash
 cd backend
-npm install
+npm ci
 cp .env.example .env
 # Edit .env with your credentials
 npm run dev
@@ -375,7 +375,7 @@ npm run dev
 ### Frontend Setup
 ```bash
 cd frontend
-npm install
+npm ci
 cp .env.example .env
 # Edit .env with API URL
 npm run dev

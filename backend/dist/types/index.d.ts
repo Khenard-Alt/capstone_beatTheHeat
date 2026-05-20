@@ -13,6 +13,8 @@ export interface WeatherSnapshot {
 export interface AdvisoryInput {
     query: string;
     weather: WeatherSnapshot;
+    lang?: 'english' | 'tagalog' | 'taglish' | 'en' | 'tl';
+    single?: boolean;
 }
 export interface AdvisoryResult {
     summary: string;
@@ -33,5 +35,6 @@ export interface AdvisoryResult {
         mode: 'rule-grounded-ai';
         scope: 'system-only';
     };
+    singleResponse?: string;
 }
 //# sourceMappingURL=index.d.ts.map

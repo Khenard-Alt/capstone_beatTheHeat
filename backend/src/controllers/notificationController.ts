@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { sendHeatAlertEmail, sendAdvisoryNotificationEmail } from '../services/email.service';
 import { getSupabaseAdminClient } from '../config/supabase';
+import { getSmsGatewayHealth, sendHeatAlertSms } from '../services/sms.service';
 
 const toPriority = (level?: string): 'low' | 'medium' | 'high' => {
   const normalized = String(level ?? '').toLowerCase();
@@ -41,6 +42,38 @@ const insertNotifications = async (
 };
 
 export const notificationController = {
+  getSmsGatewayHealth: async (_req: Request, res: Response): Promise<void> => {
+    const health = await getSmsGatewayHealth();
+    res.status(200).json({
+      success: true,
+      data: health,
+    });
+  },
+
+  sendSmsTest: async (req: Request, res: Response): Promise<void> => {
+    const { phone, recipientName } = req.body ?? {};
+    if (!phone) {
+      res.status(400).json({ success: false, message: 'phone is required' });
+      return;
+    }
+
+    const sent = await sendHeatAlertSms(String(phone), String(recipientName ?? 'Parent'), 'danger', 42);
+    if (!sent) {
+      const health = await getSmsGatewayHealth();
+      res.status(503).json({
+        success: false,
+        message: 'SMS test failed. Gateway may be offline or has no load.',
+        data: health,
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'SMS test sent successfully.',
+    });
+  },
+
   /**
    * Send heat alert email to users
    */

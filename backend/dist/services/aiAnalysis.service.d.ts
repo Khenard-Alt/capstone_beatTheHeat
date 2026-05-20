@@ -1,6 +1,7 @@
 import { AdvisoryInput, AdvisoryResult } from '../types';
 declare class AIAnalysisService {
     private knowledgeCache;
+    private maybeAttachSingle;
     generateScopedAdvisory(input: AdvisoryInput): Promise<AdvisoryResult>;
     generatePythonOnlyAdvisory(input: AdvisoryInput): Promise<AdvisoryResult>;
     private requestGeminiContent;
@@ -15,8 +16,10 @@ declare class AIAnalysisService {
     private getVariationSeed;
     private buildVariationHint;
     private applyVariation;
+    private varyText;
     private rotateList;
     private getVariationSuffix;
+    private applySafetyRules;
     private buildKnowledgeContext;
     private getKnowledgeCache;
     private readTextFileSafe;

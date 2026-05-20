@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 export declare const notificationController: {
+    getSmsGatewayHealth: (_req: Request, res: Response) => Promise<void>;
+    sendSmsTest: (req: Request, res: Response) => Promise<void>;
     /**
      * Send heat alert email to users
      */

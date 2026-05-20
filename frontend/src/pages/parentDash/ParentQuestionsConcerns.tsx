@@ -1,7 +1,7 @@
 import React from 'react';
 import { ParentSectionPage } from './ParentSectionPage';
 import { useEffect, useState } from 'react';
-import { fetchParentMessages, sendParentMessage, ParentMessage } from '../../services/parentMessages.service';
+import { fetchParentMessages, sendParentMessage } from '../../services/parentMessages.service'; import type { ParentMessage } from '../../services/parentMessages.service';
 import '../../styles/ParentQuestionsConcerns.css';
 
 export const ParentQuestionsConcerns: React.FC = () => {

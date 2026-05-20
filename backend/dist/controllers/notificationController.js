@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.notificationController = void 0;
 const email_service_1 = require("../services/email.service");
 const supabase_1 = require("../config/supabase");
+const sms_service_1 = require("../services/sms.service");
 const toPriority = (level) => {
     const normalized = String(level ?? '').toLowerCase();
     if (['danger', 'extreme-danger', 'critical', 'high'].includes(normalized)) {
@@ -35,6 +36,34 @@ const insertNotifications = async (userIds, payload) => {
     }
 };
 exports.notificationController = {
+    getSmsGatewayHealth: async (_req, res) => {
+        const health = await (0, sms_service_1.getSmsGatewayHealth)();
+        res.status(200).json({
+            success: true,
+            data: health,
+        });
+    },
+    sendSmsTest: async (req, res) => {
+        const { phone, recipientName } = req.body ?? {};
+        if (!phone) {
+            res.status(400).json({ success: false, message: 'phone is required' });
+            return;
+        }
+        const sent = await (0, sms_service_1.sendHeatAlertSms)(String(phone), String(recipientName ?? 'Parent'), 'danger', 42);
+        if (!sent) {
+            const health = await (0, sms_service_1.getSmsGatewayHealth)();
+            res.status(503).json({
+                success: false,
+                message: 'SMS test failed. Gateway may be offline or has no load.',
+                data: health,
+            });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            message: 'SMS test sent successfully.',
+        });
+    },
     /**
      * Send heat alert email to users
      */

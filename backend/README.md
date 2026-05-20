@@ -1,5 +1,54 @@
 # Beat The Heat Backend
 
+## AI Trainer Workflow
+
+Use these scripts for dataset auditing, retraining, and packaging:
+
+```powershell
+.\backend\scripts\setup-python-venv.ps1
+.\backend\scripts\run-trainer-tests.ps1
+.\backend\scripts\audit-training-data.js .\backend\logs\audit-events.jsonl .\backend\data\training_audit_report.json --compare-report .\backend\components\AIModel\python\model\training_report.json
+.\backend\scripts\run-retrain.ps1 -MinClassCount 0
+.\backend\scripts\promote-model.ps1
+.\backend\scripts\package-model-artifacts.ps1
+```
+
+The retrain job writes `training_report.json`, `model_registry.json`, and release archives under `backend/deploy/model-release/`.
+
+### Local Trainer Runbook
+
+1. Create or refresh the Python venv:
+
+```powershell
+.\backend\scripts\setup-python-venv.ps1 -PythonExe (Get-Command python).Source
+```
+
+2. Run the trainer unit tests:
+
+```powershell
+.\backend\scripts\run-trainer-tests.ps1
+```
+
+3. Audit the latest `ai_analysis` events:
+
+```powershell
+node .\backend\scripts\audit-training-data.js .\backend\logs\audit-events.jsonl .\backend\data\training_audit_report.json --compare-report .\backend\components\AIModel\python\model\training_report.json
+```
+
+4. Retrain and package artifacts:
+
+```powershell
+.\backend\scripts\run-retrain.ps1 -MinClassCount 0
+.\backend\scripts\promote-model.ps1
+.\backend\scripts\package-model-artifacts.ps1
+```
+
+Expected outputs:
+- `backend/components/AIModel/python/model/training_report.json`
+- `backend/components/AIModel/python/model/model_registry.json`
+- `backend/deploy/published-models/*/promotion_manifest.json`
+- `backend/deploy/model-release/*.zip`
+
 ## Always-On Weather Updates (Defense-Ready)
 
 This backend supports secure scheduler endpoints so weather snapshots continue even when no user is browsing the UI.

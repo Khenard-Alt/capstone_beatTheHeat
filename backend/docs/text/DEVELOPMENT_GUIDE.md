@@ -338,7 +338,7 @@ debugger; // Will pause execution in browser DevTools
 **Solution:**
 ```bash
 rm -rf node_modules
-npm install
+npm ci
 ```
 
 #### Issue: Port already in use

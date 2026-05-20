@@ -1,0 +1,14 @@
+﻿{
+    "publishDir":  "C:\\Code Files\\capstone\\capstone_beatTheHeat\\backend\\deploy\\published-models\\20260520-213825",
+    "generatedAt":  "2026-05-20T21:38:25.4482500+08:00",
+    "artifacts":  [
+                      "heat_advisory_model.joblib",
+                      "label_map.json",
+                      "training_report.json",
+                      "tuning_report.json",
+                      "model_registry.json"
+                  ],
+    "auditReport":  "training_audit_report.json",
+    "modelStatus":  "needs-review",
+    "sourceDir":  "C:\\Code Files\\capstone\\capstone_beatTheHeat\\backend\\components\\AIModel\\python\\model"
+}

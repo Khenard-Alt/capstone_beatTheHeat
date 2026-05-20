@@ -15,7 +15,7 @@ interface HeatIndexCardProps {
 export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
   heatIndex,
   temperature,
-  humidity,
+  
   level,
   lastUpdated,
 }) => {

@@ -22,13 +22,14 @@ const parentMessages_routes_1 = __importDefault(require("./routes/parentMessages
 const incidents_routes_1 = __importDefault(require("./routes/incidents.routes"));
 const weather_service_1 = require("./services/weather.service");
 const aiAnalysis_service_1 = require("./services/aiAnalysis.service");
+const notification_service_1 = require("./services/notification.service");
 // Import routes (to be created)
 // import schoolRoutes from './routes/school.routes';
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
-const WEATHER_SNAPSHOT_INTERVAL_MINUTES = Number(process.env.WEATHER_SNAPSHOT_INTERVAL_MINUTES ?? 15);
+const WEATHER_SNAPSHOT_INTERVAL_MINUTES = Number(process.env.WEATHER_SNAPSHOT_INTERVAL_MINUTES ?? 1);
 const AI_ADVISORY_INTERVAL_MINUTES = Number(process.env.AI_ADVISORY_INTERVAL_MINUTES ?? 1);
 // Middleware
 app.use((0, cors_1.default)());
@@ -71,7 +72,8 @@ const startWeatherSnapshotScheduler = () => {
     const intervalMs = Math.max(1, WEATHER_SNAPSHOT_INTERVAL_MINUTES) * 60 * 1000;
     const collectSnapshot = async () => {
         try {
-            await weather_service_1.weatherService.getCurrentWeather();
+            const snapshot = await weather_service_1.weatherService.getCurrentWeather();
+            await notification_service_1.notificationService.dispatchHeatAlerts(snapshot);
         }
         catch (error) {
             console.error('Weather snapshot scheduler error:', error);

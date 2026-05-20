@@ -7,6 +7,20 @@ export declare const env: {
     readonly schoolLat: number;
     readonly schoolLon: number;
     readonly weatherSchedulerToken: string;
+    readonly smsProvider: "android-heartbeat" | "twilio";
+    readonly androidSmsGatewayUrl: string;
+    readonly androidSmsGatewayApiKey: string;
+    readonly androidSmsGatewayUsername: string;
+    readonly androidSmsGatewayPassword: string;
+    readonly androidSmsHeartbeatUrl: string;
+    readonly androidSmsHeartbeatTimeoutMs: number;
+    readonly twilioAccountSid: string;
+    readonly twilioAuthToken: string;
+    readonly twilioPhoneNumber: string;
+    readonly heatAlertNotifyLevels: string[];
+    readonly heatAlertCooldownMinutes: number;
+    readonly heatAlertEmailEnabled: boolean;
+    readonly heatAlertSmsEnabled: boolean;
     readonly aiModelProvider: "gemini" | "python" | "fallback";
     readonly pythonExecutable: string;
     readonly pythonModelDir: string;
@@ -15,4 +29,6 @@ export declare const env: {
 export declare const hasWeatherApiKey: () => boolean;
 export declare const hasGeminiApiKey: () => boolean;
 export declare const hasWeatherSchedulerToken: () => boolean;
+export declare const hasAndroidSmsGatewayConfig: () => boolean;
+export declare const hasTwilioConfig: () => boolean;
 //# sourceMappingURL=environment.d.ts.map

@@ -171,6 +171,19 @@
   border-radius: 999px;
   padding: 10px 14px;
   font-size: 13px;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.global-advisory-input-row input::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+.global-advisory-input-row input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
 }
 
 .global-advisory-input-row button {
@@ -251,3 +264,13 @@
     width: 56px;
   }
 }
+
+.floating-advisory-header{position:static;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;min-width:320px;max-width:420px;padding:12px 14px;border:none;border-radius:999px;background:#0f172a;color:#fff;box-shadow:0 14px 30px rgba(15,23,42,0.35);cursor:pointer;font-weight:600;line-height:1.2;animation:floatAdvisorySlide 0.35s ease-out}
+.floating-advisory-header:hover{background:#111827}
+.floating-advisory-header.attention{animation:floatAdvisoryPulse 0.9s ease-in-out infinite, floatAdvisoryShake 0.18s ease-in-out infinite;box-shadow:0 0 0 0 rgba(249,115,22,0.5),0 24px 60px rgba(15,23,42,0.45)}
+.floating-advisory-header.attention::after{content:"";position:absolute;inset:-8px;border-radius:999px;border:2px solid rgba(249,115,22,0.55);animation:floatAdvisoryRing 1.4s ease-out infinite}
+.floating-advisory-header-left{display:flex;flex-direction:column;gap:4px;min-width:0}
+.floating-advisory-text{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
+.floating-advisory-icon{display:grid;place-items:center;background:#0ea5e9;border-radius:999px;width:34px;height:34px}
+.floating-advisory-icon svg{font-size:18px}
+

@@ -79,6 +79,24 @@ const mapRiskLevel = (heatLevel) => {
     }
     return 'low';
 };
+const normalizeTimestamp = (maybeTs) => {
+    if (!maybeTs)
+        return null;
+    const parsed = new Date(maybeTs);
+    if (Number.isNaN(parsed.getTime()))
+        return null;
+    return parsed.toISOString();
+};
+const normalizeWeatherSnapshot = (raw) => {
+    if (!raw)
+        return null;
+    // Prefer explicit known fields but otherwise return as-is
+    const heatLevel = raw.heatLevel ?? raw.heat_level ?? raw.level ?? raw?.weather?.heatLevel ?? 'normal';
+    return {
+        ...raw,
+        heatLevel,
+    };
+};
 const loadLocalAdvisories = async (limit, offset) => {
     const auditPath = path_1.default.resolve(process.cwd(), 'logs', 'audit-events.jsonl');
     try {
@@ -94,21 +112,35 @@ const loadLocalAdvisories = async (limit, offset) => {
                 return null;
             }
         })
-            .filter((event) => event && event.type === 'ai_analysis' && event.payload)
+            .filter((event) => event && (event.type === 'ai_analysis' || event.type === 'ai-analysis' || event.type === 'ai_analysis_v1'))
             .map((event) => {
-            const heatLevel = String(event.payload?.weather?.heatLevel ?? 'normal');
+            // Support multiple possible key names for created timestamp and response
+            const created = normalizeTimestamp(event.created_at ?? event.createdAt ?? event.timestamp ?? null);
+            const payload = event.payload ?? event.data ?? null;
+            const responseText = (payload && (payload.ai_response ?? payload.responseText ?? payload.aiResponse ?? payload.response)) ??
+                event.ai_response ??
+                event.aiResponse ??
+                null;
+            const weatherSnapshot = normalizeWeatherSnapshot(payload?.weather ?? payload?.weather_snapshot ?? event.weather_snapshot ?? null);
+            const heatLevel = String(weatherSnapshot?.heatLevel ?? 'normal');
             return {
-                id: event.id,
-                created_at: event.createdAt,
-                response: event.payload?.responseText ?? 'No advisory text available',
+                id: event.id ?? null,
+                created_at: created,
+                response: typeof responseText === 'string' ? responseText : JSON.stringify(responseText ?? 'No advisory text available'),
                 safety_level: heatLevel,
                 risk_level: mapRiskLevel(heatLevel),
+                weather_snapshot: weatherSnapshot,
             };
         })
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            .filter(Boolean)
+            .sort((a, b) => {
+            const at = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bt = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return bt - at;
+        });
         return advisories.slice(offset, offset + limit);
     }
-    catch {
+    catch (err) {
         return [];
     }
 };
@@ -116,9 +148,15 @@ const generateHealthAdvisory = async (req, res, next) => {
     try {
         const query = typeof req.body?.query === 'string' ? req.body.query : '';
         const weather = req.body?.weather ?? (await weather_service_1.weatherService.getCurrentWeather());
+        const rawLang = req.body?.lang;
+        const allowedLangs = ['english', 'tagalog', 'taglish', 'en', 'tl'];
+        const langParam = rawLang && allowedLangs.includes(rawLang) ? rawLang : undefined;
+        const singleParam = req.body?.single === true || String(req.body?.single ?? '') === 'true';
         const advisory = await aiAnalysis_service_1.aiAnalysisService.generateScopedAdvisory({
             query,
             weather,
+            lang: langParam,
+            single: singleParam,
         });
         res.status(200).json({
             success: true,
@@ -134,9 +172,14 @@ const getRealtimeAdvisory = async (req, res, next) => {
     try {
         const query = typeof req.query?.query === 'string' ? req.query.query : 'Realtime heat advisory update.';
         const weather = await weather_service_1.weatherService.getCurrentWeather();
+        const rawLangQ = typeof req.query?.lang === 'string' ? req.query.lang : undefined;
+        const langParam = rawLangQ && ['english', 'tagalog', 'taglish', 'en', 'tl'].includes(rawLangQ) ? rawLangQ : undefined;
+        const singleParam = String(req.query?.single ?? '') === 'true';
         const advisory = await aiAnalysis_service_1.aiAnalysisService.generatePythonOnlyAdvisory({
             query,
             weather,
+            lang: langParam,
+            single: singleParam,
         });
         res.status(200).json({
             success: true,
@@ -179,9 +222,22 @@ const getHealthAdvisories = async (req, res, next) => {
             res.status(500).json({
                 success: false,
                 message: 'Failed to fetch advisories',
-                error: error.message,
+                error: error?.message ?? String(error),
             });
             return;
+        }
+        // Fallback: if Supabase didn't return a count, request a head-only count query
+        let totalCount = typeof count === 'number' && Number.isFinite(count) ? count : 0;
+        if (totalCount === 0) {
+            try {
+                const countResp = await client.from('ai_analysis_logs').select('id', { count: 'exact', head: true });
+                if (typeof countResp.count === 'number') {
+                    totalCount = countResp.count;
+                }
+            }
+            catch {
+                // ignore fallback errors and keep totalCount as-is
+            }
         }
         res.status(200).json({
             success: true,
@@ -201,7 +257,7 @@ const getHealthAdvisories = async (req, res, next) => {
             pagination: {
                 limit,
                 offset,
-                total: count || 0,
+                total: totalCount || 0,
             },
         });
     }

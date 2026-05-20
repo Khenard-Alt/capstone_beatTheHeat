@@ -4,6 +4,32 @@ import path from 'path';
 import { aiAnalysisService } from '../services/aiAnalysis.service';
 import { weatherService } from '../services/weather.service';
 import { getSupabaseAdminClient } from '../config/supabase';
+import { AdvisoryInput } from '../types';
+
+type AdvisoryDecisionBasis = {
+	heatIndexC?: number;
+	temperatureC?: number;
+	humidityPercent?: number;
+	heatLevel?: string;
+	dataSource?: string;
+	rationale?: string[];
+};
+
+type AdvisoryModelProfile = {
+	mode?: string;
+	scope?: string;
+};
+
+type AdvisoryRow = {
+	id: string;
+	type?: string;
+	created_at?: string | null;
+	createdAt?: string | null;
+	ai_response?: unknown;
+	aiResponse?: unknown;
+	weather_snapshot?: any;
+	payload?: any;
+};
 
 const formatLoggedAdvisoryResponse = (aiResponse: unknown): string => {
 	if (typeof aiResponse !== 'string') {
@@ -32,18 +58,8 @@ const formatLoggedAdvisoryResponse = (aiResponse: unknown): string => {
 
 const parseAiAdvisoryPayload = (aiResponse: unknown): {
 	confidenceScore?: number;
-	decisionBasis?: {
-		heatIndexC?: number;
-		temperatureC?: number;
-		humidityPercent?: number;
-		heatLevel?: string;
-		dataSource?: string;
-		rationale?: string[];
-	};
-	modelProfile?: {
-		mode?: string;
-		scope?: string;
-	};
+	decisionBasis?: AdvisoryDecisionBasis;
+	modelProfile?: AdvisoryModelProfile;
 } => {
 	if (typeof aiResponse !== 'string') {
 		return {};
@@ -121,6 +137,23 @@ const mapRiskLevel = (heatLevel: string): 'low' | 'medium' | 'high' | 'critical'
 	return 'low';
 };
 
+const normalizeTimestamp = (maybeTs?: string | null): string | null => {
+	if (!maybeTs) return null;
+	const parsed = new Date(maybeTs);
+	if (Number.isNaN(parsed.getTime())) return null;
+	return parsed.toISOString();
+};
+
+const normalizeWeatherSnapshot = (raw: any) => {
+	if (!raw) return null;
+	// Prefer explicit known fields but otherwise return as-is
+	const heatLevel = raw.heatLevel ?? raw.heat_level ?? raw.level ?? raw?.weather?.heatLevel ?? 'normal';
+	return {
+		...raw,
+		heatLevel,
+	};
+};
+
 const loadLocalAdvisories = async (limit: number, offset: number): Promise<any[]> => {
 	const auditPath = path.resolve(process.cwd(), 'logs', 'audit-events.jsonl');
 
@@ -131,26 +164,44 @@ const loadLocalAdvisories = async (limit: number, offset: number): Promise<any[]
 			.filter(Boolean)
 			.map((line) => {
 				try {
-					return JSON.parse(line);
+					return JSON.parse(line) as AdvisoryRow | null;
 				} catch {
 					return null;
 				}
 			})
-			.filter((event) => event && event.type === 'ai_analysis' && event.payload)
+			.filter((event) => event && (event.type === 'ai_analysis' || event.type === 'ai-analysis' || event.type === 'ai_analysis_v1'))
 			.map((event) => {
-				const heatLevel = String(event.payload?.weather?.heatLevel ?? 'normal');
+				// Support multiple possible key names for created timestamp and response
+				const created = normalizeTimestamp((event as any).created_at ?? (event as any).createdAt ?? (event as any).timestamp ?? null);
+				const payload = (event as any).payload ?? (event as any).data ?? null;
+				const responseText =
+					(payload && (payload.ai_response ?? payload.responseText ?? payload.aiResponse ?? payload.response)) ??
+					(event as any).ai_response ??
+					(event as any).aiResponse ??
+					null;
+
+				const weatherSnapshot = normalizeWeatherSnapshot(payload?.weather ?? payload?.weather_snapshot ?? (event as any).weather_snapshot ?? null);
+
+				const heatLevel = String(weatherSnapshot?.heatLevel ?? 'normal');
+
 				return {
-					id: event.id,
-					created_at: event.createdAt,
-					response: event.payload?.responseText ?? 'No advisory text available',
+					id: (event as any).id ?? null,
+					created_at: created,
+					response: typeof responseText === 'string' ? responseText : JSON.stringify(responseText ?? 'No advisory text available'),
 					safety_level: heatLevel,
 					risk_level: mapRiskLevel(heatLevel),
+					weather_snapshot: weatherSnapshot,
 				};
 			})
-			.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+			.filter(Boolean)
+			.sort((a, b) => {
+				const at = a.created_at ? new Date(a.created_at).getTime() : 0;
+				const bt = b.created_at ? new Date(b.created_at).getTime() : 0;
+				return bt - at;
+			});
 
 		return advisories.slice(offset, offset + limit);
-	} catch {
+	} catch (err) {
 		return [];
 	}
 };
@@ -163,10 +214,16 @@ export const generateHealthAdvisory = async (
 	try {
 		const query = typeof req.body?.query === 'string' ? req.body.query : '';
 		const weather = req.body?.weather ?? (await weatherService.getCurrentWeather());
+		const rawLang = req.body?.lang as string | undefined;
+		const allowedLangs = ['english', 'tagalog', 'taglish', 'en', 'tl'] as const;
+		const langParam = rawLang && (allowedLangs as readonly string[]).includes(rawLang) ? (rawLang as AdvisoryInput['lang']) : undefined;
+		const singleParam = req.body?.single === true || String(req.body?.single ?? '') === 'true';
 
 		const advisory = await aiAnalysisService.generateScopedAdvisory({
 			query,
 			weather,
+			lang: langParam,
+			single: singleParam,
 		});
 
 		res.status(200).json({
@@ -186,9 +243,14 @@ export const getRealtimeAdvisory = async (
 	try {
 		const query = typeof req.query?.query === 'string' ? req.query.query : 'Realtime heat advisory update.';
 		const weather = await weatherService.getCurrentWeather();
+		const rawLangQ = typeof req.query?.lang === 'string' ? req.query.lang : undefined;
+		const langParam = rawLangQ && (['english', 'tagalog', 'taglish', 'en', 'tl'] as readonly string[]).includes(rawLangQ) ? (rawLangQ as AdvisoryInput['lang']) : undefined;
+		const singleParam = String(req.query?.single ?? '') === 'true';
 		const advisory = await aiAnalysisService.generatePythonOnlyAdvisory({
 			query,
 			weather,
+			lang: langParam,
+			single: singleParam,
 		});
 
 		res.status(200).json({
@@ -238,9 +300,22 @@ export const getHealthAdvisories = async (
 			res.status(500).json({
 				success: false,
 				message: 'Failed to fetch advisories',
-				error: error.message,
+				error: (error as any)?.message ?? String(error),
 			});
 			return;
+		}
+
+		// Fallback: if Supabase didn't return a count, request a head-only count query
+		let totalCount: number = typeof count === 'number' && Number.isFinite(count) ? count : 0;
+		if (totalCount === 0) {
+			try {
+				const countResp: any = await client.from('ai_analysis_logs').select('id', { count: 'exact', head: true });
+				if (typeof countResp.count === 'number') {
+					totalCount = countResp.count;
+				}
+			} catch {
+				// ignore fallback errors and keep totalCount as-is
+			}
 		}
 
 		res.status(200).json({
@@ -261,7 +336,7 @@ export const getHealthAdvisories = async (
 			pagination: {
 				limit,
 				offset,
-				total: count || 0,
+				total: totalCount || 0,
 			},
 		});
 	} catch (error) {

@@ -14,6 +14,8 @@ export interface WeatherSnapshot {
 export interface AdvisoryInput {
 	query: string;
 	weather: WeatherSnapshot;
+	lang?: 'english' | 'tagalog' | 'taglish' | 'en' | 'tl';
+	single?: boolean; // when true, request a single concise summary response
 }
 
 export interface AdvisoryResult {
@@ -35,4 +37,6 @@ export interface AdvisoryResult {
 		mode: 'rule-grounded-ai';
 		scope: 'system-only';
 	};
+	// Optional single-response text when the caller requests a concise single answer
+	singleResponse?: string;
 }

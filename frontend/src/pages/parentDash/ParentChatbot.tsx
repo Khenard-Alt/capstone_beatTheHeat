@@ -52,9 +52,14 @@ export const ParentChatbot: React.FC = () => {
     setIsThinking(true);
 
     try {
-      const scoped = await generateScopedAdvisory(trimmed);
+      const lang = /[\u00C0-\u024F]|\b(ano|paano|bakit|kasi|lahat|naman|po|ngayon|mainit|init|mahirap|sino|saan)\b/i.test(trimmed)
+        ? 'tagalog'
+        : 'english';
+
+      const scoped = await generateScopedAdvisory(trimmed, { lang, single: true });
+      const summary = scoped.singleResponse ?? scoped.summary;
       const reply = [
-        scoped.summary,
+        summary,
         '',
         `Risk level: ${scoped.riskLevel}`,
         ...scoped.actions.slice(0, 3).map((action) => `• ${action}`),

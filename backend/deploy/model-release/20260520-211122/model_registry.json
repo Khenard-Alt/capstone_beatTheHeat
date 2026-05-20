@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-05-20T13:10:43.916556+00:00",
+  "status": "needs-review",
+  "promotion": {
+    "blocked": true,
+    "reasons": [
+      "Holdout missing class: caution",
+      "Holdout missing class: danger",
+      "Holdout missing class: safe"
+    ]
+  },
+  "data": {
+    "rows": null,
+    "min_class_count": 0,
+    "class_counts": {
+      "safe": 58,
+      "caution": 307,
+      "extreme-caution": 299,
+      "danger": 13,
+      "extreme-danger": 0
+    },
+    "label_map": {
+      "caution": 0,
+      "danger": 1,
+      "extreme-caution": 2,
+      "safe": 3
+    }
+  },
+  "metrics": {
+    "final_accuracy": 1.0,
+    "holdout_accuracy": 1.0,
+    "stratified_accuracy": 1.0
+  },
+  "artifacts": {
+    "model": "heat_advisory_model.joblib",
+    "labels": "label_map.json",
+    "training_report": "training_report.json"
+  }
+}

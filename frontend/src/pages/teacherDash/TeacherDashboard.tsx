@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { Card } from '../../components/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { getGreeting } from '../../utils/helpers';
+import { createIncident } from '../../services/incidents.service';
+import IncidentModal from '../../components/IncidentModal';
 import '../../styles/AdminDashboard.css';
 
 export const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
   const [loading] = useState(false);
+  const [isIncidentOpen, setIncidentOpen] = useState(false);
 
   return (
     <div className="admin-dashboard">
@@ -51,7 +54,8 @@ export const TeacherDashboard: React.FC = () => {
           <Card title="Conduct Form - Student Conditions">
             <div style={{padding: '20px', textAlign: 'center', color: '#64748b'}}>
               <p>Fill up the conduct form to report student conditions during heat-related situations. Submit updates when needed.</p>
-              <button className="btn btn-primary" style={{marginTop: '12px'}}>Submit Conduct Form</button>
+              <button className="btn btn-primary" style={{marginTop: '12px'}} onClick={() => setIncidentOpen(true)}>Submit Conduct Form</button>
+              <IncidentModal isOpen={isIncidentOpen} onClose={() => setIncidentOpen(false)} />
             </div>
           </Card>
 
@@ -64,7 +68,7 @@ export const TeacherDashboard: React.FC = () => {
           <Card title="Incident Reports">
             <div style={{padding: '20px', textAlign: 'center', color: '#64748b'}}>
               <p>Submit incident reports when heat-related incidents occur in your class or school premises.</p>
-              <button className="btn btn-primary" style={{marginTop: '12px'}}>Submit Incident Report</button>
+              <button className="btn btn-primary" style={{marginTop: '12px'}} onClick={() => setIncidentOpen(true)}>Submit Incident Report</button>
             </div>
           </Card>
         </div>

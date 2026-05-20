@@ -24,3 +24,8 @@ export const fetchIncidents = async (limit = 20, offset = 0): Promise<StudentHea
   });
   return data.data ?? [];
 };
+
+export const createIncident = async (payload: { schoolId?: string; reporterId?: string; studentId?: string; type: string; description: string; actionTaken?: string; heatIndex?: number }) => {
+  const { data } = await apiClient.post<ApiEnvelope<any>>('/api/incidents', payload);
+  return data.data;
+};

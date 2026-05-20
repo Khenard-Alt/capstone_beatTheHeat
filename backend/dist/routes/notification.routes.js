@@ -4,6 +4,16 @@ const express_1 = require("express");
 const notificationController_1 = require("../controllers/notificationController");
 const router = (0, express_1.Router)();
 /**
+ * Check SMS gateway heartbeat/readiness
+ * GET /api/notifications/sms/health
+ */
+router.get('/sms/health', notificationController_1.notificationController.getSmsGatewayHealth);
+/**
+ * Send test SMS through configured provider
+ * POST /api/notifications/sms/test
+ */
+router.post('/sms/test', notificationController_1.notificationController.sendSmsTest);
+/**
  * Get notifications for a user
  * GET /api/notifications?userId=...&limit=...&offset=...
  */

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendAdvisoryNotificationEmail = exports.sendHeatAlertEmail = exports.sendWelcomeEmail = exports.sendOTPEmail = void 0;
+exports.sendAdvisoryNotificationEmail = exports.sendHeatAlertEmail = exports.sendWelcomeEmail = exports.sendOTPEmail = exports.sendEmail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 // For development, use Ethereal Email (test email service)
 // In production, replace with real email provider
@@ -58,6 +58,37 @@ const initializeTransporter = async () => {
     }
 };
 /**
+ * Generic send email helper
+ */
+const sendEmail = async (to, subject, html, text) => {
+    try {
+        const transport = await initializeTransporter();
+        if (!transport) {
+            console.warn('[EMAIL] Transporter not configured, skipping send to', to);
+            return false;
+        }
+        const mailOptions = {
+            from: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@beattheheat.com',
+            to,
+            subject,
+            html,
+            text: text || html.replace(/<[^>]+>/g, ''),
+        };
+        const info = await transport.sendMail(mailOptions);
+        if (process.env.NODE_ENV !== 'production') {
+            const previewUrl = nodemailer_1.default.getTestMessageUrl(info);
+            if (previewUrl)
+                console.log('[EMAIL] Preview URL:', previewUrl);
+        }
+        return true;
+    }
+    catch (error) {
+        console.error('[EMAIL] Failed to send email:', error);
+        return false;
+    }
+};
+exports.sendEmail = sendEmail;
+/**
  * Send OTP email
  */
 const sendOTPEmail = async (email, otpCode, expiresIn) => {
@@ -83,9 +114,7 @@ const sendOTPEmail = async (email, otpCode, expiresIn) => {
           <p><strong>This code expires in ${expiresInMinutes} minutes.</strong></p>
           <p>If you didn't request this code, please ignore this email.</p>
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-          <p style="color: #64748b; font-size: 12px;">
-            This is an automated message from Beat The Heat. Please do not reply to this email.
-          </p>
+          <p style="color: #64748b; font-size: 12px;">This is an automated message from Beat The Heat. Please do not reply to this email.</p>
         </div>
       `,
         };
@@ -134,14 +163,10 @@ const sendWelcomeEmail = async (email, firstName, studentName) => {
             </ul>
           </div>
           <p style="margin-top: 30px;">
-            <a href="${process.env.APP_URL || 'https://beattheheat.com'}/dashboard" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-              Go to Dashboard
-            </a>
+            <a href="${process.env.APP_URL || 'https://beattheheat.com'}/dashboard" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Go to Dashboard</a>
           </p>
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-          <p style="color: #64748b; font-size: 12px;">
-            This is an automated message from Beat The Heat. Please do not reply to this email.
-          </p>
+          <p style="color: #64748b; font-size: 12px;">This is an automated message from Beat The Heat. Please do not reply to this email.</p>
         </div>
       `,
         };
@@ -212,9 +237,7 @@ const sendHeatAlertEmail = async (email, recipientName, schoolName, heatLevel, h
 
             <!-- CTA Button -->
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.APP_URL || 'https://beattheheat.com'}/advisory" style="background: linear-gradient(135deg, #0f766e, #1d4ed8); color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-                View Full Advisory
-              </a>
+              <a href="${process.env.APP_URL || 'https://beattheheat.com'}/advisory" style="background: linear-gradient(135deg, #0f766e, #1d4ed8); color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">View Full Advisory</a>
             </div>
           </div>
 
@@ -293,9 +316,7 @@ const sendAdvisoryNotificationEmail = async (email, recipientName, schoolName, a
 
           <!-- CTA Button -->
           <div style="text-align: center; margin: 20px;">
-            <a href="${process.env.APP_URL || 'https://beattheheat.com'}/health-advisory" style="background: linear-gradient(135deg, #0f766e, #1d4ed8); color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-              View All Advisories
-            </a>
+            <a href="${process.env.APP_URL || 'https://beattheheat.com'}/health-advisory" style="background: linear-gradient(135deg, #0f766e, #1d4ed8); color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">View All Advisories</a>
           </div>
 
           <!-- Footer -->
@@ -321,4 +342,11 @@ const sendAdvisoryNotificationEmail = async (email, recipientName, schoolName, a
     }
 };
 exports.sendAdvisoryNotificationEmail = sendAdvisoryNotificationEmail;
+exports.default = {
+    initializeTransporter,
+    sendOTPEmail: exports.sendOTPEmail,
+    sendWelcomeEmail: exports.sendWelcomeEmail,
+    sendHeatAlertEmail: exports.sendHeatAlertEmail,
+    sendAdvisoryNotificationEmail: exports.sendAdvisoryNotificationEmail,
+};
 //# sourceMappingURL=email.service.js.map

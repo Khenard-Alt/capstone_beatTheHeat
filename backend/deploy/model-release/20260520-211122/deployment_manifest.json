@@ -1,0 +1,12 @@
+﻿{
+    "artifacts":  [
+                      "heat_advisory_model.joblib",
+                      "label_map.json",
+                      "training_report.json",
+                      "tuning_report.json",
+                      "model_registry.json"
+                  ],
+    "generatedAt":  "2026-05-20T21:11:22.9356476+08:00",
+    "releaseDir":  "C:\\Code Files\\capstone\\capstone_beatTheHeat\\backend\\deploy\\model-release\\20260520-211122",
+    "sourceDir":  "C:\\Code Files\\capstone\\capstone_beatTheHeat\\backend\\components\\AIModel\\python\\model"
+}

@@ -4,6 +4,18 @@ import { notificationController } from '../controllers/notificationController';
 const router = Router();
 
 /**
+ * Check SMS gateway heartbeat/readiness
+ * GET /api/notifications/sms/health
+ */
+router.get('/sms/health', notificationController.getSmsGatewayHealth);
+
+/**
+ * Send test SMS through configured provider
+ * POST /api/notifications/sms/test
+ */
+router.post('/sms/test', notificationController.sendSmsTest);
+
+/**
  * Get notifications for a user
  * GET /api/notifications?userId=...&limit=...&offset=...
  */

@@ -40,10 +40,28 @@ const execFileAsync = promisify(execFile);
 class AIAnalysisService {
 	private knowledgeCache: { handbook: string | null; docs: Map<string, string> } | null = null;
 
+	private maybeAttachSingle(result: AdvisoryResult, input?: any): AdvisoryResult {
+		try {
+			if (input && input.single) {
+				result.singleResponse = result.summary;
+			}
+		} catch {
+			// noop
+		}
+		return result;
+	}
+
 	public async generateScopedAdvisory(input: AdvisoryInput): Promise<AdvisoryResult> {
 		const rawQuery = typeof input.query === 'string' ? input.query : '';
 		const scopedQuery = this.scopeUserQuery(rawQuery);
-		const languageStyle = this.detectLanguageStyle(rawQuery || scopedQuery);
+		// Respect explicit language request if provided, otherwise detect from query
+		const languageStyle = input.lang
+			? (input.lang === 'tagalog' || input.lang === 'tl'
+				? 'tagalog'
+				: input.lang === 'taglish'
+				? 'taglish'
+				: 'english')
+			: this.detectLanguageStyle(rawQuery || scopedQuery);
 		const intent = this.detectConversationIntent(rawQuery);
 		const variationSeed = this.getVariationSeed();
 
@@ -51,27 +69,27 @@ class AIAnalysisService {
 			const refusal = this.buildScopeRefusalAdvisory(input.weather, languageStyle);
 			const variedRefusal = this.applyVariation(refusal, variationSeed, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, variedRefusal, 'fallback', 'scope-guard');
-			return variedRefusal;
+			return this.maybeAttachSingle(variedRefusal, input);
 		}
 
 		const scenarioTemplate = this.buildScenarioTemplateAdvisory(intent, input.weather, languageStyle);
 		if (scenarioTemplate) {
 			const variedTemplate = this.applyVariation(scenarioTemplate, variationSeed, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, variedTemplate, 'fallback', 'intent-template');
-			return variedTemplate;
+			return this.maybeAttachSingle(variedTemplate, input);
 		}
 
 		if (env.aiModelProvider === 'python') {
 			const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle, variationSeed);
 			if (pythonResult) {
-				return pythonResult;
+				return this.maybeAttachSingle(pythonResult, input);
 			}
 
 			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
 			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
 			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', 'python-fallback');
-			return variedFallback;
+			return this.maybeAttachSingle(variedFallback, input);
 		}
 
 		if (env.aiModelProvider === 'fallback') {
@@ -79,7 +97,7 @@ class AIAnalysisService {
 			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
 			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', 'fallback-only');
-			return variedFallback;
+			return this.maybeAttachSingle(variedFallback, input);
 		}
 
 		if (!hasGeminiApiKey()) {
@@ -87,7 +105,7 @@ class AIAnalysisService {
 			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
 			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', GEMINI_MODELS[0]);
-			return variedFallback;
+			return this.maybeAttachSingle(variedFallback, input);
 		}
 
 		try {
@@ -139,40 +157,46 @@ class AIAnalysisService {
 				data.usageMetadata?.totalTokenCount
 			);
 
-			return variedResult;
+			return this.maybeAttachSingle(variedResult, input);
 		} catch (error) {
 			console.error('AI advisory generation failed, using fallback:', error);
 			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
 			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
 			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', GEMINI_MODELS[0]);
-			return variedFallback;
+			return this.maybeAttachSingle(variedFallback, input);
 		}
 	}
 
 	public async generatePythonOnlyAdvisory(input: AdvisoryInput): Promise<AdvisoryResult> {
 		const rawQuery = typeof input.query === 'string' ? input.query : '';
 		const scopedQuery = this.scopeUserQuery(rawQuery);
-		const languageStyle = this.detectLanguageStyle(rawQuery || scopedQuery);
+		const languageStyle = input.lang
+			? (input.lang === 'tagalog' || input.lang === 'tl'
+				? 'tagalog'
+				: input.lang === 'taglish'
+				? 'taglish'
+				: 'english')
+			: this.detectLanguageStyle(rawQuery || scopedQuery);
 		const variationSeed = this.getVariationSeed();
 
 		if (this.classifyScope(rawQuery) === 'out-of-scope') {
 			const refusal = this.buildScopeRefusalAdvisory(input.weather, languageStyle);
 			const variedRefusal = this.applyVariation(refusal, variationSeed, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, variedRefusal, 'fallback', 'scope-guard');
-			return variedRefusal;
+			return this.maybeAttachSingle(variedRefusal, input);
 		}
 
 		const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle, variationSeed);
 		if (pythonResult) {
-			return pythonResult;
+			return this.maybeAttachSingle(pythonResult, input);
 		}
 
 		const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
 		const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
 		const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
 		await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', 'python-fallback');
-		return variedFallback;
+		return this.maybeAttachSingle(variedFallback, input);
 	}
 
 	private async requestGeminiContent(
@@ -296,8 +320,11 @@ class AIAnalysisService {
 			const adjustedResult = this.applyQueryPolicy(result, input, scopedQuery, languageStyle);
 			const variedResult = this.applyVariation(adjustedResult, variationSeed, languageStyle);
 
-			await this.logAdvisoryAudit(input, scopedQuery, variedResult, 'python', 'local-sklearn');
-			return variedResult;
+			// Apply server-side safety rules to ensure high heat-index forces higher risk levels.
+			const finalResult = this.applySafetyRules(variedResult, input.weather);
+
+			await this.logAdvisoryAudit(input, scopedQuery, finalResult, 'python', 'local-sklearn');
+			return this.maybeAttachSingle(finalResult, input);
 		} catch (error) {
 			console.error('Python advisory generation failed:', error);
 			return null;
@@ -380,7 +407,10 @@ class AIAnalysisService {
 	}
 
 	private getVariationSeed(): number {
-		return Math.floor(Date.now() / 60000) % 3;
+		// Use a seconds-based seed so variation can change more frequently
+		// (previously used minute-based seed which produced identical outputs
+		// for repeated calls within the same minute).
+		return Math.floor(Date.now() / 1000) % 60;
 	}
 
 	private buildVariationHint(seed: number, languageStyle: LanguageStyle): string {
@@ -395,16 +425,57 @@ class AIAnalysisService {
 
 	private applyVariation(result: AdvisoryResult, seed: number, languageStyle: LanguageStyle): AdvisoryResult {
 		const suffix = this.getVariationSuffix(seed, languageStyle);
-		const summary = suffix && !result.summary.includes(suffix)
-			? `${result.summary} ${suffix}`.trim()
-			: result.summary;
+		const summaryBase = suffix && !result.summary.includes(suffix) ? `${result.summary} ${suffix}`.trim() : result.summary;
+
+		// Apply deterministic paraphrase/substitution to increase variation.
+		const summary = this.varyText(seed, summaryBase, languageStyle);
 
 		return {
 			...result,
 			summary,
-			actions: this.rotateList(result.actions, seed),
-			safetyTips: this.rotateList(result.safetyTips, seed),
+			actions: this.rotateList(result.actions.map(a => this.varyText(seed, a, languageStyle)), seed),
+			safetyTips: this.rotateList(result.safetyTips.map(t => this.varyText(seed, t, languageStyle)), seed),
 		};
+	}
+
+	private varyText(seed: number, text: string, languageStyle: LanguageStyle): string {
+		// Simple deterministic substitutions to paraphrase common phrases.
+		const mapEng: Record<string, string[]> = {
+			"Stand by for school updates.": [
+				"Stand by for school updates.",
+				"Please watch for school announcements.",
+				"Wait for official school updates before changing schedules.",
+			],
+			"Increase water break frequency and check on at-risk students.": [
+				"Increase water break frequency and check on at-risk students.",
+				"Give more frequent water breaks and watch vulnerable students.",
+				"Schedule extra hydration breaks and monitor at-risk pupils.",
+			],
+			"Avoid peak heat exposure.": [
+				"Avoid peak heat exposure.",
+				"Limit outdoor time during the hottest hours.",
+				"Plan activities outside peak heat periods.",
+			],
+		};
+
+		const mapTag: Record<string, string[]> = {
+			"Stand by for school updates.": [
+				"Mag-antabay sa abiso mula sa paaralan.",
+				"Hintayin ang opisyal na update ng paaralan.",
+				"Manatiling nakaantabay sa anunsiyo ng school.",
+			],
+		};
+
+		const pool = languageStyle === 'tagalog' || languageStyle === 'taglish' ? mapTag : mapEng;
+		for (const key of Object.keys(pool)) {
+			if (text.includes(key)) {
+				const variants = pool[key];
+				const idx = Math.abs(seed + text.length) % variants.length;
+				return text.replace(key, variants[idx]);
+			}
+		}
+
+		return text;
 	}
 
 	private rotateList(list: string[], seed: number): string[] {
@@ -424,6 +495,43 @@ class AIAnalysisService {
 				: ['Keep hydration in mind today.', 'Stand by for school updates.', 'Avoid peak heat exposure.'];
 
 		return suffixes[Math.abs(seed) % suffixes.length];
+	}
+
+	private applySafetyRules(result: AdvisoryResult, weather: AdvisoryInput['weather']): AdvisoryResult {
+		const hi = Number(weather?.heatIndexC ?? 0);
+		let threshold: AdvisoryResult['riskLevel'] = 'safe';
+		if (hi >= 50) {
+			threshold = 'extreme-danger';
+		} else if (hi >= 40) {
+			threshold = 'danger';
+		} else if (hi >= 37) {
+			threshold = 'extreme-caution';
+		} else if (hi >= 31) {
+			threshold = 'caution';
+		}
+
+		const order = ['safe', 'caution', 'extreme-caution', 'danger', 'extreme-danger'];
+		const currentIdx = order.indexOf(result.riskLevel || 'safe');
+		const thIdx = order.indexOf(threshold);
+		if (thIdx > currentIdx) {
+			// Promote to threshold; annotate rationale and modelProfile
+			const newResult = { ...result };
+			newResult.riskLevel = threshold;
+			newResult.decisionBasis = {
+				...newResult.decisionBasis,
+				rationale: newResult.decisionBasis?.rationale ? [...newResult.decisionBasis.rationale] : [],
+			};
+			const reason = `Rule override: heatIndexC=${hi} => ${threshold}`;
+			if (Array.isArray(newResult.decisionBasis.rationale)) {
+				newResult.decisionBasis.rationale.unshift(reason);
+			} else {
+				newResult.decisionBasis.rationale = [reason];
+			}
+			newResult.modelProfile = { ...newResult.modelProfile, ruleOverride: true } as any;
+			return newResult;
+		}
+
+		return result;
 	}
 
 	private async buildKnowledgeContext(query: string): Promise<string> {
@@ -589,6 +697,8 @@ class AIAnalysisService {
 			'bitcoin',
 			'cryptocurrency',
 			'stock market',
+			'stocks',
+			'finance',
 			'nba',
 			'finals',
 			'love poem',
@@ -596,10 +706,12 @@ class AIAnalysisService {
 			'lyrics',
 			'horoscope',
 			'recipe',
+			'how to',
+			'tutorial',
 		];
 
 		if (outOfScopeSignals.some((token) => lowered.includes(token))) {
-			return 'in-scope';
+			return 'out-of-scope';
 		}
 
 		return 'in-scope';

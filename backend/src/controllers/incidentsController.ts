@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { readFile } from 'fs/promises';
+import { readFile, appendFile } from 'fs/promises';
 import path from 'path';
 import { getSupabaseAdminClient } from '../config/supabase';
 
@@ -83,6 +83,47 @@ export const incidentsController = {
       });
     } catch (error) {
       next(error);
+    }
+  },
+
+  create: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { schoolId, reporterId, studentId, type, description, actionTaken, heatIndex } = req.body;
+      if (!type || !description) {
+        res.status(400).json({ success: false, message: 'Missing required fields' });
+        return;
+      }
+
+      const supabase = getSupabaseAdminClient();
+      if (!supabase) {
+        const record = { id: `local-${Date.now()}`, schoolId, reporterId, studentId, type, description, actionTaken, heatIndex, status: 'pending', created_at: new Date().toISOString() };
+        await appendFile(LOCAL_LOG, JSON.stringify(record) + '\n');
+        res.status(201).json({ success: true, data: record });
+        return;
+      }
+
+      const payload: any = {
+        school_id: schoolId || null,
+        reporter_id: reporterId || null,
+        student_id: studentId || null,
+        type,
+        description,
+        action_taken: actionTaken || null,
+        heat_index_at_time: heatIndex || null,
+        status: 'pending',
+      };
+
+      const { data, error } = await supabase.from('incidents').insert([payload]).select('*').single();
+      if (error) {
+        res.status(500).json({ success: false, message: 'Failed to create incident', error: error.message });
+        return;
+      }
+
+      res.status(201).json({ success: true, data });
+      return;
+    } catch (err) {
+      next(err);
+      return;
     }
   },
 };

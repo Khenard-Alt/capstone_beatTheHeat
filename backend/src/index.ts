@@ -17,6 +17,7 @@ import parentMessagesRoutes from './routes/parentMessages.routes';
 import incidentsRoutes from './routes/incidents.routes';
 import { weatherService } from './services/weather.service';
 import { aiAnalysisService } from './services/aiAnalysis.service';
+import { notificationService } from './services/notification.service';
 
 // Import routes (to be created)
 // import schoolRoutes from './routes/school.routes';
@@ -76,7 +77,8 @@ const startWeatherSnapshotScheduler = (): void => {
 
   const collectSnapshot = async (): Promise<void> => {
     try {
-      await weatherService.getCurrentWeather();
+      const snapshot = await weatherService.getCurrentWeather();
+      await notificationService.dispatchHeatAlerts(snapshot);
     } catch (error) {
       console.error('Weather snapshot scheduler error:', error);
     }

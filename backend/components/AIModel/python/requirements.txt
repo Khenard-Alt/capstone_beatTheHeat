@@ -1,6 +1,7 @@
-numpy==1.26.4
-pandas==2.2.2
-psycopg2-binary==2.9.9
-scikit-learn==1.5.2
-joblib==1.4.2
-xgboost==2.0.3
+numpy==2.4.6
+pandas==3.0.3
+scikit-learn==1.8.0
+xgboost==3.2.0
+joblib==1.5.3
+psycopg2-binary==2.9.12
+imbalanced-learn==0.14.1

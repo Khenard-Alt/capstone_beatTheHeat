@@ -7,6 +7,7 @@ export interface ScopedAdvisoryResponse {
 	actions: string[];
 	safetyTips: string[];
 	scopeNote: string;
+	singleResponse?: string;
 	confidenceScore?: number;
 	decisionBasis?: {
 		heatIndexC?: number;
@@ -26,11 +27,21 @@ export interface RealtimeAdvisoryResponse extends ScopedAdvisoryResponse {
 	generatedAt: string;
 }
 
-export const generateScopedAdvisory = async (query: string): Promise<ScopedAdvisoryResponse> => {
+export interface ScopedAdvisoryOptions {
+	lang?: 'english' | 'tagalog' | 'taglish';
+	single?: boolean;
+}
+
+export const generateScopedAdvisory = async (
+	query: string,
+	options: ScopedAdvisoryOptions = {}
+): Promise<ScopedAdvisoryResponse> => {
 	const { data } = await apiClient.post<ApiEnvelope<ScopedAdvisoryResponse>>(
 		'/api/health-advisories/generate',
 		{
 			query,
+			lang: options.lang,
+			single: options.single ?? false,
 		}
 	);
 

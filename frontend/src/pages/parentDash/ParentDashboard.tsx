@@ -4,7 +4,7 @@ import { WeatherWidget } from '../../components/WeatherWidget';
 import { AdvisoryAlert } from '../../components/AdvisoryAlert';
 import { Chart } from '../../components/Chart';
 import { Card } from '../../components/Card';
-import { fetchAnnouncements, Announcement } from '../../services/announcements.service';
+import { fetchAnnouncements } from '../../services/announcements.service'; import type { Announcement } from '../../services/announcements.service';
 import { fetchIncidents } from '../../services/incidents.service';
 import { fetchCurrentWeather } from '../../services/weather.service';
 import { fetchRealtimeAdvisory, generateScopedAdvisory } from '../../services/healthAdvisory.service';

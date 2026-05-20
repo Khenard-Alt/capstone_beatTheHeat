@@ -15,8 +15,10 @@ declare class AuditLogService {
     private readonly localAuditPath;
     logWeatherSnapshot(snapshot: WeatherSnapshot, schoolId?: string): Promise<void>;
     logAiAnalysis(input: AILogInput): Promise<void>;
+    private findSimilarRecentAiAnalysis;
     private insertWeatherRows;
     private appendLocal;
+    private pathExists;
 }
 export declare const auditLogService: AuditLogService;
 export {};

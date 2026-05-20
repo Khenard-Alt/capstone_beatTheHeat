@@ -7,6 +7,8 @@ import { Card } from '../../components/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchCurrentWeather } from '../../services/weather.service';
 import { apiClient } from '../../services/api';
+import { createAnnouncement } from '../../services/announcements.service';
+import AnnouncementModal from '../../components/AnnouncementModal';
 import { fetchRealtimeAdvisory } from '../../services/healthAdvisory.service';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import type { HeatIndexData, WeatherData, HealthAdvisory } from '../../types';
@@ -34,10 +36,11 @@ interface IncidentTrend {
 
 export const PrincipalDashboard: React.FC = () => {
   const { user } = useAuth();
+  const [isAnnouncementOpen, setAnnouncementOpen] = useState(false);
 
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [principalStats, setPrincipalStats] = useState<PrincipalStats | null>(null);
-  const [incidentTrends, setIncidentTrends] = useState<IncidentTrend[]>([]);
+  const [_incidentTrends, setIncidentTrends] = useState<IncidentTrend[]>([]);
   const [aiAdvisory, setAiAdvisory] = useState<HealthAdvisory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,6 +140,27 @@ export const PrincipalDashboard: React.FC = () => {
 
   const advisory = aiAdvisory ?? localAdvisory;
 
+  // Auto-notify parents when advisory reaches critical/high levels
+  useEffect(() => {
+    const shouldNotify = advisory && (advisory.riskLevel === 'critical' || advisory.heatLevel === 'danger' || advisory.heatLevel === 'extreme-danger');
+    if (!shouldNotify) return;
+
+    const notify = async () => {
+      try {
+        await apiClient.post('/api/notifications/broadcast-heat-alert', {
+          schoolId: heatIndexData.schoolId,
+          heatLevel: advisory.heatLevel,
+          heatIndex: heatIndexData.heatIndex,
+          recommendations: advisory.recommendations,
+        });
+      } catch (err) {
+        console.warn('Failed to broadcast heat alert:', err);
+      }
+    };
+
+    void notify();
+  }, [advisory?.riskLevel, advisory?.heatLevel, heatIndexData]);
+
   const systemStats = [
     { label: 'Active Advisories', value: principalStats?.activeAdvisories || '0', note: 'This period' },
     { label: 'Heat Incidents', value: principalStats?.incidents || '0', note: 'This period' },
@@ -174,9 +198,11 @@ export const PrincipalDashboard: React.FC = () => {
         </div>
         <div className="admin-dashboard-badges">
           <span className="admin-badge">Principal</span>
-          <span className="admin-badge admin-badge-muted">
-            {loading ? 'Syncing...' : 'Last sync: just now'}
-          </span>
+          <span className="admin-badge admin-badge-muted">{loading ? 'Loading...' : 'Ready'}</span>
+          <button className="btn btn-secondary" style={{ marginLeft: 12 }} onClick={() => setAnnouncementOpen(true)}>
+            Create Announcement
+          </button>
+          <AnnouncementModal isOpen={isAnnouncementOpen} onClose={() => setAnnouncementOpen(false)} />
         </div>
       </div>
 

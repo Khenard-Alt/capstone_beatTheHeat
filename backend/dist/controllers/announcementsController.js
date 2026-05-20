@@ -7,6 +7,7 @@ exports.announcementsController = void 0;
 const promises_1 = require("fs/promises");
 const path_1 = __importDefault(require("path"));
 const supabase_1 = require("../config/supabase");
+const email_service_1 = require("../services/email.service");
 const loadLocalAnnouncements = async () => {
     const sample = [
         {
@@ -65,6 +66,55 @@ exports.announcementsController = {
         }
         catch (error) {
             next(error);
+            return;
+        }
+    },
+    createAnnouncement: async (req, res, next) => {
+        try {
+            const { schoolId, title, body, priority } = req.body;
+            if (!title || !body) {
+                res.status(400).json({ success: false, message: 'Missing required fields' });
+                return;
+            }
+            const supabase = (0, supabase_1.getSupabaseAdminClient)();
+            if (!supabase) {
+                const local = { id: `local-${Date.now()}`, title, body, priority: priority || 'info', created_at: new Date().toISOString() };
+                // write to logs for offline dev
+                const p = path_1.default.resolve(process.cwd(), 'logs', 'announcements.jsonl');
+                await (0, promises_1.appendFile)(p, JSON.stringify(local) + '\n');
+                res.status(201).json({ success: true, data: local });
+                return;
+            }
+            const insertPayload = { title, body, priority: priority || 'info' };
+            if (schoolId)
+                insertPayload.school_id = schoolId;
+            const { data, error } = await supabase.from('announcements').insert([insertPayload]).select('*').single();
+            if (error) {
+                res.status(500).json({ success: false, message: 'Failed to create announcement', error: error.message });
+                return;
+            }
+            // If announcement is marked critical or notifyParents flag set, email parents
+            try {
+                const shouldNotify = req.body.notifyParents === true || (req.body.priority && req.body.priority === 'critical');
+                if (shouldNotify) {
+                    // fetch parent emails from supabase
+                    const { data: parents } = await supabase.from('users').select('email').eq('role', 'parent').eq('school_id', insertPayload.school_id || 'school-1');
+                    const emails = (parents || []).map((p) => p.email).filter(Boolean);
+                    if (emails.length > 0) {
+                        const subject = `Announcement: ${data.title}`;
+                        const html = `<h3>${data.title}</h3><p>${data.body}</p>`;
+                        await (0, email_service_1.sendEmail)(emails, subject, html);
+                    }
+                }
+            }
+            catch (e) {
+                console.warn('Failed to send announcement emails', e);
+            }
+            res.status(201).json({ success: true, data });
+            return;
+        }
+        catch (err) {
+            next(err);
             return;
         }
     },
