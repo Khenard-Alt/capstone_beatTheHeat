@@ -64,6 +64,7 @@ jest.config.js
 # Temporary
 tmp/
 temp/
+.venv/
 *.tmp
 
 # Database
