@@ -63,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
       badge: 4,
       menuKey: 'questions-concerns',
       children: [
-        { path: '/parent/questions-concerns', label: "Teacher's Panel", icon: <MdForum />, sectionId: 'question-and-concern-top' },
+        { path: '/parent/questions-concerns', label: "Questions & Concerns", icon: <MdForum />, sectionId: 'question-and-concern-top' },
         { path: '/parent/questions-concerns', label: 'Adviser Messages', icon: <MdChat />, sectionId: 'adviser-messages' },
       ],
     },
@@ -128,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
       {
         path: '/teacher/messages',
         icon: <MdForum />,
-        label: 'Concerns and Conditions',
+        label: "Parent's Panel",
         roles: ['teacher'],
         badge: null,
         menuKey: 'questions-concerns',
