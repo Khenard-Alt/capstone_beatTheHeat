@@ -30,7 +30,7 @@ interface SidebarSectionLink {
   path: string;
   label: string;
   icon: React.ReactNode;
-  sectionId: string;
+  sectionId?: string;
 }
 
 interface SidebarMenuItem {
@@ -115,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
       menuKey: 'announcements',
       children: [
         { path: '/head-teacher/advisories', label: 'Advisories', icon: <MdAutoAwesome />, sectionId: 'advisories-top' },
-        { path: '/head-teacher/announcements/principal', label: 'Announcements', icon: <MdCampaign /> },
+        { path: '/head-teacher/announcements/principal', label: 'Announcements', icon: <MdCampaign />, sectionId: 'principal-announcements' },
         { path: '/head-teacher/advisories', label: 'Heat Data', icon: <MdThermostat />, sectionId: 'heat-data-top' },
       ],
     },
@@ -175,6 +175,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
       location.pathname.startsWith('/head-teacher/advisories') ||
       location.pathname.startsWith('/head-teacher/announcements')
     );
+  const isTeacherMessagesActive =
+    userRole === 'teacher' && location.pathname.startsWith('/teacher/messages');
 
   useEffect(() => {
     if (isParentQuestionsConcernsActive) {
@@ -197,6 +199,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
       return;
     }
 
+    if (isTeacherMessagesActive) {
+      setOpenMenu('messages');
+      return;
+    }
+
     setOpenMenu(null);
   }, [
     isParentAnnouncementsActive,
@@ -204,16 +211,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     isHeadTeacherIncidentReviewActive,
     isHeadTeacherIncidentReportsActive,
     isHeadTeacherAnnouncementsActive,
+    isTeacherMessagesActive,
   ]);
 
   const setStatusVisibility = (visible: boolean) => {
     setShowNetworkStatus(visible);
+      roles: ['head-teacher'],
+      badge: null,
+      menuKey: 'announcements',
   };
 
   const updateNetworkStatus = async () => {
     try {
       if (!navigator.onLine) {
         networkStatusRef.current = 'offline';
+    {
+      path: '/teacher/messages',
+      icon: <MdForum />,
+      label: 'Messages',
+      roles: ['teacher'],
+      badge: null,
+      menuKey: 'messages',
+      children: [
+        { path: '/teacher/messages', label: 'Inbox', icon: <MdChat />, sectionId: 'teacher-messages-top' },
+        { path: '/teacher/messages', label: 'Compose Reply', icon: <MdForum />, sectionId: 'teacher-message-compose' },
+      ],
+    },
         setNetworkStatus('offline');
         setStatusVisibility(true);
         if (statusHideTimerRef.current) {

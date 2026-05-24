@@ -1,33 +1,57 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { ParentSectionPage } from './ParentSectionPage';
 import { fetchParentMessages, sendParentMessage } from '../../services/parentMessages.service';
 import type { ParentMessage } from '../../services/parentMessages.service';
+import { fetchUsersByRole, type AppUser } from '../../services/users.service';
 import '../../styles/ParentQuestionsConcerns.css';
 
 export const ParentQuestionsConcerns: React.FC = () => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ParentMessage[]>([]);
+  const [teachers, setTeachers] = useState<AppUser[]>([]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+
+  const currentParentId = user?.id ?? 'parent-1';
+
+  const teacherOptions = useMemo(() => teachers, [teachers]);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
-        const data = await fetchParentMessages(10, 0);
-        if (mounted) setMessages(data);
+        const [messageData, teacherData] = await Promise.all([
+          fetchParentMessages(10, 0),
+          fetchUsersByRole('teacher'),
+        ]);
+
+        if (mounted) {
+          setMessages(messageData.filter((message) => !user?.id || message.parent_user_id === user.id));
+          setTeachers(teacherData);
+          setSelectedTeacherId((current) => current || teacherData[0]?.id || '');
+        }
       } catch (err) {
         // ignore
       }
     };
     void load();
     return () => { mounted = false; };
-  }, []);
+  }, [user?.id]);
+
+  const recipientTeacher = useMemo(() => teachers.find((teacher) => teacher.id === selectedTeacherId) ?? teachers[0], [selectedTeacherId, teachers]);
 
   const handleSend = async () => {
-    if (!subject.trim() || !body.trim()) return;
+    if (!subject.trim() || !body.trim() || !recipientTeacher) return;
     try {
-      // Using placeholder ids for now; in real app use authenticated user id and teacher id
-      const created = await sendParentMessage({ parentUserId: 'parent-1', teacherUserId: 'teacher-1', studentId: null, subject: subject.trim(), body: body.trim() });
+      const created = await sendParentMessage({
+        parentUserId: currentParentId,
+        teacherUserId: recipientTeacher.id,
+        studentId: null,
+        subject: subject.trim(),
+        body: body.trim(),
+      });
       setMessages((prev) => [created, ...prev]);
       setSubject('');
       setBody('');
@@ -91,10 +115,25 @@ export const ParentQuestionsConcerns: React.FC = () => {
         </div>
 
         <div className="parent-message-form">
+          <label className="parent-message-field" htmlFor="teacherRecipient">
+            <span className="parent-message-field-label">Teacher recipient</span>
+            <select
+              id="teacherRecipient"
+              value={selectedTeacherId}
+              onChange={(e) => setSelectedTeacherId(e.target.value)}
+            >
+              <option value="">Select a teacher</option>
+              {teacherOptions.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.firstName} {teacher.lastName}
+                </option>
+              ))}
+            </select>
+          </label>
           <input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
           <textarea placeholder="Write your question or concern..." value={body} onChange={(e) => setBody(e.target.value)} />
           <div className="parent-message-actions">
-            <button onClick={handleSend} className="primary">Send to Teacher</button>
+            <button onClick={handleSend} className="primary" disabled={!recipientTeacher}>Send to Teacher</button>
           </div>
         </div>
 

@@ -48,6 +48,28 @@
 	background: #fff;
 }
 
+.parent-message-form select {
+	width: 100%;
+	padding: 12px 14px;
+	border: 1px solid #dbe4ef;
+	border-radius: 12px;
+	font-size: 14px;
+	color: #0f172a;
+	background: #fff;
+}
+
+.parent-message-field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.parent-message-field-label {
+	font-size: 13px;
+	font-weight: 700;
+	color: #334155;
+}
+
 .parent-message-form textarea {
 	min-height: 140px;
 	resize: vertical;

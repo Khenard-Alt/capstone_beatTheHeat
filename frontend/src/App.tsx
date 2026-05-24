@@ -40,6 +40,7 @@ import { TeacherDashboard } from './pages/teacherDash/TeacherDashboard';
 import TeacherConductForm from './pages/teacherDash/ConductForm';
 import TeacherIncidentReports from './pages/teacherDash/IncidentReports';
 import TeacherAdvisories from './pages/teacherDash/Advisories';
+import TeacherMessages from './pages/teacherDash/Messages';
 import TeacherChatbot from './pages/teacherDash/Chatbot';
 import TeacherProfileSettings from './pages/teacherDash/ProfileSettings';
 import './App.css';
@@ -521,6 +522,17 @@ const AppRoutes: React.FC = () => {
           <TeacherRoute>
             <AppLayout>
               <TeacherAdvisories />
+            </AppLayout>
+          </TeacherRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/messages"
+        element={
+          <TeacherRoute>
+            <AppLayout>
+              <TeacherMessages />
             </AppLayout>
           </TeacherRoute>
         }
