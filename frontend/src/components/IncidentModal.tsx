@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { createIncident } from '../services/incidents.service';
+import { useAuth } from '../hooks/useAuth';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  onReported?: () => void;
 }
 
-export const IncidentModal: React.FC<Props> = ({ isOpen, onClose }) => {
+export const IncidentModal: React.FC<Props> = ({ isOpen, onClose, onReported }) => {
+  const { user } = useAuth();
   const [type, setType] = useState('');
   const [description, setDescription] = useState('');
   const [actionTaken, setActionTaken] = useState('');
@@ -17,9 +20,10 @@ export const IncidentModal: React.FC<Props> = ({ isOpen, onClose }) => {
     if (!type.trim() || !description.trim()) return alert('Type and description are required');
     setLoading(true);
     try {
-      await createIncident({ type, description, actionTaken });
+      await createIncident({ type, description, actionTaken, reporterId: user?.id });
       alert('Incident reported');
       setType(''); setDescription(''); setActionTaken('');
+      if (typeof onReported === 'function') onReported();
       onClose();
     } catch (err) {
       console.error(err);

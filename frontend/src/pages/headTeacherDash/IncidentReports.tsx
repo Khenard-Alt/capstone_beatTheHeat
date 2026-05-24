@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { MdInfoOutline, MdSearch } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { fetchIncidents, type IncidentRecord } from '../../services/incidents.service';
-import { MdInfoOutline } from 'react-icons/md';
-import '../../styles/AdminDashboard.css';
+import '../../styles/TeacherPanel.css';
+import '../../styles/HeadTeacherPanel.css';
 
 type IncidentDetail = IncidentRecord & {
   parentName?: string | null;
@@ -13,97 +14,158 @@ const IncidentReports: React.FC = () => {
   const [incidents, setIncidents] = useState<IncidentDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<IncidentDetail | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'monitoring' | 'treated' | 'resolved'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     let mounted = true;
+
     const load = async () => {
       try {
         setLoading(true);
         const data = await fetchIncidents(50, 0);
-        if (mounted) setIncidents(data);
-      } catch (e) {
-        console.error(e);
+        if (mounted) {
+          setIncidents(data);
+        }
+      } catch (error) {
+        console.error(error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
+
     void load();
-    return () => { mounted = false; };
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  const filteredIncidents = useMemo(() => {
+    const normalized = searchTerm.trim().toLowerCase();
+
+    return incidents.filter((incident) => {
+      const statusMatch = statusFilter === 'all' || String(incident.status).toLowerCase() === statusFilter;
+      const searchableText = [incident.studentName, incident.gradeLevel, incident.section, incident.incidentType, incident.description, incident.reportedBy, incident.parentName]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return statusMatch && (!normalized || searchableText.includes(normalized));
+    });
+  }, [incidents, searchTerm, statusFilter]);
+
   return (
-    <div className="admin-dashboard">
-      <div className="admin-dashboard-header">
+    <div className="teacher-page-shell" id="incident-reports-top">
+      <div className="teacher-hero">
         <div>
+          <p className="teacher-eyebrow">Head teacher panel</p>
           <h1>Incident Reports</h1>
-          <p>All student incidents reported by teachers and stored in the database.</p>
+          <p>All student incidents reported by teachers and stored in the database, ready for principal and parent follow-up.</p>
+        </div>
+        <div className="teacher-hero-card">
+          <MdInfoOutline className="teacher-hero-icon" />
+          <div>
+            <strong>{filteredIncidents.length}</strong>
+            <p>Visible report rows</p>
+          </div>
         </div>
       </div>
 
-      <div style={{ padding: 16 }}>
-        <Card title="Reports">
-          {loading ? (
-            <div>Loading...</div>
-          ) : incidents.length === 0 ? (
-            <div className="empty-state">No incident reports</div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
-                    <th style={{ padding: '12px 8px' }}>Student</th>
-                    <th style={{ padding: '12px 8px' }}>Grade / Section</th>
-                    <th style={{ padding: '12px 8px' }}>Incident Type</th>
-                    <th style={{ padding: '12px 8px' }}>Description</th>
-                    <th style={{ padding: '12px 8px' }}>Action Taken</th>
-                    <th style={{ padding: '12px 8px' }}>Heat Index</th>
-                    <th style={{ padding: '12px 8px' }}>Status</th>
-                    <th style={{ padding: '12px 8px' }}>Reported By</th>
-                    <th style={{ padding: '12px 8px' }}>Date</th>
-                    <th style={{ padding: '12px 8px' }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {incidents.map((inc) => (
-                    <tr key={inc.id} style={{ borderBottom: '1px solid #f1f5f9', verticalAlign: 'top' }}>
-                      <td style={{ padding: '12px 8px', fontWeight: 600 }}>{inc.studentName || 'Unknown student'}</td>
-                      <td style={{ padding: '12px 8px' }}>{[inc.gradeLevel, inc.section].filter(Boolean).join(' - ') || '—'}</td>
-                      <td style={{ padding: '12px 8px', textTransform: 'capitalize' }}>{inc.incidentType || '—'}</td>
-                      <td style={{ padding: '12px 8px', color: '#334155', maxWidth: 260 }}>{inc.description || '—'}</td>
-                      <td style={{ padding: '12px 8px', color: '#334155', maxWidth: 260 }}>{inc.actionTaken || '—'}</td>
-                      <td style={{ padding: '12px 8px' }}>{typeof inc.heatIndex === 'number' ? `${inc.heatIndex.toFixed(1)}°C` : '—'}</td>
-                      <td style={{ padding: '12px 8px' }}>{inc.status || '—'}</td>
-                      <td style={{ padding: '12px 8px' }}>{inc.reportedBy || inc.reporterName || '—'}</td>
-                      <td style={{ padding: '12px 8px', color: '#64748b', whiteSpace: 'nowrap' }}>{inc.timestamp ? new Date(inc.timestamp).toLocaleString() : '—'}</td>
-                      <td style={{ padding: '12px 8px' }}>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedIncident(inc)}
-                          title="Show info"
-                          aria-label={`Show info for ${inc.studentName || 'incident'}`}
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 999,
-                            border: '1px solid #cbd5e1',
-                            background: '#fff',
-                            color: '#1d4ed8',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <MdInfoOutline size={20} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <div className="teacher-layout">
+        <div className="teacher-main">
+          {/* Report Notes moved from sidebar: keep as standalone card above the reports table */}
+          <div style={{ marginBottom: 16 }}>
+            <Card title="Report Notes" className="teacher-panel-card tone-success">
+              <ul className="teacher-list">
+                <li>This report feed is the source of truth for incident history.</li>
+                <li>Principal, teachers, parents, and admin pages all read from the same incidents API.</li>
+                <li>Use the info button to inspect the full incident details before closing the report.</li>
+              </ul>
+            </Card>
+          </div>
+
+          <Card title="Reports" className="teacher-panel-card">
+            <div className="teacher-incidents-toolbar" style={{ marginBottom: 16 }}>
+              <label className="teacher-incidents-search">
+                <MdSearch />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search student, grade, section, incident, or reporter"
+                />
+              </label>
+
+              <select
+                className="teacher-incidents-filter"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as any)}
+              >
+                <option value="all">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="monitoring">Monitoring</option>
+                <option value="treated">Treated</option>
+                <option value="resolved">Resolved</option>
+              </select>
             </div>
-          )}
-        </Card>
+
+            {loading ? (
+              <div className="teacher-info-copy">Loading...</div>
+            ) : filteredIncidents.length === 0 ? (
+              <div className="teacher-info-copy">No incident reports found for this filter.</div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="teacher-dashboard-table app-table">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Grade / Section</th>
+                      <th>Incident Type</th>
+                      <th>Description</th>
+                      <th>Action Taken</th>
+                      <th>Status</th>
+                      <th>Reported By</th>
+                      <th>Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredIncidents.map((incident) => (
+                      <tr key={incident.id}>
+                        <td style={{ fontWeight: 600 }}>{incident.studentName || 'Unknown student'}</td>
+                        <td>{[incident.gradeLevel, incident.section].filter(Boolean).join(' - ') || '—'}</td>
+                        <td style={{ textTransform: 'capitalize' }}>{incident.incidentType || '—'}</td>
+                        <td className="description" style={{ color: '#334155' }} title={incident.description || ''}>{incident.description || '—'}</td>
+                        <td className="action-taken" style={{ color: '#334155' }} title={incident.actionTaken || ''}>{incident.actionTaken || '—'}</td>
+                        <td>{incident.status ? <span className={`status-badge ${String(incident.status).toLowerCase()}`}>{incident.status}</span> : '—'}</td>
+                        <td>{incident.reportedBy || incident.reporterName || '—'}</td>
+                        <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{incident.timestamp ? new Date(incident.timestamp).toLocaleString() : '—'}</td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedIncident(incident)}
+                            title="Show info"
+                            aria-label={`Show info for ${incident.studentName || 'incident'}`}
+                            className="table-action-btn"
+                          >
+                            <MdInfoOutline size={20} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        <div className="teacher-side">
+          {/* Sidebar intentionally left empty for incident reports; notes moved above table */}
+        </div>
       </div>
 
       {selectedIncident && (
@@ -156,6 +218,7 @@ const IncidentReports: React.FC = () => {
             <div style={{ padding: '0 20px 20px', display: 'grid', gap: 12 }}>
               <InfoSection label="Description" value={selectedIncident.description || '—'} />
               <InfoSection label="Action Taken" value={selectedIncident.actionTaken || '—'} />
+              <InfoSection label="AI Suggestion" value={selectedIncident.aiSuggestion || '—'} />
             </div>
           </div>
         </div>

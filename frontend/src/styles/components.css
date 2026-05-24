@@ -118,6 +118,11 @@
   margin-bottom: var(--spacing-lg);
 }
 
+.input-container.input-floating-error {
+  position: relative;
+  padding-bottom: 0;
+}
+
 .input-label {
   display: block;
   font-size: var(--font-sm);
@@ -133,11 +138,34 @@
   border-radius: var(--radius-md);
   font-size: var(--font-base);
   transition: border-color var(--transition-fast);
+  background: var(--color-background-secondary);
+  color: var(--color-text);
 }
 
 .input-field:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-light);
+  font-size: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-field.input-with-icon {
+  padding-left: 48px;
 }
 
 .input-error {
@@ -149,6 +177,95 @@
   margin-top: var(--spacing-xs);
   font-size: var(--font-sm);
   color: var(--color-danger);
+}
+
+.input-error-toast {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100% - 10px);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #c2410c;
+  box-shadow: 0 14px 28px rgba(194, 65, 12, 0.12);
+  z-index: 2;
+  animation: toastPop 0.22s ease-out;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.input-error-toast-side {
+  top: 50%;
+  left: auto;
+  transform: translateY(-50%);
+  max-width: 128px;
+  padding: 4px 7px;
+}
+
+.input-error-toast-left {
+  right: calc(100% + 22px);
+}
+
+.input-error-toast-right {
+  left: calc(100% + 22px);
+}
+
+@keyframes toastPop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.input-error-toast-icon {
+  flex-shrink: 0;
+  animation: toastIconBounce 0.55s ease-out;
+  font-size: 12px;
+}
+
+@keyframes toastIconBounce {
+  0% {
+    transform: scale(0.7) rotate(-8deg);
+  }
+  60% {
+    transform: scale(1.08) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+.input-error-toast-text {
+  display: block;
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .input-error-toast {
+    width: calc(100% - 8px);
+    white-space: normal;
+  }
+
+  .input-error-toast-side {
+    top: calc(100% + 6px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    max-width: calc(100% - 8px);
+  }
 }
 
 /* Header Styles */
@@ -1103,6 +1220,22 @@
   line-height: 1;
   letter-spacing: -3px;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Global big metric utility to ensure numeric parity across components
+   Uses tabular numbers and enforces sizing to avoid SVG/font inheritance issues */
+.big-metric {
+  font-size: 64px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: -3px !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  transform: none !important;
+  -webkit-font-feature-settings: 'tnum' 1;
+  font-feature-settings: 'tnum' 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
 }
 
 .heat-index-metrics {

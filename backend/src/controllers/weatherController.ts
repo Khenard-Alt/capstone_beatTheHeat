@@ -54,6 +54,25 @@ export const getCurrentWeather = async (
 	}
 };
 
+export const getWeatherForecast = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+): Promise<void> => {
+	try {
+		const rawDays = Number(req.query.days ?? 7);
+		const days = Number.isFinite(rawDays) ? Math.min(7, Math.max(1, Math.floor(rawDays))) : 7;
+		const forecast = await weatherService.getForecastOutlook(days);
+
+		res.status(200).json({
+			success: true,
+			data: forecast,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 export const runScheduledSnapshot = async (
 	req: Request,
 	res: Response,

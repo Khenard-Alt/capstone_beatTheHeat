@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-05-20T13:10:28.576Z",
+  "generatedAt": "2026-05-22T00:57:17.647Z",
   "inputPath": ".\\backend\\logs\\audit-events.jsonl",
-  "aiAnalysisCount": 2173,
-  "dedupedCount": 677,
-  "duplicateCount": 1496,
+  "aiAnalysisCount": 2447,
+  "dedupedCount": 941,
+  "duplicateCount": 1506,
   "duplicateExamples": [
     "29c6fc40-4e16-4db5-a9d2-00127b01aaa7",
     "49120290-fd99-4bce-83fc-a1935bace0f4",
@@ -13,25 +13,25 @@
   ],
   "parseFailures": [],
   "sources": {
-    "fallback": 267,
+    "fallback": 323,
     "gemini": 23,
-    "python": 387
+    "python": 595
   },
   "labelCounts": {
-    "safe": 54,
-    "caution": 364,
-    "extreme-caution": 242,
-    "danger": 13,
+    "safe": 58,
+    "caution": 470,
+    "extreme-caution": 321,
+    "danger": 88,
     "extreme-danger": 0
   },
   "weatherLabelCounts": {
-    "safe": 58,
-    "caution": 307,
-    "extreme-caution": 299,
-    "danger": 13,
+    "safe": 61,
+    "caution": 332,
+    "extreme-caution": 470,
+    "danger": 78,
     "extreme-danger": 0
   },
-  "labelAgreementRate": 0.3559822747415066,
+  "labelAgreementRate": 0.5058448459086079,
   "mismatches": [
     {
       "id": "3a0990b6-bd6d-4ab1-8099-07842e807f9a",
@@ -185,33 +185,34 @@
     }
   ],
   "alerts": [
-    "Found 436 label-quality mismatches against heat-index rules."
+    "Label distribution drift detected (0.444 > 0.2).",
+    "Found 465 label-quality mismatches against heat-index rules."
   ],
   "comparison": {
     "compareReportPath": ".\\backend\\components\\AIModel\\python\\model\\training_report.json",
     "baselineCounts": {
-      "safe": 58,
-      "caution": 307,
-      "extreme-caution": 296,
-      "danger": 13,
-      "extreme-danger": 0
+      "safe": 25,
+      "caution": 25,
+      "extreme-caution": 25,
+      "danger": 25,
+      "extreme-danger": 25
     },
     "currentDistribution": {
-      "safe": 0.08023774145616643,
-      "caution": 0.5408618127786032,
-      "extreme-caution": 0.35958395245170877,
-      "danger": 0.019316493313521546,
+      "safe": 0.061899679829242264,
+      "caution": 0.5016008537886874,
+      "extreme-caution": 0.3425827107790822,
+      "danger": 0.09391675560298826,
       "extreme-danger": 0
     },
     "baselineDistribution": {
-      "safe": 0.08605341246290801,
-      "caution": 0.45548961424332346,
-      "extreme-caution": 0.4391691394658754,
-      "danger": 0.019287833827893175,
-      "extreme-danger": 0
+      "safe": 0.2,
+      "caution": 0.2,
+      "extreme-caution": 0.2,
+      "danger": 0.2,
+      "extreme-danger": 0.2
     },
-    "distributionShift": 0.08540085802090816,
+    "distributionShift": 0.44418356456776953,
     "driftThreshold": 0.2,
-    "driftDetected": false
+    "driftDetected": true
   }
 }

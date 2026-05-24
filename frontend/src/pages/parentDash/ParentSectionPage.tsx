@@ -13,6 +13,7 @@ interface ParentSectionPageProps {
   sections: Array<{ title: string; body: string; bullets?: string[]; tone?: 'default' | 'alert' | 'success' }>;
   footerNote: string;
   children?: React.ReactNode;
+  topId?: string;
 }
 
 export const ParentSectionPage: React.FC<ParentSectionPageProps> = ({
@@ -24,13 +25,14 @@ export const ParentSectionPage: React.FC<ParentSectionPageProps> = ({
   sections,
   footerNote,
   children,
+  topId,
 }) => {
   return (
     <div className="parent-portal-page">
       <div className="parent-portal-hero">
         <div>
           <p className="parent-portal-eyebrow">{eyebrow}</p>
-          <h1>{title}</h1>
+          <h1 id={topId ?? undefined}>{title}</h1>
           <p>{description}</p>
         </div>
         <div className="parent-portal-hero-card">

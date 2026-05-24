@@ -88,25 +88,49 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+.parent-card-large {
+  grid-column: span 2;
+  min-width: 420px;
+}
+
+.parent-student-item {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid #e6eefc;
+  min-width: 240px;
+}
+
 .parent-portal-highlight-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.parent-portal-highlight-label,
-.parent-profile-label,
-.parent-chatbot-meta {
+/* Scoped adjustments to avoid leaking styles into other dashboards */
+.parent-portal-page .parent-portal-highlight-label {
+  display: inline-block;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #64748b;
+  margin: 0 0 6px 0; /* ensure clear gap below the label */
 }
 
-.parent-portal-highlight-value {
+.parent-portal-page .parent-portal-highlight-value {
+  display: block;
   font-size: 18px;
   font-weight: 700;
   color: #0f172a;
+  line-height: 1.15;
+  margin: 0;
+  text-align: left;
+  word-break: break-word;
+}
+
+/* Keep card body alignment predictable while allowing inner text to be left-aligned */
+.parent-portal-page .parent-portal-highlights .card {
+  align-items: stretch;
 }
 
 .parent-portal-card.tone-alert {
@@ -229,8 +253,16 @@
   white-space: pre-wrap;
 }
 
+.parent-chatbot-message.assistant .parent-chatbot-bubble {
+  background: linear-gradient(135deg, #f7fbff 0%, #e2efff 100%);
+  color: #0f172a;
+  border-color: #cfe2ff;
+}
+
 .parent-chatbot-message.parent .parent-chatbot-bubble {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  background: #ffffff;
+  border-color: #dbe4ef;
+  color: #334155;
 }
 
 .parent-chatbot-bubble p {
@@ -335,6 +367,86 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
+}
+
+/* Allow grid children inputs to shrink and avoid overflow into adjacent columns */
+.parent-profile-grid input,
+.parent-profile-grid .parent-info-input {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.parent-info-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e6eefc;
+  background: #fff;
+  font: inherit;
+  color: #0f172a;
+}
+
+.parent-email-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.parent-email-row .parent-info-input {
+  width: auto;
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.parent-email-row .btn {
+  padding: 6px 10px;
+  font-size: 13px;
+  min-width: 72px;
+  flex: 0 0 auto; /* don't grow; keep fixed small size */
+}
+
+/* If the layout gets tight, ensure button wraps under input instead of overlapping */
+@media (max-width: 860px) {
+  .parent-email-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parent-email-row .btn {
+    width: 100%;
+  }
+}
+
+.parent-student-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.parent-student-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid #e6eefc;
+  min-width: 160px;
+}
+
+.parent-student-meta {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+.parent-student-section {
+  grid-column: 1 / -1;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e6eefc;
+}
+
+.parent-student-header {
+  margin-bottom: 8px;
 }
 
 .parent-profile-grid strong,

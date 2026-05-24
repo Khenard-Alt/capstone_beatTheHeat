@@ -31,6 +31,9 @@ exports.env = {
     get schoolLon() {
         return Number(process.env.SCHOOL_LON ?? 121.025);
     },
+    get schoolLocationName() {
+        return process.env.SCHOOL_LOCATION_NAME ?? 'Brgy Mayamot, Antipolo City';
+    },
     get weatherSchedulerToken() {
         return process.env.WEATHER_SCHEDULER_TOKEN ?? '';
     },

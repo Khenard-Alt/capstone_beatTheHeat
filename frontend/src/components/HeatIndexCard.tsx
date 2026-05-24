@@ -35,7 +35,7 @@ export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
 
       <div className="heat-index-body">
         <div className="heat-index-main">
-          <div className="heat-index-value" data-heat-level={level}>
+          <div className="heat-index-value big-metric" data-heat-level={level}>
             {heatIndex.toFixed(1)}°C
           </div>
           <div className="heat-index-label">Heat Index</div>

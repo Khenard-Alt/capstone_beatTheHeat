@@ -22,6 +22,7 @@ export interface IncidentRecord {
   temperature?: number | null;
   timestamp: string;
   actionTaken?: string | null;
+  aiSuggestion?: string | null;
   reportedBy?: string | null;
   status: StudentHealthIncident['status'] | string;
 }

@@ -9,11 +9,12 @@ interface AILogInput {
     tokenOutput?: number;
     tokenTotal?: number;
     estimatedCostUsd?: number;
-    source: 'gemini' | 'fallback' | 'python';
+    source: 'gemini' | 'fallback' | 'python' | 'ensemble';
 }
 declare class AuditLogService {
     private readonly localAuditPath;
     private supabaseDuplicateCountAvailable;
+    private supabaseUpdatedAtAvailable;
     logWeatherSnapshot(snapshot: WeatherSnapshot, schoolId?: string): Promise<void>;
     logAiAnalysis(input: AILogInput): Promise<void>;
     private findSimilarRecentAiAnalysis;

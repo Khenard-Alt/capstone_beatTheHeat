@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 /**
- * Get all students (for parent child dropdown)
+ * Get students for parent child dropdown and admin listings
  * GET /api/students
  */
-export declare const getStudents: (_req: Request, res: Response, _next: NextFunction) => Promise<void>;
+export declare const getStudents: (req: Request, res: Response, _next: NextFunction) => Promise<void>;
 /**
  * Search students by name
  * GET /api/students/search?q=name

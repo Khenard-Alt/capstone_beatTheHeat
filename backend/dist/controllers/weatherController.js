@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.runWeatherBackfill = exports.runScheduledSnapshot = exports.getCurrentWeather = void 0;
+exports.runWeatherBackfill = exports.runScheduledSnapshot = exports.getWeatherForecast = exports.getCurrentWeather = void 0;
 const weather_service_1 = require("../services/weather.service");
 const environment_1 = require("../config/environment");
 const getSchedulerTokenFromRequest = (req) => {
@@ -45,6 +45,21 @@ const getCurrentWeather = async (_req, res, next) => {
     }
 };
 exports.getCurrentWeather = getCurrentWeather;
+const getWeatherForecast = async (req, res, next) => {
+    try {
+        const rawDays = Number(req.query.days ?? 7);
+        const days = Number.isFinite(rawDays) ? Math.min(7, Math.max(1, Math.floor(rawDays))) : 7;
+        const forecast = await weather_service_1.weatherService.getForecastOutlook(days);
+        res.status(200).json({
+            success: true,
+            data: forecast,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getWeatherForecast = getWeatherForecast;
 const runScheduledSnapshot = async (req, res, next) => {
     if (!ensureSchedulerAuth(req, res)) {
         return;

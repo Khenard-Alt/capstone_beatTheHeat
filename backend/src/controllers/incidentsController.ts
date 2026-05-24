@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { readFile, appendFile, writeFile } from 'fs/promises';
 import path from 'path';
+import { aiAnalysisService } from '../services/aiAnalysis.service';
+import { weatherService } from '../services/weather.service';
 import { getSupabaseAdminClient } from '../config/supabase';
+import { sendEmail, buildAnnouncementHtml } from '../services/email.service';
 
 const LOCAL_LOG = path.resolve(process.cwd(), 'logs', 'health-incidents.jsonl');
 
@@ -38,6 +41,95 @@ const formatPersonName = (person: any): string | null => {
   return parts || person.email || null;
 };
 
+const getIncidentDetails = (incident: any) => {
+  const incidentType = String(incident?.incidentType || incident?.type || '').toLowerCase();
+  const description = String(incident?.description || '').toLowerCase();
+  const actionTaken = String(incident?.actionTaken || incident?.action_taken || '').toLowerCase();
+  const heatIndex = typeof incident?.heatIndex === 'number'
+    ? incident.heatIndex
+    : Number(incident?.heatIndex ?? incident?.heat_index_at_time);
+
+  const hasHighHeat = Number.isFinite(heatIndex) && heatIndex >= 41;
+  const symptomHints = [
+    'dizzy',
+    'dizziness',
+    'cramp',
+    'asthma',
+    'nausea',
+    'headache',
+    'faint',
+    'weak',
+    'shortness of breath',
+    'breathing',
+    'vomit',
+    'dehydration',
+    'exhaustion',
+    'fatigue',
+  ].filter((hint) => description.includes(hint) || actionTaken.includes(hint));
+
+  return { incidentType, description, actionTaken, heatIndex, hasHighHeat, symptomHints };
+};
+
+const buildIncidentSuggestion = (incident: any): string => {
+  const { incidentType, description, actionTaken, hasHighHeat, symptomHints } = getIncidentDetails(incident);
+
+  if (incidentType.includes('asthma-attack') || symptomHints.includes('breathing')) {
+    return 'Keep the student calm and seated, give the prescribed inhaler if available, monitor breathing closely, and notify the clinic and parent right away if symptoms do not improve.';
+  }
+
+  if (incidentType.includes('heat-exhaustion') || incidentType.includes('dehydration') || hasHighHeat || symptomHints.includes('dehydration') || symptomHints.includes('exhaustion')) {
+    return 'Move the student to a cool shaded area, give water if conscious, loosen tight clothing, and recheck every 10-15 minutes before escalating to the clinic or parent if needed.';
+  }
+
+  if (incidentType.includes('dizziness') || symptomHints.includes('dizzy') || symptomHints.includes('faint')) {
+    return 'Let the student sit or lie down, provide water in small sips, keep them out of direct sun, and watch for worsening symptoms before sending for clinic support.';
+  }
+
+  if (incidentType.includes('nausea') || symptomHints.includes('vomit')) {
+    return 'Keep the student in a cool area, avoid heavy activity, offer water carefully, and refer to the clinic if nausea continues or vomiting appears.';
+  }
+
+  if (incidentType.includes('headache') || symptomHints.includes('headache')) {
+    return 'Move the student to rest in a quiet cool space, give hydration, and monitor whether the headache improves before deciding on clinic referral.';
+  }
+
+  if (incidentType.includes('other') || description.length > 0 || actionTaken.length > 0) {
+    return 'Keep the student safe, add the specific symptoms and response taken, inform the proper school staff, and update the report with any follow-up action needed.';
+  }
+
+  return 'Keep the student safe, document the situation clearly, inform the proper school staff, and update the report with any follow-up action taken.';
+};
+
+const generateIncidentSuggestion = async (incident: any): Promise<string> => {
+  const fallbackSuggestion = buildIncidentSuggestion(incident);
+  const { incidentType, description, actionTaken, heatIndex, hasHighHeat } = getIncidentDetails(incident);
+
+  try {
+    const query = [
+      'Create a short but specific head-teacher action suggestion for this student incident report.',
+      `Incident type: ${incidentType || 'unknown'}`,
+      `Description: ${description || 'none'}`,
+      `Action taken: ${actionTaken || 'none'}`,
+      `Heat index: ${Number.isFinite(heatIndex) ? heatIndex : 'unknown'}`,
+      `High heat flag: ${hasHighHeat ? 'yes' : 'no'}`,
+      'Write 1-2 sentences that are tailored to the incident details and avoid repeating the same generic wording for every case.',
+      'Focus on the most relevant immediate action, escalation step, and follow-up based on the symptoms and current action taken.',
+    ].join(' ');
+
+    const weather = await weatherService.getCurrentWeather();
+    const advisory = await aiAnalysisService.generateScopedAdvisory({
+      query,
+      weather,
+      single: true,
+      lang: 'english',
+    });
+
+    return advisory.singleResponse || advisory.summary || fallbackSuggestion;
+  } catch {
+    return fallbackSuggestion;
+  }
+};
+
 const mapIncidentRow = (
   row: any,
   studentsById: Record<string, any>,
@@ -72,6 +164,13 @@ const mapIncidentRow = (
     actionTaken: row.action_taken || null,
     reportedBy: reporterName || row.reporter_id || null,
     status: row.status || null,
+    aiSuggestion: buildIncidentSuggestion({
+      incidentType: row.type,
+      description: row.description,
+      actionTaken: row.action_taken,
+      heatIndex: row.heat_index_at_time,
+      status: row.status,
+    }),
   };
 };
 
@@ -84,9 +183,13 @@ export const incidentsController = {
       const supabase = getSupabaseAdminClient();
       if (!supabase) {
         const local = await loadLocalIncidents();
+        const data = local.slice(offset, offset + limit).map((record: any) => ({
+          ...record,
+          aiSuggestion: record.aiSuggestion || buildIncidentSuggestion(record),
+        }));
         res.status(200).json({
           success: true,
-          data: local.slice(offset, offset + limit),
+          data,
           pagination: { limit, offset, total: local.length },
         });
         return;
@@ -173,6 +276,13 @@ export const incidentsController = {
             reporterRole: row.reporter_role || null,
             parentName: row.parent_name || null,
             parentEmail: row.parent_email || null,
+            aiSuggestion: buildIncidentSuggestion({
+              incidentType: row.incident_type,
+              description: row.description,
+              actionTaken: row.action_taken,
+              heatIndex: row.heat_index,
+              status: row.status,
+            }),
           }));
 
           res.status(200).json({
@@ -205,8 +315,10 @@ export const incidentsController = {
       const supabase = getSupabaseAdminClient();
       if (!supabase) {
         const record = { id: `local-${Date.now()}`, schoolId, reporterId, studentId, type, description, actionTaken, heatIndex, status: 'pending', created_at: new Date().toISOString() };
-        await appendFile(LOCAL_LOG, JSON.stringify(record) + '\n');
-        res.status(201).json({ success: true, data: record });
+        const aiSuggestion = await generateIncidentSuggestion(record);
+        const recordWithSuggestion = { ...record, aiSuggestion };
+        await appendFile(LOCAL_LOG, JSON.stringify(recordWithSuggestion) + '\n');
+        res.status(201).json({ success: true, data: recordWithSuggestion });
         return;
       }
 
@@ -227,7 +339,43 @@ export const incidentsController = {
         return;
       }
 
-      res.status(201).json({ success: true, data });
+      const aiSuggestion = await generateIncidentSuggestion({ ...payload, ...data });
+      // Optionally notify parents/teachers when request includes notify flags
+      try {
+        const notifyParents = req.body.notifyParents === true || req.body.notifyParents === 'true';
+        const notifyTeachers = req.body.notifyTeachers === true || req.body.notifyTeachers === 'true';
+
+        if (notifyParents || notifyTeachers) {
+          const subject = `Incident reported: ${String(payload.type || 'Student incident')}`;
+          const html = buildAnnouncementHtml(subject, String(payload.description || 'An incident was reported.'));
+
+          if (notifyParents) {
+            // If a student_id exists, try to fetch parent for targeted notification
+            if (payload.student_id) {
+              const { data: studentRows } = await supabase.from('students').select('parent_user_id').eq('id', payload.student_id).limit(1).single();
+              const parentId = studentRows?.parent_user_id;
+              if (parentId) {
+                const { data: parent } = await supabase.from('users').select('email').eq('id', parentId).limit(1).single();
+                if (parent?.email) await sendEmail(parent.email, subject, html);
+              }
+            } else {
+              const { data: parents } = await supabase.from('users').select('email').eq('role', 'parent');
+              const parentEmails = (parents || []).map((p: any) => p.email).filter(Boolean);
+              if (parentEmails.length > 0) await sendEmail(parentEmails, subject, html);
+            }
+          }
+
+          if (notifyTeachers) {
+            const { data: teachers } = await supabase.from('users').select('email').eq('role', 'teacher');
+            const teacherEmails = (teachers || []).map((t: any) => t.email).filter(Boolean);
+            if (teacherEmails.length > 0) await sendEmail(teacherEmails, subject, html);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to send incident notifications', e);
+      }
+
+      res.status(201).json({ success: true, data: { ...data, aiSuggestion } });
       return;
     } catch (err) {
       next(err);
@@ -247,7 +395,7 @@ export const incidentsController = {
           return;
         }
 
-        res.status(200).json({ success: true, data: record });
+        res.status(200).json({ success: true, data: { ...record, aiSuggestion: record.aiSuggestion || buildIncidentSuggestion(record) } });
         return;
       }
 
@@ -293,7 +441,8 @@ export const incidentsController = {
         });
       }
 
-      res.status(200).json({ success: true, data: mapIncidentRow(data, studentsById, reportersById, parentsById) });
+      const mapped = mapIncidentRow(data, studentsById, reportersById, parentsById);
+      res.status(200).json({ success: true, data: mapped });
     } catch (error) {
       next(error);
     }
@@ -341,6 +490,40 @@ export const incidentsController = {
       if (error || !data) {
         res.status(500).json({ success: false, message: 'Failed to update incident', error: error?.message || 'Unknown error' });
         return;
+      }
+
+      // Optionally notify on updates if flags provided
+      try {
+        const notifyParents = req.body.notifyParents === true || req.body.notifyParents === 'true';
+        const notifyTeachers = req.body.notifyTeachers === true || req.body.notifyTeachers === 'true';
+
+        if (notifyParents || notifyTeachers) {
+          const subject = `Incident update: ${data.type || 'Student incident'}`;
+          const html = buildAnnouncementHtml(subject, `Status: ${data.status}\n\n${data.action_taken || data.description || ''}`);
+
+          if (notifyParents) {
+            if (data.student_id) {
+              const { data: studentRows } = await supabase.from('students').select('parent_user_id').eq('id', data.student_id).limit(1).single();
+              const parentId = studentRows?.parent_user_id;
+              if (parentId) {
+                const { data: parent } = await supabase.from('users').select('email').eq('id', parentId).limit(1).single();
+                if (parent?.email) await sendEmail(parent.email, subject, html);
+              }
+            } else {
+              const { data: parents } = await supabase.from('users').select('email').eq('role', 'parent');
+              const parentEmails = (parents || []).map((p: any) => p.email).filter(Boolean);
+              if (parentEmails.length > 0) await sendEmail(parentEmails, subject, html);
+            }
+          }
+
+          if (notifyTeachers) {
+            const { data: teachers } = await supabase.from('users').select('email').eq('role', 'teacher');
+            const teacherEmails = (teachers || []).map((t: any) => t.email).filter(Boolean);
+            if (teacherEmails.length > 0) await sendEmail(teacherEmails, subject, html);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to send incident update notifications', e);
       }
 
       res.status(200).json({ success: true, data });

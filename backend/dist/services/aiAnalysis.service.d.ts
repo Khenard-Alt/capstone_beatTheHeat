@@ -1,12 +1,24 @@
 import { AdvisoryInput, AdvisoryResult } from '../types';
 declare class AIAnalysisService {
     private knowledgeCache;
+    private geminiDisabledUntil;
     private maybeAttachSingle;
+    private isGeminiTemporarilyDisabled;
+    private disableGeminiTemporarily;
+    private buildProjectFailAdvisory;
     generateScopedAdvisory(input: AdvisoryInput): Promise<AdvisoryResult>;
     generatePythonOnlyAdvisory(input: AdvisoryInput): Promise<AdvisoryResult>;
     private requestGeminiContent;
     private logAdvisoryAudit;
     private estimateCostUsd;
+    private generateEnsembleAdvisory;
+    private generateGeminiAdvisory;
+    private mergeAdvisoryResults;
+    private mergeScopeNotes;
+    private mergeStringLists;
+    private mergeHealthDetails;
+    private pickHigherRiskLevel;
+    private pickHigherTriage;
     private generatePythonAdvisory;
     private resolvePythonModelPaths;
     private resolvePythonExecutable;
@@ -29,6 +41,7 @@ declare class AIAnalysisService {
     private detectConversationIntent;
     private buildScenarioTemplateAdvisory;
     private getScenarioTemplate;
+    private buildForecastAdvisory;
     private buildScopeRefusalAdvisory;
     private getScopeRefusalTemplate;
     private applyQueryPolicy;
@@ -47,6 +60,7 @@ declare class AIAnalysisService {
     private parseAdvisory;
     private fillHealthDefaults;
     private buildNormalizedAdvisoryFromText;
+    private extractJsonStringField;
     private tryParseAdvisoryPayload;
     private normalizeModelText;
     private cleanModelNarrative;

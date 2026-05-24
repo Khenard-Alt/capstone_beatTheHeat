@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUser = exports.deleteUser = exports.getOTPStatus = exports.verifyOTPCode = exports.sendOTP = exports.getUserProfile = exports.listUsers = exports.authenticateAdminTools = exports.loginUser = exports.registerUser = void 0;
+exports.getUserChildren = exports.updateUser = exports.deleteUser = exports.getOTPStatus = exports.verifyOTPCode = exports.sendOTP = exports.getUserProfile = exports.listUsers = exports.authenticateAdminTools = exports.loginUser = exports.registerUser = void 0;
 const supabase_1 = require("../config/supabase");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -26,6 +26,28 @@ const fallbackUsers = [
     fallbackUser('parent@beattheheat.local', 'parent'),
     fallbackUser('teacher@beattheheat.local', 'teacher'),
 ];
+const inferFallbackRole = (email) => {
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (normalizedEmail.includes('admin')) {
+        return 'admin';
+    }
+    if (normalizedEmail.includes('principal')) {
+        return 'principal';
+    }
+    if (normalizedEmail.includes('head-teacher') || normalizedEmail.includes('head teacher')) {
+        return 'head-teacher';
+    }
+    if (normalizedEmail.includes('teacher')) {
+        return 'teacher';
+    }
+    if (normalizedEmail.includes('staff')) {
+        return 'staff';
+    }
+    if (normalizedEmail.includes('parent')) {
+        return 'parent';
+    }
+    return null;
+};
 const sanitizeUserRow = (user) => ({
     id: user.id,
     email: user.email,
@@ -47,6 +69,22 @@ const mapUserRow = (user) => ({
     createdAt: user.created_at,
     updatedAt: user.updated_at,
 });
+const raceWithTimeout = async (promise, timeoutMs) => {
+    let timeoutHandle;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise((_, reject) => {
+                timeoutHandle = setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs);
+            }),
+        ]);
+    }
+    finally {
+        if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+        }
+    }
+};
 /**
  * Register a new user (parent or teacher)
  * POST /api/users/register
@@ -169,20 +207,7 @@ const loginUser = async (req, res, next) => {
         }
         const client = (0, supabase_1.getSupabaseAdminClient)();
         if (!client) {
-            const normalizedEmail = String(email).trim().toLowerCase();
-            const inferredRole = normalizedEmail.includes('admin')
-                ? 'admin'
-                : normalizedEmail.includes('principal')
-                    ? 'principal'
-                    : normalizedEmail.includes('head-teacher') || normalizedEmail.includes('head teacher')
-                        ? 'head-teacher'
-                        : normalizedEmail.includes('teacher')
-                            ? 'teacher'
-                            : normalizedEmail.includes('staff')
-                                ? 'staff'
-                                : normalizedEmail.includes('parent')
-                                    ? 'parent'
-                                    : null;
+            const inferredRole = inferFallbackRole(email);
             if (!inferredRole) {
                 res.status(401).json({ success: false, message: 'Invalid email or password' });
                 return;
@@ -196,12 +221,65 @@ const loginUser = async (req, res, next) => {
             });
             return;
         }
-        const { data: user, error } = await client
-            .from('users')
-            .select('id, email, role, first_name, last_name, school_id, created_at, updated_at, password_hash')
-            .eq('email', email)
-            .single();
+        const loginTimeoutMs = Number(process.env.SUPABASE_LOGIN_TIMEOUT_MS ?? 5000);
+        let user;
+        let error;
+        try {
+            const result = await raceWithTimeout(
+            // Supabase PostgrestBuilder isn't typed as a Promise; cast to Promise to satisfy raceWithTimeout
+            (client
+                .from('users')
+                .select('id, email, role, first_name, last_name, school_id, created_at, updated_at, password_hash')
+                .eq('email', email)
+                .single()), loginTimeoutMs);
+            user = result?.data;
+            error = result?.error;
+        }
+        catch (queryError) {
+            if (process.env.NODE_ENV !== 'production') {
+                const normalizedEmail = String(email).trim().toLowerCase();
+                const inferredRole = normalizedEmail.includes('admin')
+                    ? 'admin'
+                    : normalizedEmail.includes('principal')
+                        ? 'principal'
+                        : normalizedEmail.includes('head-teacher') || normalizedEmail.includes('head teacher')
+                            ? 'head-teacher'
+                            : normalizedEmail.includes('teacher')
+                                ? 'teacher'
+                                : normalizedEmail.includes('staff')
+                                    ? 'staff'
+                                    : normalizedEmail.includes('parent')
+                                        ? 'parent'
+                                        : null;
+                if (!inferredRole) {
+                    res.status(401).json({ success: false, message: 'Invalid email or password' });
+                    return;
+                }
+                const mockUser = fallbackUser(email, inferredRole);
+                res.status(200).json({
+                    success: true,
+                    message: 'Login successful (fallback mode)',
+                    user: mockUser,
+                    token: 'mock-token',
+                });
+                return;
+            }
+            throw queryError;
+        }
         if (error || !user) {
+            if (process.env.NODE_ENV !== 'production') {
+                const inferredRole = inferFallbackRole(email);
+                if (inferredRole) {
+                    const mockUser = fallbackUser(email, inferredRole);
+                    res.status(200).json({
+                        success: true,
+                        message: 'Login successful (fallback mode)',
+                        user: mockUser,
+                        token: 'mock-token',
+                    });
+                    return;
+                }
+            }
             res.status(401).json({ success: false, message: 'Invalid email or password' });
             return;
         }
@@ -566,4 +644,48 @@ const updateUser = async (req, res, next) => {
     }
 };
 exports.updateUser = updateUser;
+/**
+ * Get children/students linked to a parent user
+ * GET /api/users/:id/children
+ */
+const getUserChildren = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            res.status(400).json({ success: false, message: 'User ID is required' });
+            return;
+        }
+        const client = (0, supabase_1.getSupabaseAdminClient)();
+        if (!client) {
+            // No DB client — return empty list in fallback mode
+            res.status(200).json({ success: true, message: 'Children (fallback)', children: [] });
+            return;
+        }
+        const { data, error } = await client
+            .from('students')
+            .select('id, first_name, last_name, grade_level, section, school_id')
+            .eq('parent_user_id', id)
+            .eq('status', 'active')
+            .order('last_name', { ascending: true })
+            .order('first_name', { ascending: true });
+        if (error) {
+            console.error('Get user children error:', error);
+            res.status(500).json({ success: false, message: 'Failed to fetch children', error: error.message });
+            return;
+        }
+        const mapped = (data ?? []).map((student) => ({
+            id: student.id,
+            name: `${student.first_name} ${student.last_name}`,
+            grade: student.grade_level ?? undefined,
+            section: student.section ?? undefined,
+            schoolId: student.school_id,
+        }));
+        res.status(200).json({ success: true, message: 'Children', children: mapped });
+    }
+    catch (error) {
+        console.error('Get user children exception:', error);
+        next(error);
+    }
+};
+exports.getUserChildren = getUserChildren;
 //# sourceMappingURL=userController.js.map

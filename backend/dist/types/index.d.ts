@@ -10,6 +10,18 @@ export interface WeatherSnapshot {
     heatLevel: 'safe' | 'caution' | 'extreme-caution' | 'danger' | 'extreme-danger';
     timestamp: string;
 }
+export interface WeatherForecastDay {
+    source: 'openweathermap' | 'fallback';
+    location: string;
+    date: string;
+    temperatureC: number;
+    humidityPercent: number;
+    condition: string;
+    windSpeedMps: number;
+    pressureHpa: number;
+    heatIndexC: number;
+    heatLevel: 'safe' | 'caution' | 'extreme-caution' | 'danger' | 'extreme-danger';
+}
 export interface AdvisoryInput {
     query: string;
     weather: WeatherSnapshot;
@@ -47,5 +59,6 @@ export interface AdvisoryResult {
         whenToEscalate?: string;
         sampleAnnouncementText?: string;
     };
+    extra?: string[];
 }
 //# sourceMappingURL=index.d.ts.map

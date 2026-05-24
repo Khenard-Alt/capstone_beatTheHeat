@@ -13,6 +13,7 @@ interface AuthContextType {
   logout: () => void;
   register: (data: any) => Promise<void>;
   setAdminAuthSession: (user: User) => void;
+  updateUser: (u: User) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +30,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(adminUser);
     localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(adminUser));
     localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'admin-auth-token');
+  };
+
+  const updateUser = (u: User) => {
+    setUser(u);
+    try {
+      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(u));
+    } catch (_) {}
   };
 
   useEffect(() => {
@@ -135,6 +143,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout,
         register,
         setAdminAuthSession,
+          updateUser,
       }}
     >
       {children}

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { env, hasWeatherApiKey } from '../config/environment';
-import { WeatherSnapshot } from '../types';
+import { WeatherForecastDay, WeatherSnapshot } from '../types';
 import { auditLogService } from './auditLog.service';
 
 interface OpenWeatherResponse {
@@ -29,6 +29,40 @@ interface OpenWeatherHistoricalResponse {
 	}>;
 }
 
+interface OpenWeatherOneCallDailyResponse {
+	timezone?: string;
+	daily?: Array<{
+		dt?: number;
+		temp?: {
+			day?: number;
+		};
+		humidity?: number;
+		pressure?: number;
+		wind_speed?: number;
+		weather?: Array<{ main?: string; description?: string }>;
+	}>;
+}
+
+interface OpenWeatherFiveDayForecastResponse {
+	city?: {
+		timezone?: number;
+		name?: string;
+	};
+	list?: Array<{
+		dt?: number;
+		dt_txt?: string;
+		main?: {
+			temp?: number;
+			humidity?: number;
+			pressure?: number;
+		};
+		wind?: {
+			speed?: number;
+		};
+		weather?: Array<{ main?: string; description?: string }>;
+	}>;
+}
+
 interface WeatherBackfillFailure {
 	dayOffset: number;
 	reason: string;
@@ -43,8 +77,16 @@ export interface WeatherBackfillResult {
 	snapshots: WeatherSnapshot[];
 }
 
+export interface WeatherForecastResult {
+	requestedDays: number;
+	mode: 'onecall-daily' | 'five-day-forecast' | 'current-api-no-key';
+	location: string;
+	days: WeatherForecastDay[];
+	notes: string[];
+}
+
 class WeatherService {
-	private readonly schoolLocationName = 'Mayamot Elementary School, Antipolo City';
+	private readonly schoolLocationName = env.schoolLocationName;
 
 	public async collectScheduledSnapshot(lat = env.schoolLat, lon = env.schoolLon): Promise<WeatherSnapshot> {
 		return this.getCurrentWeather(lat, lon);
@@ -140,6 +182,46 @@ class WeatherService {
 		}
 	}
 
+	public async getForecastOutlook(
+		days = 7,
+		lat = env.schoolLat,
+		lon = env.schoolLon
+	): Promise<WeatherForecastResult> {
+		const requestedDays = Math.min(7, Math.max(1, Math.floor(days)));
+
+		if (!hasWeatherApiKey()) {
+			const fallback = this.getFallbackWeather();
+			return {
+				requestedDays,
+				mode: 'current-api-no-key',
+				location: fallback.location,
+				days: [
+					{
+						source: fallback.source,
+						location: fallback.location,
+						date: fallback.timestamp.slice(0, 10),
+						temperatureC: fallback.temperatureC,
+						humidityPercent: fallback.humidityPercent,
+						condition: fallback.condition,
+						windSpeedMps: fallback.windSpeedMps,
+						pressureHpa: fallback.pressureHpa,
+						heatIndexC: fallback.heatIndexC,
+						heatLevel: fallback.heatLevel,
+					},
+				],
+				notes: ['OPENWEATHER_API_KEY is missing. Returning fallback-based outlook.'],
+			};
+		}
+
+		const oneCallResult = await this.tryFetchOneCallForecast(requestedDays, lat, lon);
+		if (oneCallResult) {
+			return oneCallResult;
+		}
+
+		const fiveDayResult = await this.fetchFiveDayForecast(requestedDays, lat, lon);
+		return fiveDayResult;
+	}
+
 	private async fetchHistoricalSnapshots(
 		lat: number,
 		lon: number,
@@ -177,6 +259,144 @@ class WeatherService {
 		}
 
 		return snapshots;
+	}
+
+	private async tryFetchOneCallForecast(
+		requestedDays: number,
+		lat: number,
+		lon: number
+	): Promise<WeatherForecastResult | null> {
+		try {
+			const { data } = await axios.get<OpenWeatherOneCallDailyResponse>(
+				'https://api.openweathermap.org/data/3.0/onecall',
+				{
+					params: {
+						lat,
+						lon,
+						units: 'metric',
+						appid: env.openWeatherApiKey,
+						exclude: 'minutely,hourly,alerts',
+					},
+					timeout: 8000,
+				}
+			);
+
+			const daily = (data.daily ?? [])
+				.slice(0, requestedDays)
+				.filter((day) => typeof day.dt === 'number' && typeof day.temp?.day === 'number');
+
+			if (daily.length === 0) {
+				return null;
+			}
+
+			const days = daily.map((day) => this.toDailyForecastDay(day, data.timezone));
+			return {
+				requestedDays,
+				mode: 'onecall-daily',
+				location: this.schoolLocationName,
+				days,
+				notes: ['Real forecast data fetched from OpenWeather One Call daily forecast.'],
+			};
+		} catch (error) {
+			console.warn('OpenWeather One Call forecast unavailable, falling back to 5-day forecast:', this.toErrorMessage(error));
+			return null;
+		}
+	}
+
+	private async fetchFiveDayForecast(
+		requestedDays: number,
+		lat: number,
+		lon: number
+	): Promise<WeatherForecastResult> {
+		const { data } = await axios.get<OpenWeatherFiveDayForecastResponse>(
+			'https://api.openweathermap.org/data/2.5/forecast',
+			{
+				params: {
+					lat,
+					lon,
+					units: 'metric',
+					appid: env.openWeatherApiKey,
+				},
+				timeout: 8000,
+			}
+		);
+
+		const grouped = new Map<string, NonNullable<OpenWeatherFiveDayForecastResponse['list']>[number]>();
+		for (const point of data.list ?? []) {
+			if (!point.dt_txt || typeof point.main?.temp !== 'number') {
+				continue;
+			}
+
+			const dateKey = point.dt_txt.slice(0, 10);
+			const existing = grouped.get(dateKey);
+			const hour = Number(point.dt_txt.slice(11, 13));
+			if (!existing || Math.abs(hour - 12) < Math.abs(Number(existing.dt_txt?.slice(11, 13) ?? '0') - 12)) {
+				grouped.set(dateKey, point);
+			}
+		}
+
+		const sortedDays = Array.from(grouped.entries())
+			.sort(([left], [right]) => left.localeCompare(right))
+			.slice(0, requestedDays)
+			.map(([dateKey, point]) => this.toFiveDayForecastDay(dateKey, point, data.city?.name));
+
+		return {
+			requestedDays,
+			mode: 'five-day-forecast',
+			location: this.schoolLocationName,
+			days: sortedDays,
+			notes: [
+				'Real forecast data fetched from OpenWeather 5-day forecast endpoint.',
+				sortedDays.length < requestedDays
+					? `Only ${sortedDays.length} forecast day(s) were available from the API.`
+					: 'Forecast days grouped from 3-hour weather snapshots.',
+			],
+		};
+	}
+
+	private toDailyForecastDay(
+		day: NonNullable<OpenWeatherOneCallDailyResponse['daily']>[number],
+		timezone?: string
+	): WeatherForecastDay {
+		const temperatureC = Number(day.temp?.day?.toFixed(1) ?? 0);
+		const humidityPercent = Number(day.humidity?.toFixed(0) ?? 0);
+		const heatIndexC = Number(this.calculateHeatIndexC(temperatureC, humidityPercent).toFixed(1));
+
+		return {
+			source: 'openweathermap',
+			location: this.schoolLocationName,
+			date: new Date((day.dt ?? Date.now() / 1000) * 1000).toISOString().slice(0, 10),
+			temperatureC,
+			humidityPercent,
+			condition: day.weather?.[0]?.description ?? day.weather?.[0]?.main ?? timezone ?? 'forecast',
+			windSpeedMps: Number((day.wind_speed ?? 0).toFixed(1)),
+			pressureHpa: Number((day.pressure ?? 0).toFixed(0)),
+			heatIndexC,
+			heatLevel: this.getHeatLevel(heatIndexC),
+		};
+	}
+
+	private toFiveDayForecastDay(
+		dateKey: string,
+		point: NonNullable<OpenWeatherFiveDayForecastResponse['list']>[number],
+		cityName?: string
+	): WeatherForecastDay {
+		const temperatureC = Number(point.main?.temp?.toFixed(1) ?? 0);
+		const humidityPercent = Number(point.main?.humidity?.toFixed(0) ?? 0);
+		const heatIndexC = Number(this.calculateHeatIndexC(temperatureC, humidityPercent).toFixed(1));
+
+		return {
+			source: 'openweathermap',
+			location: cityName ?? this.schoolLocationName,
+			date: dateKey,
+			temperatureC,
+			humidityPercent,
+			condition: point.weather?.[0]?.description ?? point.weather?.[0]?.main ?? 'forecast',
+			windSpeedMps: Number((point.wind?.speed ?? 0).toFixed(1)),
+			pressureHpa: Number((point.main?.pressure ?? 0).toFixed(0)),
+			heatIndexC,
+			heatLevel: this.getHeatLevel(heatIndexC),
+		};
 	}
 
 	private toHistoricalSnapshot(

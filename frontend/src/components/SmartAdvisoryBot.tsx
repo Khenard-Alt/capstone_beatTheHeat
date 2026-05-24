@@ -8,11 +8,27 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/SmartAdvisoryBot.css';
 
 const fallbackMessages = [
-  'Ask me about heat index, student safety, and parent precautions.',
-  'Need heat safety tips? Ask me anything about school advisories.',
-  'Heat index is changing. Ask for quick guidance now.',
-  'Ask me about today�s heat level and recommended actions.',
+  'Tanungin mo ako tungkol sa heat index, student safety, at parent precautions.',
+  'Kailangan mo ng heat safety tips? Tanungin mo ako tungkol sa school advisories.',
+  'Nagbabago ang heat index. Humingi ka ng mabilis na gabay ngayon.',
+  'Tanungin mo ako tungkol sa heat level ngayon at mga recommended action.',
 ];
+
+const inferLanguageFromQuery = (text: string): 'english' | 'tagalog' | 'taglish' => {
+  const normalized = text.toLowerCase();
+
+  const tagalogHints = ['ano', 'paano', 'bakit', 'kasi', 'dapat', 'pwede', 'ba', 'po', 'opo', 'yung', 'naman', 'huwag', 'delikado', 'init', 'tubig', 'klase'];
+  if (tagalogHints.some((token) => normalized.includes(token))) {
+    return 'tagalog';
+  }
+
+  const englishHints = ['english', 'what', 'why', 'how', 'should', 'can', 'please', 'safe', 'heat', 'school', 'advisory', 'recess'];
+  if (englishHints.some((token) => normalized.includes(token))) {
+    return 'english';
+  }
+
+  return 'taglish';
+};
 
 export const SmartAdvisoryBot: React.FC = () => {
   const { user } = useAuth();
@@ -78,9 +94,9 @@ export const SmartAdvisoryBot: React.FC = () => {
       const weather = await fetchCurrentWeather();
       const heatIndex = calculateHeatIndex(weather.temperature, weather.humidity);
       const level = getHeatLevel(heatIndex);
-      const prompt = `Give a single-sentence heat advisory for a ${roleLabel}. Current temperature is ${weather.temperature.toFixed(1)}�C, heat index is ${heatIndex.toFixed(1)}�C (${level}). Condition: ${weather.conditions}. Keep it short and practical.`;
+      const prompt = `Bigyan ako ng isang maikling heat advisory para sa isang ${roleLabel}. Ang current temperature ay ${weather.temperature.toFixed(1)}�C, heat index ay ${heatIndex.toFixed(1)}�C (${level}). Condition: ${weather.conditions}. Gawing maikli at praktikal.`;
 
-      const scoped = await generateScopedAdvisory(prompt, { lang: 'english', single: true });
+      const scoped = await generateScopedAdvisory(prompt, { single: true });
       setNudgeText(scoped.singleResponse ?? scoped.summary);
     } catch (error) {
       setFallbackIndex((prev) => (prev + 1) % fallbackMessages.length);
@@ -104,21 +120,18 @@ export const SmartAdvisoryBot: React.FC = () => {
     setQuestion('');
     
     try {
-      const lang = /[\u00C0-\u024F]|\b(ano|paano|bakit|kasi|lahat|naman|po|ngayon|mainit|init|mahirap|sino|saan)\b/i.test(trimmed)
-        ? 'tagalog'
-        : 'english';
-      const scoped = await generateScopedAdvisory(trimmed, { lang, single: true });
+      const scoped = await generateScopedAdvisory(trimmed, { single: true, lang: inferLanguageFromQuery(trimmed) });
       const actions = (scoped.actions ?? []).slice(0, 3).map((item) => `- ${item}`).join('\n');
       const tips = (scoped.safetyTips ?? []).slice(0, 3).map((item) => `- ${item}`).join('\n');
       const summary = scoped.singleResponse ?? scoped.summary;
       const replyParts = [
         summary,
         '',
-        'Recommended steps:',
-        actions || '- Keep hydrated and avoid peak heat exposure.',
+        'Mga recommended na hakbang:',
+        actions || '- Uminom ng tubig at iwasan ang matinding init.',
         '',
-        'Quick safety tips:',
-        tips || '- Follow school advisories and monitor symptoms.',
+        'Mabilis na safety tips:',
+        tips || '- Sundin ang school advisories at bantayan ang sintomas.',
         '',
         scoped.scopeNote,
       ].filter(part => typeof part === 'string');
@@ -138,7 +151,7 @@ export const SmartAdvisoryBot: React.FC = () => {
         <div className="global-advisory-panel" role="dialog" aria-label="Smart Advisory Bot">
           <div className="global-advisory-panel-header">
             <div className="global-advisory-panel-title">
-              <span className="global-advisory-header-icon">??</span>
+              <span className="global-advisory-header-icon">AI</span>
               <div>
                 <h3>Smart AI Advisory Bot</h3>
                 <span className="global-advisory-status">
@@ -155,20 +168,20 @@ export const SmartAdvisoryBot: React.FC = () => {
           <div className="global-advisory-panel-body">
             <div className="global-advisory-messages">
               <div className="global-advisory-message ai">
-                <div className="global-advisory-avatar">??</div>
+                <div className="global-advisory-avatar">AI</div>
                 <div className="global-advisory-bubble">{nudgeText}</div>
               </div>
               {messages.map((message) => (
                 <div key={message.id} className={`global-advisory-message ${message.sender}`}>
-                  {message.sender === 'ai' && <div className="global-advisory-avatar">??</div>}
+                  {message.sender === 'ai' && <div className="global-advisory-avatar">AI</div>}
                   <div className="global-advisory-bubble">{message.text}</div>
-                  {message.sender === 'user' && <div className="global-advisory-avatar user">??</div>}
+                  {message.sender === 'user' && <div className="global-advisory-avatar user">You</div>}
                 </div>
               ))}
               {isThinking && (
                 <div className="global-advisory-message ai">
-                  <div className="global-advisory-avatar">??</div>
-                  <div className="global-advisory-bubble typing">AI is thinking...</div>
+                  <div className="global-advisory-avatar">AI</div>
+                  <div className="global-advisory-bubble typing">Nag-iisip ang AI...</div>
                 </div>
               )}
             </div>
@@ -176,16 +189,23 @@ export const SmartAdvisoryBot: React.FC = () => {
             <div className="global-advisory-input-row">
               <input
                 type="text"
-                placeholder="Ask about heat safety..."
+                placeholder="Magtanong tungkol sa heat safety..."
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && void handleAsk()}
               />
               <button onClick={() => void handleAsk()} disabled={!question.trim() || isThinking}>
-                {isThinking ? '...' : 'Ask AI'}
+                {isThinking ? '...' : 'Tanungin ang AI'}
               </button>
             </div>
-            <button className="global-advisory-link" onClick={() => { setIsOpen(false); navigate(chatPath); }}>
+
+            <button
+              className="global-advisory-link"
+              onClick={() => {
+                setIsOpen(false);
+                navigate(chatPath);
+              }}
+            >
               Open full dashboard view
             </button>
           </div>

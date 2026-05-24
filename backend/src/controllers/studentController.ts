@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { getSupabaseAdminClient } from '../config/supabase';
 
 const fallbackStudents = [
-  { id: 's1', name: 'Juan Dela Cruz', grade: 'Grade 3', schoolId: 'school-1' },
-  { id: 's2', name: 'Maria Santos', grade: 'Grade 5', schoolId: 'school-1' },
-  { id: 's3', name: 'Carlos Reyes', grade: 'Grade 4', schoolId: 'school-1' },
+  { id: 's1', name: 'Juan Dela Cruz', grade: 'Grade 3', section: 'Rose', schoolId: 'school-1' },
+  { id: 's2', name: 'Maria Santos', grade: 'Grade 5', section: 'Jasmine', schoolId: 'school-1' },
+  { id: 's3', name: 'Carlos Reyes', grade: 'Grade 4', section: 'Lily', schoolId: 'school-1' },
 ];
 
 const mapStudentRow = (student: {
@@ -12,11 +12,13 @@ const mapStudentRow = (student: {
   first_name: string;
   last_name: string;
   grade_level: string | null;
+  section?: string | null;
   school_id: string;
 }) => ({
   id: student.id,
   name: `${student.first_name} ${student.last_name}`,
   grade: student.grade_level ?? undefined,
+  section: student.section ?? undefined,
   schoolId: student.school_id,
 });
 
@@ -38,46 +40,71 @@ const fallbackStudentRecord = (input: {
   parentUserId: input.parentUserId ?? null,
 });
 
+const normalizeStudentSearch = (value: string) => value.toLowerCase().trim();
+
+const matchesStudentQuery = (student: { name: string; grade?: string; section?: string }, query: string) => {
+  const haystack = [student.name, student.grade, student.section]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return haystack.includes(query);
+};
+
 /**
- * Get all students (for parent child dropdown)
+ * Get students for parent child dropdown and admin listings
  * GET /api/students
  */
 export const getStudents = async (
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): Promise<void> => {
   try {
+    const unassignedOnly = String(req.query.unassignedOnly).toLowerCase() === 'true';
     const client = getSupabaseAdminClient();
 
     if (!client) {
-      res.status(500).json({
-        success: false,
-        message: 'Database connection not configured',
+      res.status(200).json({
+        success: true,
+        message: 'Serving fallback student list',
+        students: fallbackStudents,
       });
       return;
     }
 
-    const { data, error } = await client
+    let query = client
       .from('students')
-      .select('id, first_name, last_name, grade_level, school_id, parent_user_id')
-      .is('parent_user_id', null)
+      .select('id, first_name, last_name, grade_level, section, school_id, parent_user_id, status')
+      .eq('status', 'active')
       .order('last_name', { ascending: true })
       .order('first_name', { ascending: true });
 
+    const parentId = typeof req.query.parentId === 'string' ? req.query.parentId : undefined;
+
+    if (unassignedOnly) {
+      query = query.is('parent_user_id', null);
+    }
+
+    if (parentId) {
+      query = query.eq('parent_user_id', parentId);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       console.error('Database query error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to fetch students from database',
-        error: error.message
+      res.status(200).json({
+        success: true,
+        message: 'Serving fallback student list',
+        students: fallbackStudents,
       });
       return;
     }
 
     res.status(200).json({
       success: true,
-      message: 'Students without parents',
+      message: unassignedOnly ? 'Students without parents' : 'Students',
       students: (data ?? []).map(mapStudentRow),
     });
   } catch (error) {
@@ -103,13 +130,13 @@ export const searchStudents = async (
       return;
     }
 
-    const query = q.toLowerCase().trim();
+    const query = normalizeStudentSearch(q);
 
     const client = getSupabaseAdminClient();
 
     if (!client) {
       const results = fallbackStudents.filter((student) =>
-        student.name.toLowerCase().includes(query)
+        matchesStudentQuery(student, query)
       );
 
       res.status(200).json({
@@ -123,12 +150,12 @@ export const searchStudents = async (
 
     const { data, error } = await client
       .from('students')
-      .select('id, first_name, last_name, grade_level, school_id');
+      .select('id, first_name, last_name, grade_level, section, school_id');
 
     if (error) {
       console.warn('Student search query failed, using fallback data:', error);
       const results = fallbackStudents.filter((student) =>
-        student.name.toLowerCase().includes(query)
+        matchesStudentQuery(student, query)
       );
 
       res.status(200).json({
@@ -142,7 +169,7 @@ export const searchStudents = async (
 
     const results = (data ?? [])
       .map(mapStudentRow)
-      .filter((student) => student.name.toLowerCase().includes(query));
+      .filter((student) => matchesStudentQuery(student, query));
 
     res.status(200).json({
       success: true,
@@ -193,7 +220,7 @@ export const getStudentById = async (
 
     const { data, error } = await client
       .from('students')
-      .select('id, first_name, last_name, grade_level, school_id')
+      .select('id, first_name, last_name, grade_level, section, school_id')
       .eq('id', id)
       .single();
 

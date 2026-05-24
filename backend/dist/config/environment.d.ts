@@ -6,6 +6,7 @@ export declare const env: {
     readonly googleGeminiApiKey: string;
     readonly schoolLat: number;
     readonly schoolLon: number;
+    readonly schoolLocationName: string;
     readonly weatherSchedulerToken: string;
     readonly smsProvider: "android-heartbeat" | "twilio";
     readonly androidSmsGatewayUrl: string;

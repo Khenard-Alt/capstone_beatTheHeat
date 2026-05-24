@@ -319,18 +319,18 @@ export const ParentDashboard: React.FC = () => {
   const buildSmallTalkResponse = (intent: SmallTalkIntent): string => {
     if (intent === 'greeting') {
       return [
-        `Hi parent. Current heat index is ${heatIndexData.heatIndex.toFixed(1)}°C (${heatIndexData.level}).`,
-        'I can answer heat-safety questions for your child and suggest school-safe actions.',
+        `Kumusta po. Ang current heat index ay ${heatIndexData.heatIndex.toFixed(1)}°C (${heatIndexData.level}).`,
+        'Maaari akong sumagot sa heat-safety questions para sa anak ninyo at magbigay ng school-safe na hakbang.',
       ].join(' ');
     }
 
     if (intent === 'thanks') {
-      return 'You are welcome. You can ask me anytime about heat level, class safety, hydration, and parent precautions.';
+      return 'Walang anuman po. Maaari ninyo akong tanungin kahit kailan tungkol sa heat level, class safety, hydration, at parent precautions.';
     }
 
     return [
-      'I can help with heat advisories only: class activity safety, parent precautions, warning signs, hydration, and class suspension guidance based on heat level.',
-      'Ask in English, Tagalog, or Taglish.',
+      'Makakatulong ako sa heat advisories lang: class activity safety, parent precautions, warning signs, hydration, at class suspension guidance base sa heat level.',
+      'Maaari kayong magtanong sa Tagalog, English, o Taglish.',
     ].join(' ');
   };
 
@@ -418,7 +418,7 @@ export const ParentDashboard: React.FC = () => {
         text: [
           scoped.summary,
           '',
-          `Risk Level: ${scoped.riskLevel}`,
+          `Antas ng panganib: ${scoped.riskLevel}`,
           ...scoped.actions.slice(0, 3).map((action) => `- ${action}`),
           '',
           scoped.scopeNote,
@@ -432,7 +432,7 @@ export const ParentDashboard: React.FC = () => {
       const fallbackMessage: ParentChatMessage = {
         id: Date.now() + 1,
         sender: 'ai',
-        text: 'I cannot connect to the advisory service right now. Please check latest heat alert and follow school guidance while reconnecting.',
+        text: 'Hindi ako makakonekta sa advisory service ngayon. Paki-check ang latest heat alert at sundin ang school guidance habang nagre-reconnect.',
         intentLabel: 'Service Fallback',
         confidenceScore: 64,
       };

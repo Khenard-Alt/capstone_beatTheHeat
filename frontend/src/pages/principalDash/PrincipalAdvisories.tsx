@@ -70,7 +70,7 @@ const PrincipalAdvisories: React.FC = () => {
   };
 
   return (
-    <div>
+    <div id="heat-data-top">
       <div className="admin-dashboard-header" style={{ marginBottom: 16 }}>
         <div>
           <h1>Advisories</h1>

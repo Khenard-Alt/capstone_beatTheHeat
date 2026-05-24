@@ -34,6 +34,14 @@ const normalizePhone = (phone: string): string => {
 
 const isCloudSmsGateway = (): boolean => env.androidSmsGatewayUrl.includes('api.sms-gate.app');
 
+let cloudSmsTemporarilyDisabledUntil = 0;
+
+const isCloudSmsTemporarilyDisabled = (): boolean => Date.now() < cloudSmsTemporarilyDisabledUntil;
+
+const disableCloudSmsTemporarily = (minutes = 15): void => {
+	cloudSmsTemporarilyDisabledUntil = Date.now() + minutes * 60 * 1000;
+};
+
 const getGatewayBaseUrl = (): string => {
 	try {
 		const parsed = new URL(env.androidSmsGatewayUrl);
@@ -77,6 +85,17 @@ const getCloudSmsGatewayToken = async (): Promise<string | null> => {
 
 export const getSmsGatewayHealth = async (): Promise<SmsGatewayHealth> => {
 	if (env.smsProvider === 'android-heartbeat') {
+		if (isCloudSmsGateway() && isCloudSmsTemporarilyDisabled()) {
+			return {
+				provider: 'android-heartbeat',
+				configured: true,
+				online: false,
+				hasLoad: false,
+				ready: false,
+				details: 'Cloud SMS gateway temporarily disabled after recent 503 responses.',
+			};
+		}
+
 		if (!hasAndroidSmsGatewayConfig()) {
 			return {
 				provider: 'android-heartbeat',
@@ -245,7 +264,14 @@ export const sendHeatAlertSms = async (
 			}
 			return true;
 		} catch (error) {
-			console.error('[SMS] Failed to send via Android heartbeat gateway:', error);
+			const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+			if (status === 503 && isCloudSmsGateway()) {
+				disableCloudSmsTemporarily(15);
+				console.warn('[SMS] Cloud SMS gateway is overloaded; temporarily disabling SMS dispatch for 15 minutes.');
+				return false;
+			}
+
+			console.error('[SMS] Failed to send via Android heartbeat gateway:', status ? `HTTP ${status}` : error instanceof Error ? error.message : error);
 			return false;
 		}
 	}

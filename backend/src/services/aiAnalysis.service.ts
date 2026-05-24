@@ -5,9 +5,10 @@ import os from 'os';
 import path from 'path';
 import { promisify } from 'util';
 import { env, hasGeminiApiKey } from '../config/environment';
-import { AdvisoryInput, AdvisoryResult } from '../types';
+import { AdvisoryInput, AdvisoryResult, WeatherForecastDay } from '../types';
 import { auditLogService } from './auditLog.service';
 import { projectPolicyFAQ } from '../knowledge/projectPolicyFAQ';
+import { weatherService } from './weather.service';
 
 interface GeminiResponse {
 	candidates?: Array<{
@@ -27,6 +28,7 @@ type ConversationIntent =
 	| 'greeting'
 	| 'thanks'
 	| 'capability'
+	| 'forecast'
 	| 'urgent-symptoms'
 	| 'hydration'
 	| 'what-to-bring'
@@ -53,6 +55,7 @@ const execFileAsync = promisify(execFile);
 
 class AIAnalysisService {
 	private knowledgeCache: { handbook: string | null; docs: Map<string, string> } | null = null;
+	private geminiDisabledUntil = 0;
 
 	private maybeAttachSingle(result: AdvisoryResult, input?: any): AdvisoryResult {
 		try {
@@ -63,6 +66,73 @@ class AIAnalysisService {
 			// noop
 		}
 		return result;
+	}
+
+	private isGeminiTemporarilyDisabled(): boolean {
+		return Date.now() < this.geminiDisabledUntil;
+	}
+
+	private disableGeminiTemporarily(minutes = 5): void {
+		this.geminiDisabledUntil = Date.now() + minutes * 60 * 1000;
+	}
+
+	private buildProjectFailAdvisory(input: AdvisoryInput, languageStyle: LanguageStyle): AdvisoryResult {
+		const base = this.safeScopeRedirect(input.weather.heatLevel, languageStyle);
+		if (languageStyle === 'tagalog' || languageStyle === 'taglish') {
+			return {
+				...base,
+				summary: "Worry not — hindi ako takdang-aralin na magbibigay grade. Kung natatakot ka, huminga muna; humingi ng feedback sa adviser; at mag-ayos ng plan. Kaya mo 'yan! 😄",
+				actions: [
+					"Humingi ng konkretong feedback mula sa adviser ngayong araw.",
+					"Gumawa ng maliit na plan: prioritize tasks at mag-assign ng oras araw-araw.",
+					"Mag-practice ng demo o presentation kasama ang kaibigan para confident ka."
+				],
+				safetyTips: [
+					"Huwag mag-cram — mas epektibo ang steady progress.",
+					"Kumain at magpahinga para malinaw ang isip bago mag-review."
+				],
+				scopeNote: "Lighthearted, non-evaluative support for student project concerns.",
+				confidenceScore: 0.5,
+				decisionBasis: {
+					heatIndexC: input.weather.heatIndexC,
+					temperatureC: input.weather.temperatureC,
+					humidityPercent: input.weather.humidityPercent,
+					heatLevel: input.weather.heatLevel,
+					dataSource: input.weather.source,
+					rationale: [
+						"User requested a lighthearted, non-evaluative reply about project failure.",
+					],
+				},
+				modelProfile: { mode: 'rule-grounded-ai', scope: 'system-only' },
+			};
+		}
+
+		return {
+			...base,
+			summary: "Relax — I'm not the thesis police. You're probably fine. Breathe, ask your adviser for feedback, and take it step by step. You got this! 😄",
+			actions: [
+				"Ask your adviser for specific feedback and next steps.",
+				"Break the remaining work into small tasks and set short deadlines.",
+				"Do a mock presentation to build confidence."
+			],
+			safetyTips: [
+				"Avoid last-minute cramming — rest helps focus.",
+				"Eat and hydrate before any defense or demo."
+			],
+			scopeNote: "Lighthearted, non-evaluative support for project concerns.",
+			confidenceScore: 0.5,
+			decisionBasis: {
+				heatIndexC: input.weather.heatIndexC,
+				temperatureC: input.weather.temperatureC,
+				humidityPercent: input.weather.humidityPercent,
+				heatLevel: input.weather.heatLevel,
+				dataSource: input.weather.source,
+				rationale: [
+					"User requested a lighthearted, non-evaluative reply about project failure.",
+				],
+			},
+			modelProfile: { mode: 'rule-grounded-ai', scope: 'system-only' },
+		};
 	}
 
 	public async generateScopedAdvisory(input: AdvisoryInput): Promise<AdvisoryResult> {
@@ -77,6 +147,18 @@ class AIAnalysisService {
 				: 'english')
 			: this.detectLanguageStyle(rawQuery || scopedQuery);
 		const intent = this.detectConversationIntent(rawQuery);
+
+		// Early shortcut: if user asks about failing a capstone/thesis/project,
+		// return a playful, supportive fallback immediately so it's not overridden
+		// by heat-safety templates.
+		const qLower = rawQuery.toLowerCase();
+		const isProjectMention = /capstone|thesis|project/.test(qLower);
+		const isFailMention = /bagsak|fail|flunk|pasa|pumalya/.test(qLower);
+		if (isProjectMention && isFailMention) {
+			const projectResp = this.buildProjectFailAdvisory(input, languageStyle);
+			await this.logAdvisoryAudit(input, scopedQuery, projectResp, 'fallback', 'project-fallback');
+			return this.maybeAttachSingle(projectResp, input);
+		}
 		const variationSeed = this.getVariationSeed();
 
 		if (this.classifyScope(rawQuery) === 'out-of-scope') {
@@ -84,6 +166,16 @@ class AIAnalysisService {
 			const variedRefusal = this.applyVariation(refusal, variationSeed, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, variedRefusal, 'fallback', 'scope-guard');
 			return this.maybeAttachSingle(variedRefusal, input);
+		}
+
+		if (intent === 'forecast') {
+			const forecastData = await weatherService.getForecastOutlook(7);
+			const forecastAdvisory = this.buildForecastAdvisory(forecastData.days, languageStyle, forecastData.mode);
+			const adjustedForecast = this.applyQueryPolicy(forecastAdvisory, input, scopedQuery, languageStyle);
+			const variedForecast = this.applyVariation(adjustedForecast, variationSeed, languageStyle);
+			const filledForecast = this.fillHealthDefaults(variedForecast, input.weather);
+			await this.logAdvisoryAudit(input, scopedQuery, filledForecast, 'fallback', 'forecast-openweather');
+			return this.maybeAttachSingle(filledForecast, input);
 		}
 
 		let scenarioTemplate = this.buildScenarioTemplateAdvisory(intent, input.weather, languageStyle);
@@ -101,19 +193,6 @@ class AIAnalysisService {
 			return this.maybeAttachSingle(filled, input);
 		}
 
-		if (env.aiModelProvider === 'python') {
-			const pythonResult = await this.generatePythonAdvisory(input, scopedQuery, languageStyle, variationSeed);
-			if (pythonResult) {
-				return this.maybeAttachSingle(pythonResult, input);
-			}
-
-			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
-			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
-			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
-			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', 'python-fallback');
-			return this.maybeAttachSingle(variedFallback, input);
-		}
-
 		if (env.aiModelProvider === 'fallback') {
 			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
 			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
@@ -122,92 +201,16 @@ class AIAnalysisService {
 			return this.maybeAttachSingle(variedFallback, input);
 		}
 
-		if (!hasGeminiApiKey()) {
-			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
-			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
-			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
-			await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', GEMINI_MODELS[0]);
-			return this.maybeAttachSingle(variedFallback, input);
+		const ensembleResult = await this.generateEnsembleAdvisory(input, scopedQuery, languageStyle, variationSeed, env.aiModelProvider);
+		if (ensembleResult) {
+			return this.maybeAttachSingle(ensembleResult, input);
 		}
 
-		try {
-			const knowledgeContext = await this.buildKnowledgeContext(scopedQuery);
-			const systemPrompt = this.systemPrompt(knowledgeContext);
-			const userPrompt = JSON.stringify({
-				query: scopedQuery,
-				languageStyle,
-				weather: input.weather,
-				variationHint: this.buildVariationHint(variationSeed, languageStyle),
-			});
-
-			const requestBody = {
-				contents: [
-					{
-						parts: [
-							{ text: systemPrompt },
-							{ text: `USER REQUEST:\n${userPrompt}\n\nRespond with valid JSON only (no markdown, no code blocks).` },
-						],
-					},
-				],
-				generationConfig: {
-					temperature: 0.2,
-					// Increase limit to allow expanded advisories (may still be limited by provider)
-					maxOutputTokens: 1600,
-					responseMimeType: 'application/json',
-				},
-			};
-
-						if (process.env.NODE_ENV !== 'production') {
-							try {
-								console.log('[AI DEBUG] System prompt preview:', systemPrompt.slice(0, 400));
-								console.log('[AI DEBUG] User prompt payload:', userPrompt);
-							} catch {
-								// ignore logging errors
-							}
-						}
-
-						const { data, modelUsed } = await this.requestGeminiContent(requestBody);
-
-			const parts = data?.candidates?.[0]?.content?.parts ?? [];
-			const content = parts
-				.map((part) => (typeof part.text === 'string' ? part.text : ''))
-				.join('\n')
-				.trim();
-						const parsed = this.parseAdvisory(content, input.weather, languageStyle);
-						if (process.env.NODE_ENV !== 'production') {
-							try {
-								console.log('[AI DEBUG] Raw model content:', content.slice(0, 800));
-								console.log('[AI DEBUG] Parsed advisory:', JSON.stringify(parsed));
-							} catch {
-								// ignore logging errors
-							}
-						}
-			const result = this.enforceOutputScope(parsed, input.weather.heatLevel, languageStyle);
-			const adjustedResult = this.applyQueryPolicy(result, input, scopedQuery, languageStyle);
-			const variedResult = this.applyVariation(adjustedResult, variationSeed, languageStyle);
-			const finalResult = this.fillHealthDefaults(variedResult, input.weather);
-
-			await this.logAdvisoryAudit(
-				input,
-				scopedQuery,
-				finalResult,
-				'gemini',
-				modelUsed,
-				data.usageMetadata?.promptTokenCount,
-				data.usageMetadata?.candidatesTokenCount,
-				data.usageMetadata?.totalTokenCount
-			);
-
-			return this.maybeAttachSingle(finalResult, input);
-		} catch (error) {
-			console.error('AI advisory generation failed, using fallback:', error);
-			const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
-			const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
-			const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
-			const finalFallback = this.fillHealthDefaults(variedFallback, input.weather);
-			await this.logAdvisoryAudit(input, scopedQuery, finalFallback, 'fallback', GEMINI_MODELS[0]);
-			return this.maybeAttachSingle(finalFallback, input);
-		}
+		const fallback = this.buildFallbackAdvisory(input, scopedQuery, languageStyle);
+		const adjustedFallback = this.applyQueryPolicy(fallback, input, scopedQuery, languageStyle);
+		const variedFallback = this.applyVariation(adjustedFallback, variationSeed, languageStyle);
+		await this.logAdvisoryAudit(input, scopedQuery, variedFallback, 'fallback', 'fallback-only');
+		return this.maybeAttachSingle(variedFallback, input);
 	}
 
 	public async generatePythonOnlyAdvisory(input: AdvisoryInput): Promise<AdvisoryResult> {
@@ -269,6 +272,9 @@ class AIAnalysisService {
 							? error.response.data
 							: JSON.stringify(error.response?.data ?? {});
 					console.error(`Gemini model ${model} failed with status ${status ?? 'N/A'}: ${message}`);
+					if (status === 429) {
+						this.disableGeminiTemporarily(5);
+					}
 				} else {
 					console.error(`Gemini model ${model} failed with non-axios error`, error);
 				}
@@ -282,7 +288,7 @@ class AIAnalysisService {
 		input: AdvisoryInput,
 		scopedQuery: string,
 		result: AdvisoryResult,
-		source: 'gemini' | 'fallback' | 'python',
+		source: 'gemini' | 'fallback' | 'python' | 'ensemble',
 		model: string,
 		tokenInput?: number,
 		tokenOutput?: number,
@@ -314,11 +320,267 @@ class AIAnalysisService {
 		return 0;
 	}
 
+	private async generateEnsembleAdvisory(
+		input: AdvisoryInput,
+		scopedQuery: string,
+		languageStyle: LanguageStyle,
+		variationSeed: number,
+		preferredProvider: 'gemini' | 'python'
+	): Promise<AdvisoryResult | null> {
+		const [pythonResult, geminiResult] = await Promise.allSettled([
+			this.generatePythonAdvisory(input, scopedQuery, languageStyle, variationSeed, true),
+			this.isGeminiTemporarilyDisabled()
+				? Promise.resolve(null)
+				: this.generateGeminiAdvisory(input, scopedQuery, languageStyle, variationSeed, true),
+		]);
+
+		const pythonAdvisory = pythonResult.status === 'fulfilled' ? pythonResult.value : null;
+		const geminiAdvisory = geminiResult.status === 'fulfilled' ? geminiResult.value?.result ?? null : null;
+
+		if (!pythonAdvisory && !geminiAdvisory) {
+			return null;
+		}
+
+		if (pythonAdvisory && !geminiAdvisory) {
+			const result = this.applySafetyRules(pythonAdvisory, input.weather);
+			await this.logAdvisoryAudit(input, scopedQuery, result, 'python', 'ensemble-python-only');
+			return result;
+		}
+
+		if (!pythonAdvisory && geminiAdvisory) {
+			const result = this.applySafetyRules(geminiAdvisory, input.weather);
+			await this.logAdvisoryAudit(input, scopedQuery, result, 'gemini', 'ensemble-gemini-only');
+			return result;
+		}
+
+		const merged = this.mergeAdvisoryResults(
+			pythonAdvisory!,
+			geminiAdvisory!,
+			input,
+			preferredProvider
+		);
+		const finalMerged = this.applySafetyRules(merged, input.weather);
+		await this.logAdvisoryAudit(input, scopedQuery, finalMerged, 'ensemble', `ensemble:${preferredProvider}+${preferredProvider === 'python' ? 'gemini' : 'python'}`);
+		return finalMerged;
+	}
+
+	private async generateGeminiAdvisory(
+		input: AdvisoryInput,
+		scopedQuery: string,
+		languageStyle: LanguageStyle,
+		variationSeed: number,
+		skipAudit = false
+	): Promise<{ result: AdvisoryResult; modelUsed: string; tokenInput?: number; tokenOutput?: number; tokenTotal?: number } | null> {
+		if (!hasGeminiApiKey()) {
+			return null;
+		}
+
+		if (this.isGeminiTemporarilyDisabled()) {
+			return null;
+		}
+
+		try {
+			const knowledgeContext = await this.buildKnowledgeContext(scopedQuery);
+			const systemPrompt = this.systemPrompt(knowledgeContext);
+			const userPrompt = JSON.stringify({
+				query: scopedQuery,
+				languageStyle,
+				weather: input.weather,
+				variationHint: this.buildVariationHint(variationSeed, languageStyle),
+			});
+
+			const requestBody = {
+				contents: [
+					{
+						parts: [
+							{ text: systemPrompt },
+							{ text: `USER REQUEST:\n${userPrompt}\n\nRespond with valid JSON only (no markdown, no code blocks).` },
+						],
+					},
+				],
+				generationConfig: {
+					temperature: 0.2,
+					maxOutputTokens: 1600,
+					responseMimeType: 'application/json',
+				},
+			};
+
+			if (process.env.NODE_ENV !== 'production') {
+				try {
+					console.log('[AI DEBUG] System prompt preview:', systemPrompt.slice(0, 400));
+					console.log('[AI DEBUG] User prompt payload:', userPrompt);
+				} catch {
+					// ignore logging errors
+				}
+			}
+
+			const { data, modelUsed } = await this.requestGeminiContent(requestBody);
+			const parts = data?.candidates?.[0]?.content?.parts ?? [];
+			const content = parts.map((part) => (typeof part.text === 'string' ? part.text : '')).join('\n').trim();
+			const parsed = this.parseAdvisory(content, input.weather, languageStyle);
+
+			if (process.env.NODE_ENV !== 'production') {
+				try {
+					console.log('[AI DEBUG] Raw model content:', content.slice(0, 800));
+					console.log('[AI DEBUG] Parsed advisory:', JSON.stringify(parsed));
+				} catch {
+					// ignore logging errors
+				}
+			}
+
+			const result = this.enforceOutputScope(parsed, input.weather.heatLevel, languageStyle);
+			const adjustedResult = this.applyQueryPolicy(result, input, scopedQuery, languageStyle);
+			const variedResult = this.applyVariation(adjustedResult, variationSeed, languageStyle);
+			const finalResult = this.fillHealthDefaults(variedResult, input.weather);
+
+			if (!skipAudit) {
+				await this.logAdvisoryAudit(
+					input,
+					scopedQuery,
+					finalResult,
+					'gemini',
+					modelUsed,
+					data.usageMetadata?.promptTokenCount,
+					data.usageMetadata?.candidatesTokenCount,
+					data.usageMetadata?.totalTokenCount
+				);
+			}
+
+			return {
+				result: finalResult,
+				modelUsed,
+				tokenInput: data.usageMetadata?.promptTokenCount,
+				tokenOutput: data.usageMetadata?.candidatesTokenCount,
+				tokenTotal: data.usageMetadata?.totalTokenCount,
+			};
+		} catch (error) {
+			console.error('Gemini advisory generation failed:', error);
+			return null;
+		}
+	}
+
+	private mergeAdvisoryResults(
+		pythonResult: AdvisoryResult,
+		geminiResult: AdvisoryResult,
+		input: AdvisoryInput,
+		preferredProvider: 'gemini' | 'python'
+	): AdvisoryResult {
+		const riskLevel = this.pickHigherRiskLevel(pythonResult.riskLevel, geminiResult.riskLevel, input.weather.heatLevel);
+		const preferred = preferredProvider === 'python' ? pythonResult : geminiResult;
+		const secondary = preferredProvider === 'python' ? geminiResult : pythonResult;
+		const winner = (secondary.confidenceScore ?? 0) > (preferred.confidenceScore ?? 0) ? secondary : preferred;
+		const confidenceScore = Math.min(
+			0.99,
+			Math.max(preferred.confidenceScore ?? 0, secondary.confidenceScore ?? 0, 0.82) + 0.03
+		);
+		const mergedActions = this.mergeStringLists(preferred.actions, secondary.actions, 5);
+		const mergedSafetyTips = this.mergeStringLists(preferred.safetyTips, secondary.safetyTips, 5);
+		const mergedHealthDetails = this.mergeHealthDetails(preferred.healthDetails, secondary.healthDetails);
+		const rationale = this.mergeStringLists(
+			preferred.decisionBasis.rationale,
+			secondary.decisionBasis.rationale,
+			5
+		);
+
+		return this.fillHealthDefaults(
+			{
+				summary: winner.summary,
+				riskLevel,
+				actions: mergedActions,
+				safetyTips: mergedSafetyTips,
+				scopeNote: this.mergeScopeNotes(preferred.scopeNote, secondary.scopeNote),
+				confidenceScore,
+				decisionBasis: {
+					heatIndexC: input.weather.heatIndexC,
+					temperatureC: input.weather.temperatureC,
+					humidityPercent: input.weather.humidityPercent,
+					heatLevel: input.weather.heatLevel,
+					dataSource: input.weather.source,
+					rationale: rationale.length > 0 ? rationale : [preferred.decisionBasis.rationale?.[0] ?? secondary.decisionBasis.rationale?.[0] ?? 'Live weather data was used to generate this advisory.'],
+				},
+				modelProfile: {
+					mode: 'rule-grounded-ai',
+					scope: 'system-only',
+				},
+				healthDetails: mergedHealthDetails,
+				singleResponse: winner.singleResponse ?? winner.summary,
+			},
+			input.weather
+		);
+	}
+
+	private mergeScopeNotes(primary?: string, secondary?: string): string {
+		return this.mergeStringLists([primary ?? ''], [secondary ?? ''], 2).filter(Boolean).join(' ');
+	}
+
+	private mergeStringLists(primary: string[] = [], secondary: string[] = [], limit = 5): string[] {
+		const seen = new Set<string>();
+		const merged: string[] = [];
+		for (const item of [...primary, ...secondary]) {
+			const value = typeof item === 'string' ? item.trim() : '';
+			if (!value || seen.has(value.toLowerCase())) {
+				continue;
+			}
+			seen.add(value.toLowerCase());
+			merged.push(value);
+			if (merged.length >= limit) {
+				break;
+			}
+		}
+		return merged;
+	}
+
+	private mergeHealthDetails(
+		primary?: AdvisoryResult['healthDetails'],
+		secondary?: AdvisoryResult['healthDetails']
+	): AdvisoryResult['healthDetails'] {
+		if (!primary && !secondary) {
+			return undefined;
+		}
+
+		return {
+			symptoms: this.mergeStringLists(primary?.symptoms ?? [], secondary?.symptoms ?? [], 8),
+			triagePriority: this.pickHigherTriage(primary?.triagePriority, secondary?.triagePriority),
+			teacherChecklist: this.mergeStringLists(primary?.teacherChecklist ?? [], secondary?.teacherChecklist ?? [], 8),
+			clinicActions: this.mergeStringLists(primary?.clinicActions ?? [], secondary?.clinicActions ?? [], 8),
+			parentChecklist: this.mergeStringLists(primary?.parentChecklist ?? [], secondary?.parentChecklist ?? [], 8),
+			recommendedFluidsAndVolumes: primary?.recommendedFluidsAndVolumes || secondary?.recommendedFluidsAndVolumes || '',
+			coolingProcedures: this.mergeStringLists(primary?.coolingProcedures ?? [], secondary?.coolingProcedures ?? [], 8),
+			whenToEscalate: primary?.whenToEscalate || secondary?.whenToEscalate || '',
+			sampleAnnouncementText: primary?.sampleAnnouncementText || secondary?.sampleAnnouncementText || '',
+		};
+	}
+
+	private pickHigherRiskLevel(
+		left?: string,
+		right?: string,
+		weatherLevel?: string
+	): AdvisoryResult['riskLevel'] {
+		const order = ['safe', 'caution', 'extreme-caution', 'danger', 'extreme-danger'];
+		const candidates = [left, right, weatherLevel].filter(Boolean) as string[];
+		return candidates.reduce<AdvisoryResult['riskLevel']>((best, candidate) => {
+			const bestIndex = order.indexOf(String(best));
+			const candidateIndex = order.indexOf(candidate);
+			return candidateIndex > bestIndex ? (candidate as AdvisoryResult['riskLevel']) : best;
+		}, 'safe');
+	}
+
+	private pickHigherTriage(left?: string, right?: string): string | undefined {
+		const rank: Record<string, number> = { urgent: 3, high: 2, monitor: 1, low: 0 };
+		const l = (left ?? '').toLowerCase();
+		const r = (right ?? '').toLowerCase();
+		if (!l && !r) {
+			return undefined;
+		}
+		return (rank[r] ?? -1) > (rank[l] ?? -1) ? right : left;
+	}
+
 	private async generatePythonAdvisory(
 		input: AdvisoryInput,
 		scopedQuery: string,
 		languageStyle: LanguageStyle,
-		variationSeed: number
+		variationSeed: number,
+		skipAudit = false
 	): Promise<AdvisoryResult | null> {
 		const resolved = await this.resolvePythonModelPaths();
 		if (!resolved) {
@@ -365,7 +627,9 @@ class AIAnalysisService {
 			// Apply server-side safety rules to ensure high heat-index forces higher risk levels.
 			const finalResult = this.applySafetyRules(variedResult, input.weather);
 
-			await this.logAdvisoryAudit(input, scopedQuery, finalResult, 'python', 'local-sklearn');
+			if (!skipAudit) {
+				await this.logAdvisoryAudit(input, scopedQuery, finalResult, 'python', 'local-sklearn');
+			}
 			return this.maybeAttachSingle(finalResult, input);
 		} catch (error) {
 			console.error('Python advisory generation failed:', error);
@@ -693,6 +957,10 @@ class AIAnalysisService {
 			'temperature',
 			'humidity',
 			'weather',
+			'forecast',
+			'tomorrow',
+			'next day',
+			'next days',
 			'advisory',
 			'hydration',
 			'dehydration',
@@ -804,6 +1072,10 @@ class AIAnalysisService {
 
 		if (['what can you do', 'kaya mo', 'ano kaya mo', 'anong pwede itanong', 'help me use'].some((token) => lowered.includes(token))) {
 			return 'capability';
+		}
+
+		if (['forecast', 'predictions', 'prediction', 'next days', 'tomorrow', 'in the coming days', 'weather outlook', 'next week', 'this week', '1 week', 'one week', '7 days', 'seven days'].some((token) => lowered.includes(token))) {
+			return 'forecast';
 		}
 
 		if (['nahihilo', 'dizzy', 'faint', 'nausea', 'hilo', 'headache', 'heat stroke', 'heat exhaustion', 'vomit', 'sumusuka'].some((token) => lowered.includes(token))) {
@@ -1034,6 +1306,162 @@ class AIAnalysisService {
 			actions: ['Ask about hydration, outdoor activity, warning signs, or class safety guidance.', 'Use specific parent concerns for more tailored advisory output.'],
 			safetyTips: ['Stay within official school and DepEd advisories for final decisions.', 'Use latest heat updates for best recommendations.'],
 			scopeNote: 'Project scope only: heat, weather, school advisories, and parent/student precautions.',
+		};
+	}
+
+	private buildForecastAdvisory(
+		forecastDays: WeatherForecastDay[],
+		languageStyle: LanguageStyle,
+		mode: string
+	): AdvisoryResult {
+		if (forecastDays.length === 0) {
+			return this.buildFallbackAdvisory(
+				{ query: '', weather: { source: 'fallback', location: '', temperatureC: 0, humidityPercent: 0, condition: '', windSpeedMps: 0, pressureHpa: 0, heatIndexC: 0, heatLevel: 'safe', timestamp: new Date().toISOString() } },
+				'Provide current school heat safety advisory based on the given weather.',
+				languageStyle
+			);
+		}
+
+		const worstDay = [...forecastDays].sort((left, right) => right.heatIndexC - left.heatIndexC)[0];
+		const hotDays = forecastDays.filter((day) => day.heatLevel === 'danger' || day.heatLevel === 'extreme-danger').length;
+		const dangerDays = forecastDays.filter((day) => day.heatLevel === 'danger').length;
+		const extremeDays = forecastDays.filter((day) => day.heatLevel === 'extreme-danger').length;
+		const daySummaries = forecastDays.slice(0, 7).map((day, index) => `${index + 1}. ${day.date}: ${day.heatIndexC}°C (${day.heatLevel})`).join(' | ');
+
+		if (languageStyle === 'tagalog') {
+			return {
+				summary: `Narito ang 7-day heat outlook mula sa real OpenWeather forecast data. Pinakamainit na araw ay ${worstDay.date} na may ${worstDay.heatIndexC}°C (${worstDay.heatLevel}).`,
+				riskLevel: worstDay.heatLevel,
+				actions: [
+					'Planuhin ang indoor activities sa mga araw na mataas ang heat level.',
+					'Panatilihin ang regular hydration at cooling breaks araw-araw.',
+					'Kung may danger days, bawasan ang outdoor PE at assemblies lalo na sa tanghali.',
+				],
+				safetyTips: [
+					`Forecast summary: ${daySummaries}`,
+					`Danger days: ${dangerDays}; extreme-danger days: ${extremeDays}; total hot days: ${hotDays}.`,
+					`Real forecast mode: ${mode}.`,
+				],
+				scopeNote: 'Real OpenWeather forecast data ang base ng 7-day outlook.',
+				confidenceScore: 0.93,
+				decisionBasis: {
+					heatIndexC: worstDay.heatIndexC,
+					temperatureC: worstDay.temperatureC,
+					humidityPercent: worstDay.humidityPercent,
+					heatLevel: worstDay.heatLevel,
+					dataSource: `openweathermap:${mode}`,
+					rationale: [
+						'Forecast values are taken from OpenWeather real forecast data.',
+						`Highest projected heat index is ${worstDay.heatIndexC}°C on ${worstDay.date}.`,
+					],
+				},
+				modelProfile: {
+					mode: 'rule-grounded-ai',
+					scope: 'system-only',
+				},
+				healthDetails: {
+					symptoms: [],
+					triagePriority: worstDay.heatLevel === 'extreme-danger' ? 'urgent' : worstDay.heatLevel === 'danger' ? 'high' : 'monitor',
+					teacherChecklist: [
+						'Iconfirm ang forecast bawat araw bago ang PE at outdoor events.',
+						'Gumawa ng indoor fallback plan para sa mga hot days.',
+					],
+					clinicActions: ['Prepare cooling area and hydration supplies for danger days.'],
+					parentChecklist: ['Check daily forecast bago pumasok ang bata.', 'Magbaon ng tubig at light clothing araw-araw.'],
+					recommendedFluidsAndVolumes: 'water: 150-250ml every 15-20min during hot days',
+					coolingProcedures: ['Use shaded or air-conditioned spaces during peak heat.'],
+					whenToEscalate: 'If forecasted danger days coincide with symptoms, refer to clinic immediately.',
+					sampleAnnouncementText: 'Real forecast shows hot days ahead. Please ensure students bring water and avoid unnecessary sun exposure.',
+				},
+			};
+		}
+
+		if (languageStyle === 'taglish') {
+			return {
+				summary: `Narito ang 7-day heat outlook from real OpenWeather forecast data. Pinakamainit na day ay ${worstDay.date} with ${worstDay.heatIndexC}°C (${worstDay.heatLevel}).`,
+				riskLevel: worstDay.heatLevel,
+				actions: [
+					'Plan indoor activities sa mga araw na mataas ang heat level.',
+					'Keep hydration at cooling breaks daily.',
+					'If may danger days, bawasan ang outdoor PE at assemblies lalo na tanghali.',
+				],
+				safetyTips: [
+					`Forecast summary: ${daySummaries}`,
+					`Danger days: ${dangerDays}; extreme-danger days: ${extremeDays}; total hot days: ${hotDays}.`,
+					`Real forecast mode: ${mode}.`,
+				],
+				scopeNote: 'Real OpenWeather forecast data ang base ng 7-day outlook.',
+				confidenceScore: 0.93,
+				decisionBasis: {
+					heatIndexC: worstDay.heatIndexC,
+					temperatureC: worstDay.temperatureC,
+					humidityPercent: worstDay.humidityPercent,
+					heatLevel: worstDay.heatLevel,
+					dataSource: `openweathermap:${mode}`,
+					rationale: [
+						'Forecast values are taken from OpenWeather real forecast data.',
+						`Highest projected heat index is ${worstDay.heatIndexC}°C on ${worstDay.date}.`,
+					],
+				},
+				modelProfile: {
+					mode: 'rule-grounded-ai',
+					scope: 'system-only',
+				},
+				healthDetails: {
+					symptoms: [],
+					triagePriority: worstDay.heatLevel === 'extreme-danger' ? 'urgent' : worstDay.heatLevel === 'danger' ? 'high' : 'monitor',
+					teacherChecklist: ['Check forecast daily before PE and outdoor events.', 'Prepare indoor fallback plans for hot days.'],
+					clinicActions: ['Prepare cooling area and hydration supplies for danger days.'],
+					parentChecklist: ['Check daily forecast before sending the child to school.', 'Pack water and light clothing every day.'],
+					recommendedFluidsAndVolumes: 'water: 150-250ml every 15-20min during hot days',
+					coolingProcedures: ['Use shaded or air-conditioned spaces during peak heat.'],
+					whenToEscalate: 'If forecasted danger days coincide with symptoms, refer to clinic immediately.',
+					sampleAnnouncementText: 'Real forecast shows hot days ahead. Please ensure students bring water and avoid unnecessary sun exposure.',
+				},
+			};
+		}
+
+		return {
+			summary: `Here is the 7-day heat outlook from real OpenWeather forecast data. The hottest day is ${worstDay.date} with ${worstDay.heatIndexC}°C (${worstDay.heatLevel}).`,
+			riskLevel: worstDay.heatLevel,
+			actions: [
+				'Plan indoor activities on the hottest days.',
+				'Keep daily hydration and cooling breaks in place.',
+				'Reduce outdoor PE and assemblies during peak heat if danger days appear.',
+			],
+			safetyTips: [
+				`Forecast summary: ${daySummaries}`,
+				`Danger days: ${dangerDays}; extreme-danger days: ${extremeDays}; total hot days: ${hotDays}.`,
+				`Real forecast mode: ${mode}.`,
+			],
+			scopeNote: 'Real OpenWeather forecast data powers this 7-day outlook.',
+			confidenceScore: 0.93,
+			decisionBasis: {
+				heatIndexC: worstDay.heatIndexC,
+				temperatureC: worstDay.temperatureC,
+				humidityPercent: worstDay.humidityPercent,
+				heatLevel: worstDay.heatLevel,
+				dataSource: `openweathermap:${mode}`,
+				rationale: [
+					'Forecast values are taken from OpenWeather real forecast data.',
+					`Highest projected heat index is ${worstDay.heatIndexC}°C on ${worstDay.date}.`,
+				],
+			},
+			modelProfile: {
+				mode: 'rule-grounded-ai',
+				scope: 'system-only',
+			},
+			healthDetails: {
+				symptoms: [],
+				triagePriority: worstDay.heatLevel === 'extreme-danger' ? 'urgent' : worstDay.heatLevel === 'danger' ? 'high' : 'monitor',
+				teacherChecklist: ['Check forecast daily before PE and outdoor events.', 'Prepare indoor fallback plans for hot days.'],
+				clinicActions: ['Prepare cooling area and hydration supplies for danger days.'],
+				parentChecklist: ['Check daily forecast before sending the child to school.', 'Pack water and light clothing every day.'],
+				recommendedFluidsAndVolumes: 'water: 150-250ml every 15-20min during hot days',
+				coolingProcedures: ['Use shaded or air-conditioned spaces during peak heat.'],
+				whenToEscalate: 'If forecasted danger days coincide with symptoms, refer to clinic immediately.',
+				sampleAnnouncementText: 'Real forecast shows hot days ahead. Please ensure students bring water and avoid unnecessary sun exposure.',
+			},
 		};
 	}
 
@@ -1587,16 +2015,19 @@ class AIAnalysisService {
 		);
 
 		const cleanedText = this.cleanModelNarrative(modelText);
-		const summary = cleanedText
-			? cleanedText.slice(0, 220)
-			: fallback.summary;
+		const extractedSummary = this.extractJsonStringField(cleanedText, 'summary');
+		const summary = extractedSummary
+			? extractedSummary.slice(0, 220)
+			: cleanedText && !cleanedText.trim().startsWith('{')
+				? cleanedText.slice(0, 220)
+				: fallback.summary;
 
 		const normalizedScopeNote =
 			languageStyle === 'tagalog'
-				? 'Na-normalize ang model output format, pero ang advisory ay naka-base pa rin sa current heat data ng system.'
+				? 'System weather inputs lang ang base ng advisory.'
 				: languageStyle === 'taglish'
-					? 'Na-normalize ang model output format, pero advisory is still based on current system heat data.'
-					: 'Model output format was normalized, and advisory remains grounded on current system heat data.';
+					? 'System weather inputs lang ang base ng advisory.'
+					: 'Advisory is based only on current system weather inputs.';
 
 		return {
 			...fallback,
@@ -1605,12 +2036,60 @@ class AIAnalysisService {
 			confidenceScore: Math.max(0.72, fallback.confidenceScore),
 			decisionBasis: {
 				...fallback.decisionBasis,
-				rationale: [
-					...(fallback.decisionBasis.rationale ?? []),
-					'Model output was converted to the advisory schema while preserving weather-grounded recommendations.',
-				].slice(0, 5),
+				rationale: [...(fallback.decisionBasis.rationale ?? [])].slice(0, 5),
 			},
 		};
+	}
+
+	private extractJsonStringField(text: string, fieldName: string): string | null {
+		if (!text) {
+			return null;
+		}
+
+		const marker = `"${fieldName}"`;
+		const markerIndex = text.indexOf(marker);
+		if (markerIndex === -1) {
+			return null;
+		}
+
+		const colonIndex = text.indexOf(':', markerIndex + marker.length);
+		if (colonIndex === -1) {
+			return null;
+		}
+
+		let cursor = colonIndex + 1;
+		while (cursor < text.length && /\s/.test(text[cursor])) {
+			cursor += 1;
+		}
+
+		if (text[cursor] !== '"') {
+			return null;
+		}
+
+		cursor += 1;
+		let value = '';
+		let escaped = false;
+		for (; cursor < text.length; cursor += 1) {
+			const character = text[cursor];
+			if (escaped) {
+				value += character;
+				escaped = false;
+				continue;
+			}
+
+			if (character === '\\') {
+				escaped = true;
+				continue;
+			}
+
+			if (character === '"') {
+				return value;
+			}
+
+			value += character;
+		}
+
+		return null;
 	}
 
 	private tryParseAdvisoryPayload(content: string): AdvisoryPayload | null {
@@ -1728,6 +2207,73 @@ class AIAnalysisService {
 			return base;
 		}
 
+		// Special playful fallback for non-heat, lighthearted queries about school/projects
+		const q = scopedQuery.toLowerCase();
+		const mentionsProject = /capstone|thesis|project/.test(q);
+		const mentionsFail = /bagsak|fail|flunk|pasa|pumalya/.test(q);
+
+		if (mentionsProject && mentionsFail) {
+			if (languageStyle === 'tagalog' || languageStyle === 'taglish') {
+				return {
+					...base,
+					summary: "Worry not — hindi ako takdang-aralin na magbibigay grade. Kung natatakot ka, huminga muna; humingi ng feedback sa adviser; at mag-ayos ng plan. Kaya mo 'yan! 😄",
+					actions: [
+						"Humingi ng konkretong feedback mula sa adviser ngayong araw.",
+						"Gumawa ng maliit na plan: prioritize tasks at mag-assign ng oras araw-araw.",
+						"Mag-practice ng demo o presentation kasama ang kaibigan para confident ka." 
+					],
+					// include user-requested playful snark as an optional extra reply
+					extra: ["sige pre bahala ka sa buhay mo"],
+					safetyTips: [
+						"Huwag mag-cram — mas epektibo ang steady progress.",
+						"Kumain at magpahinga para malinaw ang isip bago mag-review."
+					],
+					scopeNote: "Lighthearted, non-evaluative support for student project concerns.",
+					confidenceScore: 0.5,
+					decisionBasis: {
+						heatIndexC: input.weather.heatIndexC,
+						temperatureC: input.weather.temperatureC,
+						humidityPercent: input.weather.humidityPercent,
+						heatLevel: input.weather.heatLevel,
+						dataSource: input.weather.source,
+						rationale: [
+							"User requested a lighthearted, non-evaluative reply about project failure.",
+						],
+					},
+					modelProfile: { mode: 'rule-grounded-ai', scope: 'system-only' },
+				};
+			}
+
+			// English fallback
+			return {
+				...base,
+				summary: "Relax — I'm not the thesis police. You're probably fine. Breathe, ask your adviser for feedback, and take it step by step. You got this! 😄",
+				actions: [
+					"Ask your adviser for specific feedback and next steps.",
+					"Break the remaining work into small tasks and set short deadlines.",
+					"Do a mock presentation to build confidence." 
+				],
+				safetyTips: [
+					"Avoid last-minute cramming — rest helps focus.",
+					"Eat and hydrate before any defense or demo."
+				],
+				scopeNote: "Lighthearted, non-evaluative support for project concerns.",
+				confidenceScore: 0.5,
+				decisionBasis: {
+					heatIndexC: input.weather.heatIndexC,
+					temperatureC: input.weather.temperatureC,
+					humidityPercent: input.weather.humidityPercent,
+					heatLevel: input.weather.heatLevel,
+					dataSource: input.weather.source,
+					rationale: [
+						"User requested a lighthearted, non-evaluative reply about project failure.",
+					],
+				},
+				modelProfile: { mode: 'rule-grounded-ai', scope: 'system-only' },
+			};
+		}
+
+		// Default fallback: standard heat advisory summary
 		return {
 			...base,
 			summary: this.getLocalizedSummary(input.weather.heatIndexC, level, languageStyle),

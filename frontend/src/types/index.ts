@@ -165,6 +165,7 @@ export interface StudentHealthIncident {
   temperature: number;
   timestamp: string;
   actionTaken: string;
+  aiSuggestion?: string;
   reportedBy: string;
   status: 'reported' | 'treated' | 'monitoring' | 'resolved';
 }

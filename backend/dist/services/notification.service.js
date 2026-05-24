@@ -32,9 +32,9 @@ class NotificationService {
             .from('users')
             .select('id, email, first_name, last_name, phone, role, school_id')
             .eq('school_id', schoolId)
-            .in('role', ['parent', 'principal', 'teacher']);
+            .in('role', ['parent', 'principal', 'teacher', 'head-teacher']);
         if (error || !data) {
-            console.error('[NOTIFY] Failed to fetch parent/principal recipients:', error?.message ?? error);
+            console.error('[NOTIFY] Failed to fetch notification recipients:', error?.message ?? error);
             return [];
         }
         return data;

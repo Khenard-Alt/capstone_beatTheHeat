@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,7 +14,14 @@ interface SaveStatus {
 }
 
 export const ParentProfileSettings: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const [childrenData, setChildrenData] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    phone: (user as any)?.phone || '',
+    email: user?.email || '',
+  });
   const [preferences, setPreferences] = useState({
     emailAlerts: true,
     smsAlerts: false,
@@ -64,6 +71,11 @@ export const ParentProfileSettings: React.FC = () => {
     setStatus({ saving: true });
     try {
       const payload: any = { preferences };
+      // include editable profile fields
+      payload.firstName = profile.firstName;
+      payload.lastName = profile.lastName;
+      payload.phone = profile.phone;
+      // only set newEmail when OTP verified
       if (otpVerified && newEmail) payload.newEmail = newEmail;
 
       const { data } = await apiClient.put(`/api/users/${user.id}`, payload);
@@ -76,6 +88,8 @@ export const ParentProfileSettings: React.FC = () => {
         } catch (_) {
           // ignore
         }
+        // update auth context
+        try { updateUser(updatedUser); } catch (_) {}
         setStatus({ saving: false, success: true, message: 'Preferences saved' });
       } else {
         setStatus({ saving: false, success: false, message: data?.message || 'Save failed' });
@@ -84,6 +98,61 @@ export const ParentProfileSettings: React.FC = () => {
       setStatus({ saving: false, success: false, message: err?.response?.data?.message || 'Save failed' });
     }
   };
+
+  // Fetch the current user's children (defensive fallbacks)
+  React.useEffect(() => {
+    if (!user) return;
+
+    let mounted = true;
+
+    const fetchChildren = async () => {
+      setStatus({ saving: false });
+      try {
+        // Try fetching the full user object first (may contain relations)
+        const userResp = await apiClient.get(`/api/users/${user.id}`);
+        if (mounted && userResp?.data) {
+          const maybeUser = userResp.data.user || userResp.data;
+          if (maybeUser && (maybeUser.children || maybeUser.students || maybeUser.childList)) {
+            const list = maybeUser.children || maybeUser.students || maybeUser.childList;
+            setChildrenData(Array.isArray(list) ? list : []);
+            return;
+          }
+        }
+        // First try a user-specific route
+        const tryUserChildren = await apiClient.get(`/api/users/${user.id}/children`);
+        if (mounted && tryUserChildren?.data?.children) {
+          setChildrenData(tryUserChildren.data.children);
+          return;
+        }
+      } catch (err) {
+        console.error('users/:id children fetch error', err);
+        // surface a helpful status message for debugging
+        setStatus({ saving: false, success: false, message: 'Unable to fetch linked children from /api/users/:id' });
+      }
+
+      try {
+        // Fallback to students endpoint filtered by parentId
+        const resp = await apiClient.get(`/api/students?parentId=${user.id}`);
+        if (mounted && resp?.data?.data) {
+          // some APIs return envelope
+          const payload = resp.data.data || resp.data;
+          setChildrenData(Array.isArray(payload) ? payload : []);
+        }
+      } catch (err) {
+        // silent fail — keep empty
+        console.error('students?parentId fetch error', err);
+        setChildrenData([]);
+        setStatus({ saving: false, success: false, message: 'Unable to fetch students (parentId). Check API or auth.' });
+      }
+    };
+
+    fetchChildren();
+
+    return () => { mounted = false; };
+  }, [user]);
+
+  const childrenListFromUser: any[] = (user as any)?.children || (user as any)?.students || (user as any)?.childList || [];
+  const childrenList: any[] = (childrenData && childrenData.length > 0) ? childrenData : childrenListFromUser;
 
   return (
     <div className="parent-profile-settings-page">
@@ -103,23 +172,49 @@ export const ParentProfileSettings: React.FC = () => {
       </div>
 
       <div className="parent-portal-sections">
-        <Card title="Profile Snapshot" className="parent-portal-card" icon={<MdPerson />}>
+        <Card title="Information" className="parent-portal-card parent-card-large" icon={<MdPerson />}>
           <div className="parent-profile-grid">
             <div>
-              <span className="parent-profile-label">Name</span>
-              <strong>{user?.firstName} {user?.lastName}</strong>
+              <span className="parent-profile-label">First name</span>
+              <input className="parent-info-input" value={profile.firstName} onChange={(e) => setProfile((p: any) => ({ ...p, firstName: e.target.value }))} placeholder="First name" />
+            </div>
+            <div>
+              <span className="parent-profile-label">Last name</span>
+              <input className="parent-info-input" value={profile.lastName} onChange={(e) => setProfile((p: any) => ({ ...p, lastName: e.target.value }))} placeholder="Last name" />
             </div>
             <div>
               <span className="parent-profile-label">Email</span>
-              <strong>{user?.email}</strong>
+              <div className="parent-email-row">
+                <input className="parent-info-input" value={newEmail || profile.email || ''} onChange={(e) => { setNewEmail(e.target.value); setProfile((p: any) => ({ ...p, email: e.target.value })); }} placeholder="Email address" />
+                <Button variant="outline" size="small" onClick={sendOTP}>Send OTP</Button>
+              </div>
+              {otpSent && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <input placeholder="Enter OTP" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} />
+                  <Button variant="primary" onClick={verifyOTP}>Verify</Button>
+                </div>
+              )}
             </div>
             <div>
-              <span className="parent-profile-label">Role</span>
-              <strong className="parent-profile-role">{user?.role}</strong>
+              <span className="parent-profile-label">Phone</span>
+              <input className="parent-info-input" value={profile.phone} onChange={(e) => setProfile((p: any) => ({ ...p, phone: e.target.value }))} placeholder="Phone number" />
             </div>
-            <div>
-              <span className="parent-profile-label">School ID</span>
-              <strong>{user?.schoolId}</strong>
+            <div style={{ gridColumn: '1 / -1', marginTop: 6 }} className="parent-student-section">
+              <div className="parent-student-header">
+                <span className="parent-profile-label">Student(s)</span>
+              </div>
+              <div className="parent-student-list">
+                {Array.isArray(childrenList) && childrenList.length > 0 ? (
+                  childrenList.map((c: any) => (
+                    <div key={c.id || c.studentId || c.name} className="parent-student-item">
+                      <strong>{c.name || c.fullName || c.studentName}</strong>
+                      <div className="parent-student-meta">{c.grade || c.year || ''}{c.section ? ` — ${c.section}` : ''}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="parent-student-item"><em>No student information available</em></div>
+                )}
+              </div>
             </div>
           </div>
         </Card>
@@ -154,21 +249,6 @@ export const ParentProfileSettings: React.FC = () => {
             <li>Use the chatbot for quick questions and the advisory page for formal guidance.</li>
             <li>Check announcements when school operations change.</li>
           </ul>
-        </Card>
-        <Card title="Change Email" className="parent-portal-card" icon={<MdPerson />}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <input placeholder="New email address" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Button variant="outline" onClick={sendOTP}>Send OTP</Button>
-              {otpSent && (
-                <>
-                  <input placeholder="Enter OTP" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} />
-                  <Button variant="primary" onClick={verifyOTP}>Verify OTP</Button>
-                </>
-              )}
-            </div>
-            {status.message && <div style={{ color: status.success ? 'green' : 'red' }}>{status.message}</div>}
-          </div>
         </Card>
       </div>
 

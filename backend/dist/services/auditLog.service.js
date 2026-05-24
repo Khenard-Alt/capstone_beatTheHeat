@@ -47,6 +47,8 @@ class AuditLogService {
         this.localAuditPath = path_1.default.resolve(process.cwd(), 'logs', 'audit-events.jsonl');
         // Cache whether the Supabase table has the `duplicate_count` column to avoid repeated errors
         this.supabaseDuplicateCountAvailable = null;
+        // Cache whether the Supabase table has the `updated_at` column to avoid repeated errors
+        this.supabaseUpdatedAtAvailable = null;
     }
     async logWeatherSnapshot(snapshot, schoolId = DEFAULT_SCHOOL_ID) {
         const event = {
@@ -95,10 +97,14 @@ class AuditLogService {
                             }
                             else {
                                 const currentCount = Number(existing.row.duplicate_count ?? 0) || 0;
+                                const updatePayload = { duplicate_count: currentCount + 1 };
+                                if (this.supabaseUpdatedAtAvailable !== false) {
+                                    updatePayload.updated_at = new Date().toISOString();
+                                }
                                 try {
                                     const { error } = await client
                                         .from('ai_analysis_logs')
-                                        .update({ duplicate_count: currentCount + 1, updated_at: new Date().toISOString() })
+                                        .update(updatePayload)
                                         .eq('id', existing.rowId);
                                     if (error) {
                                         // If error indicates missing column, cache and fallback to local note
@@ -115,6 +121,22 @@ class AuditLogService {
                                                 createdAt: new Date().toISOString(),
                                             });
                                         }
+                                        else if (msg.includes('updated_at')) {
+                                            this.supabaseUpdatedAtAvailable = false;
+                                            console.warn('Supabase schema missing `updated_at`; will skip future timestamp updates.');
+                                            try {
+                                                const fallbackUpdate = await client
+                                                    .from('ai_analysis_logs')
+                                                    .update({ duplicate_count: currentCount + 1 })
+                                                    .eq('id', existing.rowId);
+                                                if (fallbackUpdate.error) {
+                                                    console.warn('Failed to update duplicate_count on ai_analysis_logs:', fallbackUpdate.error.message);
+                                                }
+                                            }
+                                            catch (fallbackErr) {
+                                                console.warn('Failed to update duplicate_count on ai_analysis_logs:', fallbackErr);
+                                            }
+                                        }
                                         else {
                                             console.warn('Failed to update duplicate_count on ai_analysis_logs:', msg);
                                         }
@@ -122,6 +144,9 @@ class AuditLogService {
                                     else {
                                         // update appeared successful; mark column as available
                                         this.supabaseDuplicateCountAvailable = true;
+                                        if (this.supabaseUpdatedAtAvailable !== false && 'updated_at' in updatePayload) {
+                                            this.supabaseUpdatedAtAvailable = true;
+                                        }
                                     }
                                 }
                                 catch (err) {
@@ -142,6 +167,10 @@ class AuditLogService {
                                         catch {
                                             // ignore
                                         }
+                                    }
+                                    else if (msg.includes('updated_at')) {
+                                        this.supabaseUpdatedAtAvailable = false;
+                                        console.warn('Supabase schema missing `updated_at`; will skip future timestamp updates.');
                                     }
                                     else {
                                         console.warn('Failed to update existing ai_analysis_logs row:', err);

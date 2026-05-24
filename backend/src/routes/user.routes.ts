@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { registerUser, loginUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser } from '../controllers/userController';
+import { registerUser, loginUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren } from '../controllers/userController';
 
 const router: Router = express.Router();
 
@@ -49,6 +49,8 @@ router.get('/otp-status/:email', getOTPStatus);
  * GET /api/users/:id
  * Get user profile by ID
  */
+router.get('/:id/children', getUserChildren);
+
 router.get('/:id', getUserProfile);
 
 /**

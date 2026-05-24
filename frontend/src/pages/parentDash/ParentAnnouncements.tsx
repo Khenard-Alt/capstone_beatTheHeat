@@ -6,6 +6,7 @@ import { apiClient } from '../../services/api';
 import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
 import { formatDateTimeGlobal } from '../../utils/formatters';
 import '../../styles/HealthAdvisory.css';
+import '../../styles/ParentAnnouncements.css';
 
 export const ParentAnnouncements: React.FC = () => {
   const [advisories, setAdvisories] = useState<HealthAdvisoryType[]>([]);
@@ -113,6 +114,7 @@ export const ParentAnnouncements: React.FC = () => {
     <ParentSectionPage
       eyebrow="School Updates"
       title="Announcements"
+      topId="announcements-top"
       description="A parent-facing notice board for heat advisories, school schedule changes, and operational reminders."
       summary="This page keeps principal announcements and AI advisories short, actionable, and directly tied to school heat-safety operations."
       highlights={[
@@ -172,60 +174,94 @@ export const ParentAnnouncements: React.FC = () => {
       ]}
       footerNote="Need a conversational explanation? Open Chatbot and ask the same question in plain language."
     >
-      <div className="advisory-section">
-        <h2>Principal Announcements</h2>
-        {announcementsError && <div className="error-alert">{announcementsError}</div>}
-        {announcementsLoading && <div className="loading-state">Loading principal announcements...</div>}
-        {!announcementsLoading && announcements.length === 0 && !announcementsError && (
-          <p className="empty-state-text">No principal announcements</p>
-        )}
-        {!announcementsLoading && announcements.length > 0 && (
-          <div className="advisory-table-wrap">
-            <table className="advisory-table">
-              <thead>
-                <tr>
-                  <th scope="col">Issued</th>
-                  <th scope="col">Priority</th>
-                  <th scope="col">Title</th>
-                  <th scope="col">Message</th>
-                </tr>
-              </thead>
-              <tbody>
-                {announcements.map((announcement) => (
-                  <tr key={announcement.id}>
-                    <td>{formatDateTimeGlobal(announcement.created_at ?? new Date().toISOString())}</td>
-                    <td>
-                      <span className={`advisory-level badge-${announcement.priority ?? 'info'}`}>
-                        {(announcement.priority ?? 'info').toUpperCase()}
-                      </span>
-                    </td>
-                    <td>{announcement.title}</td>
-                    <td>{announcement.body}</td>
+      <div className="parent-announcements-page">
+        <div className="advisory-section parent-announcements-section">
+          <h2 id="principal-announcements">Principal Announcements</h2>
+          {announcementsError && <div className="error-alert">{announcementsError}</div>}
+          {announcementsLoading && <div className="loading-state">Loading principal announcements...</div>}
+          {!announcementsLoading && announcements.length === 0 && !announcementsError && (
+            <p className="empty-state-text">No principal announcements</p>
+          )}
+          {!announcementsLoading && announcements.length > 0 && (
+            <div className="advisory-table-wrap table-wrap">
+              <table className="advisory-table app-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Issued</th>
+                    <th scope="col">Priority</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Message</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {announcements.map((announcement) => (
+                    <tr key={announcement.id}>
+                      <td>{formatDateTimeGlobal(announcement.created_at ?? new Date().toISOString())}</td>
+                      <td>
+                        <span className={`advisory-level badge-${announcement.priority ?? 'info'}`}>
+                          {(announcement.priority ?? 'info').toUpperCase()}
+                        </span>
+                      </td>
+                      <td>{announcement.title}</td>
+                      <td>{announcement.body}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="error-alert">
+            {error}
           </div>
         )}
-      </div>
 
-      {error && (
-        <div className="error-alert">
-          {error}
-        </div>
-      )}
+        {loading && (
+          <div className="loading-state">
+            Loading AI advisory history...
+          </div>
+        )}
 
-      {loading && (
-        <div className="loading-state">
-          Loading AI advisory history...
-        </div>
-      )}
+        {!loading && activeAdvisories.length > 0 && (
+          <div className="advisory-section parent-announcements-section">
+            <h2 id="active-advisories">Active AI Advisories</h2>
+            <div className="advisory-table-wrap">
+              <table className="advisory-table app-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Issued</th>
+                    <th scope="col">Heat Level</th>
+                    <th scope="col">Risk</th>
+                    <th scope="col">Summary</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeAdvisories.map((advisory) => (
+                    <tr key={advisory.id}>
+                      <td>{formatDateTime(advisory.createdAt)}</td>
+                      <td>
+                        <span className={`advisory-level badge-${advisory.heatLevel}`}>
+                          {formatHeatLevelLabel(advisory.heatLevel)}
+                        </span>
+                      </td>
+                      <td className={`advisory-risk risk-${advisory.riskLevel}`}>
+                        {formatHeatLevelLabel(advisory.riskLevel)}
+                      </td>
+                      <td>{advisory.advisoryText}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
-      {!loading && activeAdvisories.length > 0 && (
-        <div className="advisory-section">
-          <h2>Active AI Advisories</h2>
-          <div className="advisory-table-wrap">
-            <table className="advisory-table">
+        <div className="advisory-section parent-announcements-section">
+          <h2 id="announcement-history">AI Advisory History {!loading && `(${historyAdvisories.length})`}</h2>
+          <div className="advisory-table-wrap table-wrap">
+            <table className="advisory-table app-table">
               <thead>
                 <tr>
                   <th scope="col">Issued</th>
@@ -235,7 +271,7 @@ export const ParentAnnouncements: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {activeAdvisories.map((advisory) => (
+                {historyAdvisories.map((advisory) => (
                   <tr key={advisory.id}>
                     <td>{formatDateTime(advisory.createdAt)}</td>
                     <td>
@@ -251,42 +287,10 @@ export const ParentAnnouncements: React.FC = () => {
                 ))}
               </tbody>
             </table>
+            {!loading && historyAdvisories.length === 0 && (
+              <p className="empty-state-text">No recent advisories</p>
+            )}
           </div>
-        </div>
-      )}
-
-      <div className="advisory-section">
-        <h2>AI Advisory History {!loading && `(${historyAdvisories.length})`}</h2>
-        <div className="advisory-table-wrap">
-          <table className="advisory-table">
-            <thead>
-              <tr>
-                <th scope="col">Issued</th>
-                <th scope="col">Heat Level</th>
-                <th scope="col">Risk</th>
-                <th scope="col">Summary</th>
-              </tr>
-            </thead>
-            <tbody>
-              {historyAdvisories.map((advisory) => (
-                <tr key={advisory.id}>
-                  <td>{formatDateTime(advisory.createdAt)}</td>
-                  <td>
-                    <span className={`advisory-level badge-${advisory.heatLevel}`}>
-                      {formatHeatLevelLabel(advisory.heatLevel)}
-                    </span>
-                  </td>
-                  <td className={`advisory-risk risk-${advisory.riskLevel}`}>
-                    {formatHeatLevelLabel(advisory.riskLevel)}
-                  </td>
-                  <td>{advisory.advisoryText}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {!loading && historyAdvisories.length === 0 && (
-            <p className="empty-state-text">No recent advisories</p>
-          )}
         </div>
       </div>
     </ParentSectionPage>

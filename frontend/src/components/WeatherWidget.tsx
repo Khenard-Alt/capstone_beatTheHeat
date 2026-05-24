@@ -20,7 +20,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
       <div className="weather-body">
         <div className="weather-main">
           <div className="weather-icon">{icon}</div>
-          <div className="weather-temp">
+          <div className="weather-temp big-metric">
             {formatTemperature(weather.temperature)}
           </div>
           <div className="weather-conditions">{weather.conditions}</div>

@@ -69,6 +69,27 @@
   width: 100%;
 }
 
+/* Login Layout - Clean, no header/footer */
+.login-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+}
+
+.login-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-content {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .app-main {

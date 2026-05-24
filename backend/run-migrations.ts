@@ -4,9 +4,10 @@ import axios from 'axios';
 import { env } from './src/config/environment';
 
 const migrations = [
-	'004_create_weather_data_table.sql',
-	'003_create_heat_index_table.sql',
-	'007_create_ai_analysis_logs_table.sql',
+		'004_create_weather_data_table.sql',
+		'003_create_heat_index_table.sql',
+		'007_create_ai_analysis_logs_table.sql',
+		'010_add_ai_analysis_logs_columns.sql',
 ];
 
 async function runMigrations() {

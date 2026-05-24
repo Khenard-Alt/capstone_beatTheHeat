@@ -25,6 +25,9 @@ exports.parentMessagesController = {
                 .order('created_at', { ascending: false })
                 .range(offset, offset + limit - 1);
             if (error) {
+                // Log the Supabase error server-side for diagnosis
+                // eslint-disable-next-line no-console
+                console.error('Supabase fetch parent_messages error:', { error });
                 res.status(500).json({ success: false, message: 'Failed to fetch messages', error: error.message });
                 return;
             }

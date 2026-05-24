@@ -28,7 +28,7 @@ const notification_service_1 = require("./services/notification.service");
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT ?? 5000);
 const WEATHER_SNAPSHOT_INTERVAL_MINUTES = Number(process.env.WEATHER_SNAPSHOT_INTERVAL_MINUTES ?? 1);
 const AI_ADVISORY_INTERVAL_MINUTES = Number(process.env.AI_ADVISORY_INTERVAL_MINUTES ?? 1);
 // Middleware
@@ -136,7 +136,7 @@ const startDailyNotificationScheduler = () => {
     console.log(`⏰ Daily notification scheduler enabled for times: ${(process.env.DAILY_NOTIFICATION_TIMES ?? '09:00,14:00,18:00')}`);
 };
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`📍 Health check: http://localhost:${PORT}/health`);
     console.log(`🌡️  Beat the Heat API initialized`);

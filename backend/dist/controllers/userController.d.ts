@@ -49,4 +49,9 @@ export declare const deleteUser: (req: Request, res: Response, next: NextFunctio
  * PUT /api/users/:id
  */
 export declare const updateUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+/**
+ * Get children/students linked to a parent user
+ * GET /api/users/:id/children
+ */
+export declare const getUserChildren: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 //# sourceMappingURL=userController.d.ts.map

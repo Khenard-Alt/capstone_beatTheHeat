@@ -45,6 +45,7 @@ router.get('/otp-status/:email', userController_1.getOTPStatus);
  * GET /api/users/:id
  * Get user profile by ID
  */
+router.get('/:id/children', userController_1.getUserChildren);
 router.get('/:id', userController_1.getUserProfile);
 /**
  * PUT /api/users/:id

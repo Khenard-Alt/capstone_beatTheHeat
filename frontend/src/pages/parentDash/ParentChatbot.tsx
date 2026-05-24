@@ -15,18 +15,34 @@ interface ChatMessage {
 }
 
 const starterPrompts = [
-  'What should my child do during extreme heat today?',
-  'Can students still do outdoor activities this afternoon?',
-  'What signs of heat exhaustion should I watch for?',
-  'Explain the advisory in simple terms.',
+  'Ano ang dapat gawin ng anak ko ngayong sobrang init?',
+  'Pwede pa bang mag-outdoor activity ang mga estudyante ngayong hapon?',
+  'Anong signs ng heat exhaustion ang dapat bantayan?',
+  'Ipaliwanag mo ang advisory nang simple.',
 ];
+
+const inferLanguageFromQuery = (text: string): 'english' | 'tagalog' | 'taglish' => {
+  const normalized = text.toLowerCase();
+
+  const tagalogHints = ['ano', 'paano', 'bakit', 'kasi', 'dapat', 'pwede', 'ba', 'po', 'opo', 'yung', 'naman', 'huwag', 'delikado', 'init', 'tubig', 'klase'];
+  if (tagalogHints.some((token) => normalized.includes(token))) {
+    return 'tagalog';
+  }
+
+  const englishHints = ['english', 'what', 'why', 'how', 'should', 'can', 'please', 'safe', 'heat', 'school', 'advisory', 'recess'];
+  if (englishHints.some((token) => normalized.includes(token))) {
+    return 'english';
+  }
+
+  return 'taglish';
+};
 
 export const ParentChatbot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
       role: 'assistant',
-      text: 'I am the Beat The Heat parent assistant. Ask me about heat advisories, school safety, or what your child should do next.',
+        text: 'Ako ang Beat The Heat parent assistant. Maaari kang magtanong tungkol sa heat advisories, school safety, o kung ano ang dapat gawin ng anak mo.',
       meta: 'System scoped to school heat safety',
     },
   ]);
@@ -52,16 +68,12 @@ export const ParentChatbot: React.FC = () => {
     setIsThinking(true);
 
     try {
-      const lang = /[\u00C0-\u024F]|\b(ano|paano|bakit|kasi|lahat|naman|po|ngayon|mainit|init|mahirap|sino|saan)\b/i.test(trimmed)
-        ? 'tagalog'
-        : 'english';
-
-      const scoped = await generateScopedAdvisory(trimmed, { lang, single: true });
+      const scoped = await generateScopedAdvisory(trimmed, { single: true, lang: inferLanguageFromQuery(trimmed) });
       const summary = scoped.singleResponse ?? scoped.summary;
       const reply = [
         summary,
         '',
-        `Risk level: ${scoped.riskLevel}`,
+        `Antas ng panganib: ${scoped.riskLevel}`,
         ...scoped.actions.slice(0, 3).map((action) => `• ${action}`),
         '',
         scoped.scopeNote,
@@ -83,7 +95,7 @@ export const ParentChatbot: React.FC = () => {
         {
           id: Date.now() + 1,
           role: 'assistant',
-          text: 'The advisory service is unavailable right now. Please check the latest school heat level and follow the current safety notice.',
+          text: 'Hindi available ang advisory service ngayon. Paki-check ang latest school heat level at sundin ang current safety notice.',
           meta: 'Fallback response',
         },
       ]);
@@ -107,7 +119,7 @@ export const ParentChatbot: React.FC = () => {
           <MdSmartToy className="parent-chatbot-scope-icon" />
           <div>
             <strong>Scoped response mode</strong>
-            <p>Only answers heat-related school safety questions and avoids off-topic guidance.</p>
+            <p>Sumasagot lang sa heat-related school safety questions at umiiwas sa off-topic na gabay.</p>
           </div>
         </div>
       </div>
@@ -116,8 +128,8 @@ export const ParentChatbot: React.FC = () => {
         <Card className="parent-chatbot-main" noPadding>
           <div className="parent-chatbot-header">
             <div>
-              <h2>Conversation</h2>
-              <p>Keep questions short. The assistant will respond with a scoped answer and next steps.</p>
+              <h2>Usapan</h2>
+              <p>Panatilihing maikli ang tanong. Magbibigay ang assistant ng scoped na sagot at next steps.</p>
             </div>
             <Button
               variant="outline"
@@ -148,7 +160,7 @@ export const ParentChatbot: React.FC = () => {
                   <MdSmartToy />
                 </div>
                 <div className="parent-chatbot-bubble parent-chatbot-typing">
-                  <span>Thinking about the current heat context...</span>
+                  <span>Iniisip ang current heat context...</span>
                 </div>
               </div>
             )}
@@ -196,18 +208,18 @@ export const ParentChatbot: React.FC = () => {
 
           <Card title="How to ask" className="parent-chatbot-side-card">
             <ul className="parent-chatbot-list">
-              <li>Use English, Tagalog, or Taglish.</li>
-              <li>Ask for a specific child-safety action or explanation.</li>
-              <li>Follow up with the advisory page when you need the formal risk summary.</li>
+              <li>Gumamit ng Tagalog, English, o Taglish.</li>
+              <li>Magtanong ng specific child-safety action o paliwanag.</li>
+              <li>Sundan ang advisory page kapag kailangan mo ng formal risk summary.</li>
             </ul>
           </Card>
 
           <Card title="Fast access" className="parent-chatbot-side-card">
-            <p className="parent-chatbot-side-copy">
-              Open the advisory page for a structured safety summary, or return to the dashboard to view live school heat status.
+              <p className="parent-chatbot-side-copy">
+              Buksan ang advisory page para sa structured safety summary, o bumalik sa dashboard para makita ang live school heat status.
             </p>
             <Button variant="outline" fullWidth icon={<MdOpenInNew />}>
-              Open Advisory
+              Buksan ang Advisory
             </Button>
           </Card>
         </div>

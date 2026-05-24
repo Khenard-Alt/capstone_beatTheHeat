@@ -51,12 +51,12 @@ export const getAdminStats = async (
 			.select('*', { count: 'exact', head: true })
 			.gte('created_at', startDate.toISOString());
 
-		// Fetch heat incidents (heat_index >= 37°C danger level)
+		// Fetch canonical heat incidents from the incidents table.
+		// This dashboard metric should reflect actual incident records, not raw heat snapshots.
 		const { count: incidentCount, error: _incidentError } = await client
-			.from('heat_index_logs')
+			.from('incidents')
 			.select('*', { count: 'exact', head: true })
-			.gte('created_at', startDate.toISOString())
-			.gte('heat_index_c', 37);
+			.gte('created_at', startDate.toISOString());
 
 		// Fetch trend data (advisories per hour for today or per day for week/month)
 		let trendData: any[] = [];

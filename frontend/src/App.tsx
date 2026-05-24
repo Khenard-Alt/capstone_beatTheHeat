@@ -28,15 +28,20 @@ import { PrincipalDashboard } from './pages/principalDash/PrincipalDashboard';
 import PrincipalReports from './pages/principalDash/PrincipalReports';
 import AnnouncementShell from './pages/principalDash/AnnouncementShell';
 import PrincipalAdvisories from './pages/principalDash/PrincipalAdvisories';
+import HeadTeacherPrincipalAnnouncements from './pages/headTeacherDash/HeadTeacherPrincipalAnnouncements';
 import PrincipalChatbot from './pages/principalDash/PrincipalChatbot';
 import PrincipalProfileSettings from './pages/principalDash/PrincipalProfileSettings';
 import { HeadTeacherDashboard } from './pages/headTeacherDash/HeadTeacherDashboard';
 import IncidentReview from './pages/headTeacherDash/IncidentReview';
 import IncidentReports from './pages/headTeacherDash/IncidentReports';
-import Advisories from './pages/headTeacherDash/Advisories';
 import Chatbot from './pages/headTeacherDash/Chatbot';
 import ProfileSettings from './pages/headTeacherDash/ProfileSettings';
 import { TeacherDashboard } from './pages/teacherDash/TeacherDashboard';
+import TeacherConductForm from './pages/teacherDash/ConductForm';
+import TeacherIncidentReports from './pages/teacherDash/IncidentReports';
+import TeacherAdvisories from './pages/teacherDash/Advisories';
+import TeacherChatbot from './pages/teacherDash/Chatbot';
+import TeacherProfileSettings from './pages/teacherDash/ProfileSettings';
 import './App.css';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -173,43 +178,7 @@ const HomeRoute: React.FC = () => {
   return <Dashboard />;
 };
 
-  const LandingRoute: React.FC = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <Loading fullScreen text="Loading..." />;
-  }
-
-  if (isAuthenticated) {
-    if (user?.role === 'admin') {
-      return <Navigate to="/admin" replace />;
-    }
-
-    if (user?.role === 'principal') {
-      return <Navigate to="/principal/dashboard" replace />;
-    }
-
-    if (user?.role === 'head-teacher') {
-      return <Navigate to="/head-teacher/dashboard" replace />;
-    }
-
-    if (user?.role === 'teacher') {
-      return <Navigate to="/teacher/dashboard" replace />;
-    }
-
-    if (user?.role === 'parent') {
-      return <Navigate to="/parent/dashboard" replace />;
-    }
-
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return (
-    <PublicLayout>
-      <Login />
-    </PublicLayout>
-  );
-};
+  const LandingRoute: React.FC = () => <Navigate to="/login" replace />;
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
@@ -251,13 +220,24 @@ const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   );
 };
 
+const LoginLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div className="login-layout">
+      <main className="login-main">
+        <div className="login-content">{children}</div>
+      </main>
+    </div>
+  );
+};
+
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginLayout><Login /></LoginLayout>} />
       <Route path="/register" element={<Navigate to="/login" replace />} />
 
       <Route path="/" element={<LandingRoute />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
 
       <Route
         path="/dashboard"
@@ -436,6 +416,18 @@ const AppRoutes: React.FC = () => {
       />
 
       <Route
+        path="/head-teacher/announcements/principal"
+        element={
+          <HeadTeacherRoute>
+            <AppLayout>
+              <HeadTeacherPrincipalAnnouncements />
+            </AppLayout>
+          </HeadTeacherRoute>
+        }
+      />
+
+
+      <Route
         path="/head-teacher/incident-review"
         element={
           <HeadTeacherRoute>
@@ -462,7 +454,7 @@ const AppRoutes: React.FC = () => {
         element={
           <HeadTeacherRoute>
             <AppLayout>
-              <Advisories />
+              <PrincipalAdvisories />
             </AppLayout>
           </HeadTeacherRoute>
         }
@@ -496,6 +488,61 @@ const AppRoutes: React.FC = () => {
           <TeacherRoute>
             <AppLayout>
               <TeacherDashboard />
+            </AppLayout>
+          </TeacherRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/conduct-form"
+        element={
+          <TeacherRoute>
+            <AppLayout>
+              <TeacherConductForm />
+            </AppLayout>
+          </TeacherRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/incident-reports"
+        element={
+          <TeacherRoute>
+            <AppLayout>
+              <TeacherIncidentReports />
+            </AppLayout>
+          </TeacherRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/advisories"
+        element={
+          <TeacherRoute>
+            <AppLayout>
+              <TeacherAdvisories />
+            </AppLayout>
+          </TeacherRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/chatbot"
+        element={
+          <TeacherRoute>
+            <AppLayout>
+              <TeacherChatbot />
+            </AppLayout>
+          </TeacherRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/profile-settings"
+        element={
+          <TeacherRoute>
+            <AppLayout>
+              <TeacherProfileSettings />
             </AppLayout>
           </TeacherRoute>
         }

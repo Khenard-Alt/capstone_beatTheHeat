@@ -20,6 +20,11 @@ const normalizePhone = (phone) => {
     return cleaned;
 };
 const isCloudSmsGateway = () => environment_1.env.androidSmsGatewayUrl.includes('api.sms-gate.app');
+let cloudSmsTemporarilyDisabledUntil = 0;
+const isCloudSmsTemporarilyDisabled = () => Date.now() < cloudSmsTemporarilyDisabledUntil;
+const disableCloudSmsTemporarily = (minutes = 15) => {
+    cloudSmsTemporarilyDisabledUntil = Date.now() + minutes * 60 * 1000;
+};
 const getGatewayBaseUrl = () => {
     try {
         const parsed = new URL(environment_1.env.androidSmsGatewayUrl);
@@ -57,6 +62,16 @@ const getCloudSmsGatewayToken = async () => {
 };
 const getSmsGatewayHealth = async () => {
     if (environment_1.env.smsProvider === 'android-heartbeat') {
+        if (isCloudSmsGateway() && isCloudSmsTemporarilyDisabled()) {
+            return {
+                provider: 'android-heartbeat',
+                configured: true,
+                online: false,
+                hasLoad: false,
+                ready: false,
+                details: 'Cloud SMS gateway temporarily disabled after recent 503 responses.',
+            };
+        }
         if (!(0, environment_1.hasAndroidSmsGatewayConfig)()) {
             return {
                 provider: 'android-heartbeat',
@@ -202,7 +217,13 @@ const sendHeatAlertSms = async (phone, recipientName, heatLevel, heatIndex) => {
             return true;
         }
         catch (error) {
-            console.error('[SMS] Failed to send via Android heartbeat gateway:', error);
+            const status = axios_1.default.isAxiosError(error) ? error.response?.status : undefined;
+            if (status === 503 && isCloudSmsGateway()) {
+                disableCloudSmsTemporarily(15);
+                console.warn('[SMS] Cloud SMS gateway is overloaded; temporarily disabling SMS dispatch for 15 minutes.');
+                return false;
+            }
+            console.error('[SMS] Failed to send via Android heartbeat gateway:', status ? `HTTP ${status}` : error instanceof Error ? error.message : error);
             return false;
         }
     }
