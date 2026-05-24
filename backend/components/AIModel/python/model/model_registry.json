@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-22T00:57:24.981973+00:00",
+  "generated_at": "2026-05-24T16:21:09.879406+00:00",
   "status": "needs-review",
   "promotion": {
     "blocked": true,
@@ -30,7 +30,7 @@
   },
   "metrics": {
     "final_accuracy": 0.9130434782608695,
-    "holdout_accuracy": 0.8333333333333334,
+    "holdout_accuracy": 0.5833333333333334,
     "stratified_accuracy": 0.9130434782608695
   },
   "artifacts": {

@@ -1,19 +1,18 @@
-const { incidentsController } = require('../controllers/incidentsController');
-
 jest.mock('../config/supabase', () => ({
   getSupabaseAdminClient: jest.fn(),
 }));
 
+const { incidentsController } = require('../controllers/incidentsController');
 const { getSupabaseAdminClient } = require('../config/supabase');
 
 describe('incidentsController.create', () => {
   let req, res, next;
 
   beforeEach(() => {
+    jest.resetAllMocks();
     req = { body: {} };
     res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     next = jest.fn();
-    jest.resetAllMocks();
   });
 
   test('returns 400 when missing fields', async () => {
