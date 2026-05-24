@@ -1,5 +1,6 @@
 import React from 'react';
-import { getPreferredLang, setPreferredLang, availableLangs, Lang } from '../utils/lang';
+import { getPreferredLang, setPreferredLang, availableLangs } from '../utils/lang';
+import type { Lang } from '../utils/lang';
 
 export const LanguageSelector: React.FC<{ className?: string }> = ({ className }) => {
   const [lang, setLang] = React.useState<Lang>(getPreferredLang());

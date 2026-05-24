@@ -1,13 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MdBolt, MdCampaign, MdCheckCircle, MdOutlineThermostat } from 'react-icons/md';
+import { MdBolt, MdCheckCircle, MdOutlineThermostat } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { fetchHealthAdvisories, fetchRealtimeAdvisory, type LoggedAdvisory, type RealtimeAdvisoryResponse } from '../../services/healthAdvisory.service';
+import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
+import { formatDateTimeGlobal } from '../../utils/formatters';
 import '../../styles/TeacherPanel.css';
 
 const Advisories: React.FC = () => {
   const [realtimeAdvisory, setRealtimeAdvisory] = useState<RealtimeAdvisoryResponse | null>(null);
   const [advisories, setAdvisories] = useState<LoggedAdvisory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [announcementsError, setAnnouncementsError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -43,6 +48,31 @@ const Advisories: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    const loadAnnouncements = async () => {
+      try {
+        setAnnouncementsLoading(true);
+        const data = await fetchAnnouncements(10, 0);
+        if (mounted) {
+          setAnnouncements(data);
+          setAnnouncementsError(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch announcements for teacher advisories:', err);
+        if (mounted) {
+          setAnnouncements([]);
+          setAnnouncementsError('Failed to load principal announcements');
+        }
+      } finally {
+        if (mounted) setAnnouncementsLoading(false);
+      }
+    };
+
+    void loadAnnouncements();
+    return () => { mounted = false; };
+  }, []);
+
   const advisoryCards = useMemo(() => [
     {
       label: 'Current Heat Level',
@@ -67,7 +97,7 @@ const Advisories: React.FC = () => {
   ], [advisories.length, realtimeAdvisory]);
 
   return (
-    <div className="teacher-page-shell">
+    <div id="advisories-top" className="teacher-page-shell">
       <div className="teacher-hero">
         <div>
           <p className="teacher-eyebrow">Teacher panel</p>
@@ -145,6 +175,43 @@ const Advisories: React.FC = () => {
               </div>
             )}
           </Card>
+
+          <div className="advisory-section teacher-announcements-section">
+            <h2 id="principal-announcements">Principal Announcements</h2>
+            {announcementsError && <div className="error-alert">{announcementsError}</div>}
+            {announcementsLoading && <div className="loading-state">Loading principal announcements...</div>}
+            {!announcementsLoading && announcements.length === 0 && !announcementsError && (
+              <p className="empty-state-text">No principal announcements</p>
+            )}
+            {!announcementsLoading && announcements.length > 0 && (
+              <div className="advisory-table-wrap table-wrap">
+                <table className="advisory-table app-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Issued</th>
+                      <th scope="col">Priority</th>
+                      <th scope="col">Title</th>
+                      <th scope="col">Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {announcements.map((announcement) => (
+                      <tr key={announcement.id}>
+                        <td>{formatDateTimeGlobal(announcement.created_at ?? new Date().toISOString())}</td>
+                        <td>
+                          <span className={`advisory-level badge-${announcement.priority ?? 'info'}`}>
+                            {(announcement.priority ?? 'info').toUpperCase()}
+                          </span>
+                        </td>
+                        <td>{announcement.title}</td>
+                        <td>{announcement.body}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="teacher-side">

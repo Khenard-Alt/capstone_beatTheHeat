@@ -5,12 +5,28 @@ import { fetchParentMessages, sendParentMessage, type ParentMessage } from '../.
 import { fetchUsersByRole, type AppUser } from '../../services/users.service';
 import '../../styles/TeacherPanel.css';
 import '../../styles/ParentQuestionsConcerns.css';
+import '../../styles/Messenger.css';
+
+type ParentThread = {
+  id: string;
+  parent: AppUser;
+  messages: ParentMessage[];
+  preview: string;
+  updatedAt: string | null;
+};
+
+const formatTime = (value?: string | null) => {
+  if (!value) return 'No messages yet';
+  return new Date(value).toLocaleString();
+};
+
+const getDisplayName = (person?: AppUser) => (person ? `${person.firstName} ${person.lastName}`.trim() : 'Unknown parent');
 
 const TeacherMessages: React.FC = () => {
 	const { user } = useAuth();
 	const [messages, setMessages] = useState<ParentMessage[]>([]);
 	const [parents, setParents] = useState<AppUser[]>([]);
-	const [selectedParentId, setSelectedParentId] = useState('');
+	const [activeParentId, setActiveParentId] = useState('');
 	const [subject, setSubject] = useState('');
 	const [body, setBody] = useState('');
 	const [loading, setLoading] = useState(true);
@@ -22,17 +38,29 @@ const TeacherMessages: React.FC = () => {
 		try {
 			setLoading(true);
 			const [messageData, parentData] = await Promise.all([
-				fetchParentMessages(20, 0),
+				fetchParentMessages({ limit: 100, offset: 0, teacherId: currentTeacherId }),
 				fetchUsersByRole('parent'),
 			]);
 
-			setMessages(messageData.filter((message) => !user?.id || message.teacher_user_id === user.id));
+			setMessages(messageData);
 			setParents(parentData);
-			setSelectedParentId((current) => current || parentData[0]?.id || '');
+
+			setActiveParentId((current) => {
+				if (current && parentData.some((parent) => parent.id === current)) {
+					return current;
+				}
+
+				const threadWithHistory = parentData.find((parent) =>
+					messageData.some((message) => message.parent_id === parent.id)
+				);
+
+				return threadWithHistory?.id || parentData[0]?.id || '';
+			});
 		} catch (error) {
 			console.error('Failed to load teacher messages:', error);
 			setMessages([]);
 			setParents([]);
+			setActiveParentId('');
 		} finally {
 			setLoading(false);
 		}
@@ -48,22 +76,42 @@ const TeacherMessages: React.FC = () => {
 		return () => {
 			window.clearInterval(intervalId);
 		};
-	}, [user?.id]);
+	}, [currentTeacherId]);
 
-	const recipientParent = useMemo(() => parents.find((parent) => parent.id === selectedParentId) ?? parents[0], [parents, selectedParentId]);
+	const parentThreads = useMemo<ParentThread[]>(() => {
+		return parents.map((parent) => {
+			const threadMessages = messages
+				.filter((message) => message.parent_id === parent.id)
+				.slice()
+				.sort((left, right) => new Date(left.created_at || '').getTime() - new Date(right.created_at || '').getTime());
+
+			const latestMessage = threadMessages.at(-1);
+
+			return {
+				id: parent.id,
+				parent,
+				messages: threadMessages,
+				preview: latestMessage?.body || 'No chat yet. Open the thread to start the conversation.',
+				updatedAt: latestMessage?.created_at || null,
+			};
+		});
+	}, [messages, parents]);
+
+	const activeParent = useMemo(() => parents.find((parent) => parent.id === activeParentId) ?? null, [activeParentId, parents]);
+	const activeThread = useMemo(() => parentThreads.find((thread) => thread.id === activeParentId) ?? null, [activeParentId, parentThreads]);
 
 	const handleSend = async () => {
-		if (!recipientParent || !subject.trim() || !body.trim()) {
+		if (!activeParent || !body.trim()) {
 			return;
 		}
 
 		try {
 			setSending(true);
 			const created = await sendParentMessage({
-				parentUserId: recipientParent.id,
+				parentUserId: activeParent.id,
 				teacherUserId: currentTeacherId,
-				studentId: null,
-				subject: subject.trim(),
+				senderRole: 'teacher',
+				subject: subject.trim() || `Re: ${getDisplayName(activeParent)}`,
 				body: body.trim(),
 			});
 
@@ -83,83 +131,126 @@ const TeacherMessages: React.FC = () => {
 				<div>
 					<p className="teacher-eyebrow">Teacher panel</p>
 					<h1>Messages</h1>
-					<p>Reply to parent concerns and keep the message thread aligned with the parent panel conversation flow.</p>
+					<p>Reply to parent concerns in a messenger-style thread that keeps each parent conversation separate and easy to review.</p>
 				</div>
 				<div className="teacher-hero-card">
 					<div>
 						<strong>Parent inbox</strong>
-						<p>Same message channel, teacher-side view.</p>
+						<p>Threaded history for this adviser only.</p>
 					</div>
 				</div>
 			</div>
 
-			<section className="parent-messaging-section" id="teacher-messages-top" aria-labelledby="teacher-messages-heading">
+			<section className="messenger-section" id="teacher-messages-top" aria-labelledby="teacher-messages-heading">
 				<div className="parent-section-header">
 					<p className="parent-section-eyebrow">Adviser Messages</p>
-					<h2 id="teacher-messages-heading">Parent-to-teacher message feed</h2>
+					<h2 id="teacher-messages-heading">Parent chat inbox</h2>
 					<p className="parent-section-copy">
-						Review parent concerns, then send a direct reply back through the shared message table.
+						Recent chats are grouped by parent so your replies stay inside the right conversation history.
 					</p>
 				</div>
 
-				<div className="parent-message-form" id="teacher-message-compose">
-					<label className="parent-message-field" htmlFor="parentRecipient">
-						<span className="parent-message-field-label">Parent recipient</span>
-						<select
-							id="parentRecipient"
-							value={selectedParentId}
-							onChange={(event) => setSelectedParentId(event.target.value)}
-						>
-							<option value="">Select a parent</option>
-							{parents.map((parent) => (
-								<option key={parent.id} value={parent.id}>
-									{parent.firstName} {parent.lastName}
-								</option>
-							))}
-						</select>
-					</label>
-					<input placeholder="Subject" value={subject} onChange={(event) => setSubject(event.target.value)} />
-					<textarea placeholder="Write your reply or note..." value={body} onChange={(event) => setBody(event.target.value)} />
-					<div className="parent-message-actions">
-						<button type="button" className="primary" onClick={() => void handleSend()} disabled={sending || !recipientParent}>
-							{sending ? 'Sending...' : 'Send to Parent'}
-						</button>
-					</div>
-				</div>
+				<div className="messenger-shell">
+					<aside className="messenger-thread-rail">
+						<div>
+							<p className="parent-section-eyebrow">Recent Chats</p>
+							<p className="messenger-hint">Pick a parent thread, review the history, then send your reply from the composer.</p>
+						</div>
 
-				<div className="parent-message-list">
-					<div className="parent-section-header">
-						<p className="parent-section-eyebrow">Inbox</p>
-						<h2>Recent parent messages</h2>
-					</div>
-
-					{loading && <div className="empty-state">Loading messages...</div>}
-					{!loading && messages.length === 0 && <div className="empty-state">No messages yet</div>}
-					{messages.map((message) => (
-						<article key={message.id} className="parent-message-item">
-							<strong>{message.subject}</strong>
-							<p>{message.body}</p>
-							<small>{message.created_at ? new Date(message.created_at).toLocaleString() : ''}</small>
-							<div className="parent-message-actions" style={{ marginTop: 12 }}>
+						<div className="messenger-thread-list">
+							{loading && <div className="messenger-empty">Loading parent chats...</div>}
+							{!loading && parentThreads.length === 0 && <div className="messenger-empty">No parent chats yet.</div>}
+							{parentThreads.map((thread) => (
 								<button
+									key={thread.id}
 									type="button"
-									className="primary"
-									onClick={() => {
-										setSelectedParentId(message.parent_user_id || '');
-										setSubject(`Re: ${message.subject}`);
-										setBody(`Hi, `);
-									}}
+									className={`messenger-thread-button ${activeParentId === thread.id ? 'active' : ''}`}
+									onClick={() => setActiveParentId(thread.id)}
 								>
-									Reply to parent
+									<div className="messenger-thread-top">
+										<div>
+											<div className="messenger-thread-title">{getDisplayName(thread.parent)}</div>
+											<div className="messenger-thread-subtitle">Parent account</div>
+										</div>
+										<div className="messenger-thread-subtitle">{thread.messages.length} msgs</div>
+									</div>
+									<div className="messenger-thread-preview">{thread.preview}</div>
+									<div className="messenger-thread-meta">
+										<span>Latest</span>
+										<span>{formatTime(thread.updatedAt)}</span>
+									</div>
+								</button>
+							))}
+						</div>
+					</aside>
+
+					<div className="messenger-chat-panel">
+						<div className="messenger-chat-header">
+							<div>
+								<p className="parent-section-eyebrow">Conversation</p>
+								<h2>{activeParent ? getDisplayName(activeParent) : 'Select a parent thread'}</h2>
+								<p>{activeThread ? `${activeThread.messages.length} message${activeThread.messages.length === 1 ? '' : 's'} in this thread` : 'Choose a parent thread to view the chat history and reply.'}</p>
+							</div>
+							<div className="messenger-chat-badge">Teacher view</div>
+						</div>
+
+						<div className="messenger-chat-bubble-list">
+							{activeThread?.messages && activeThread.messages.length > 0 ? (
+								activeThread.messages.map((message) => {
+									const outgoing = message.sender_role === 'teacher';
+									return (
+										<article key={message.id} className={`messenger-message ${outgoing ? 'outgoing' : 'incoming'}`}>
+											<div className="messenger-avatar">{outgoing ? 'ME' : 'PA'}</div>
+											<div className="messenger-bubble">
+												<span className="messenger-meta">
+													{outgoing ? 'You' : getDisplayName(activeParent ?? undefined)} · {formatTime(message.created_at)}
+												</span>
+												{message.subject && <strong style={{ display: 'block', marginBottom: 8 }}>{message.subject}</strong>}
+												<div>{message.body}</div>
+											</div>
+										</article>
+									);
+								})
+							) : (
+								<div className="messenger-empty">Open a parent thread to see the conversation history.</div>
+							)}
+						</div>
+
+						<div className="messenger-compose">
+							<div className="messenger-compose-grid">
+								<label className="messenger-compose-field">
+									<span className="parent-section-eyebrow">Parent recipient</span>
+									<select value={activeParentId} onChange={(event) => setActiveParentId(event.target.value)}>
+										<option value="">Select a parent</option>
+										{parents.map((parent) => (
+											<option key={parent.id} value={parent.id}>
+												{getDisplayName(parent)}
+											</option>
+										))}
+									</select>
+								</label>
+
+								<label className="messenger-compose-field">
+									<span className="parent-section-eyebrow">Subject</span>
+									<input placeholder="Optional subject line" value={subject} onChange={(event) => setSubject(event.target.value)} />
+								</label>
+							</div>
+
+							<textarea placeholder="Write your reply or note..." value={body} onChange={(event) => setBody(event.target.value)} />
+
+							<div className="messenger-compose-actions">
+								<div className="messenger-hint">
+									Use short, factual replies that stay aligned with the school heat guidance and keep one thread per parent.
+								</div>
+								<button type="button" className="primary" onClick={() => void handleSend()} disabled={sending || !activeParent}>
+									{sending ? 'Sending...' : 'Send to Parent'}
 								</button>
 							</div>
-						</article>
-					))}
+						</div>
+					</div>
 				</div>
-			</section>
 
-			<div className="teacher-layout" style={{ marginTop: 24 }}>
-				<div className="teacher-main">
+				<div className="messenger-side-panel" style={{ marginTop: 20 }}>
 					<Card title="Messaging notes" className="teacher-panel-card tone-success">
 						<ul className="teacher-list">
 							<li>Keep replies short, factual, and tied to school heat guidance.</li>
@@ -167,8 +258,7 @@ const TeacherMessages: React.FC = () => {
 							<li>Continue the same thread instead of starting a new topic for the same concern.</li>
 						</ul>
 					</Card>
-				</div>
-				<div className="teacher-side">
+
 					<Card title="Quick tips" className="teacher-panel-card tone-alert">
 						<ul className="teacher-list">
 							<li>Use the inbox before sending a new message.</li>
@@ -177,7 +267,7 @@ const TeacherMessages: React.FC = () => {
 						</ul>
 					</Card>
 				</div>
-			</div>
+			</section>
 		</div>
 	);
 };

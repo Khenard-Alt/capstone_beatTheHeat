@@ -13,17 +13,25 @@ exports.parentMessagesController = {
         try {
             const limit = parseInt(req.query.limit || '20', 10);
             const offset = parseInt(req.query.offset || '0', 10);
+            const parentId = typeof req.query.parentId === 'string' ? req.query.parentId : undefined;
+            const teacherId = typeof req.query.teacherId === 'string' ? req.query.teacherId : undefined;
             const supabase = (0, supabase_1.getSupabaseAdminClient)();
             if (!supabase) {
                 // Read local file quickly by returning empty or sample
                 res.status(200).json({ success: true, data: [] });
                 return;
             }
-            const { data, error, count } = await supabase
+            let query = supabase
                 .from('parent_messages')
-                .select('id, parent_user_id, teacher_user_id, student_id, subject, body, created_at', { count: 'exact' })
-                .order('created_at', { ascending: false })
-                .range(offset, offset + limit - 1);
+                .select('id, parent_id, teacher_id, sender_role, subject, body, status, reply, created_at', { count: 'exact' })
+                .order('created_at', { ascending: false });
+            if (parentId) {
+                query = query.eq('parent_id', parentId);
+            }
+            if (teacherId) {
+                query = query.eq('teacher_id', teacherId);
+            }
+            const { data, error, count } = await query.range(offset, offset + limit - 1);
             if (error) {
                 // Log the Supabase error server-side for diagnosis
                 // eslint-disable-next-line no-console
@@ -41,21 +49,30 @@ exports.parentMessagesController = {
     },
     create: async (req, res, next) => {
         try {
-            const { parentUserId, teacherUserId, studentId, subject, body } = req.body;
+            const { parentUserId, teacherUserId, subject, body, senderRole, } = req.body;
             if (!parentUserId || !teacherUserId || !subject || !body) {
                 res.status(400).json({ success: false, message: 'Missing required fields' });
                 return;
             }
+            const normalizedSenderRole = senderRole === 'teacher' ? 'teacher' : 'parent';
             const supabase = (0, supabase_1.getSupabaseAdminClient)();
             if (!supabase) {
-                const record = { id: `local-${Date.now()}`, parentUserId, teacherUserId, studentId, subject, body, created_at: new Date().toISOString() };
+                const record = {
+                    id: `local-${Date.now()}`,
+                    parentUserId,
+                    teacherUserId,
+                    senderRole: normalizedSenderRole,
+                    subject,
+                    body,
+                    created_at: new Date().toISOString(),
+                };
                 await (0, promises_1.appendFile)(LOCAL_LOG, JSON.stringify(record) + '\n');
                 res.status(201).json({ success: true, data: record });
                 return;
             }
             const { data, error } = await supabase
                 .from('parent_messages')
-                .insert([{ parent_user_id: parentUserId, teacher_user_id: teacherUserId, student_id: studentId || null, subject, body }])
+                .insert([{ parent_id: parentUserId, teacher_id: teacherUserId, sender_role: normalizedSenderRole, subject, body }])
                 .select('*')
                 .single();
             if (error) {

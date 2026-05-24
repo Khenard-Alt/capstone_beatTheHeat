@@ -17,8 +17,9 @@ WHERE u.email = 'teacher@beattheheat.local'
 AND NOT EXISTS (SELECT 1 FROM public.incidents WHERE description LIKE 'Student felt dizzy during PE%');
 
 -- Parent message
-INSERT INTO public.parent_messages (parent_id, school_id, subject, body)
-SELECT u.id, 'school-1', 'Concern about heat', 'Please advise on measures for outdoor activities.'
-FROM public.users u
-WHERE u.email = 'parent@beattheheat.local'
+INSERT INTO public.parent_messages (parent_id, teacher_id, sender_role, school_id, subject, body)
+SELECT parent_u.id, teacher_u.id, 'parent', 'school-1', 'Concern about heat', 'Please advise on measures for outdoor activities.'
+FROM public.users parent_u
+JOIN public.users teacher_u ON teacher_u.email = 'teacher@beattheheat.local'
+WHERE parent_u.email = 'parent@beattheheat.local'
 AND NOT EXISTS (SELECT 1 FROM public.parent_messages WHERE subject = 'Concern about heat');

@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     {
       path: '/parent/announcements',
       icon: <MdCampaign />,
-      label: 'Announcements',
+      label: 'Announcement',
       roles: ['parent'],
       badge: 2,
       menuKey: 'announcements',
@@ -123,14 +123,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     { path: '/head-teacher/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['head-teacher'], badge: null },
   ];
 
-  const teacherMenuItems: SidebarMenuItem[] = [
-    { path: '/teacher/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['teacher'], badge: null },
-    { path: '/teacher/conduct-form', icon: <MdForum />, label: 'Conduct Form', roles: ['teacher'], badge: null },
-    { path: '/teacher/incident-reports', icon: <MdCampaign />, label: 'Incident Reports', roles: ['teacher'], badge: null },
-    { path: '/teacher/advisories', icon: <MdAutoAwesome />, label: 'Heat Data & Advisories', roles: ['teacher'], badge: null },
-    { path: '/teacher/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['teacher'], badge: null },
-    { path: '/teacher/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['teacher'], badge: null },
-  ];
+    const teacherMenuItems: SidebarMenuItem[] = [
+      { path: '/teacher/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['teacher'], badge: null },
+      {
+        path: '/teacher/messages',
+        icon: <MdForum />,
+        label: 'Concerns and Conditions',
+        roles: ['teacher'],
+        badge: null,
+        menuKey: 'questions-concerns',
+        children: [
+          { path: '/teacher/messages', label: 'Inbox', icon: <MdChat />, sectionId: 'teacher-messages-top' },
+          { path: '/teacher/messages', label: 'Compose Reply', icon: <MdForum />, sectionId: 'teacher-message-compose' },
+        ],
+      },
+      { path: '/teacher/incident-reports', icon: <MdCampaign />, label: 'Incident Reports', roles: ['teacher'], badge: null },
+      {
+        path: '/teacher/advisories',
+        icon: <MdCampaign />,
+        label: 'Announcements',
+        roles: ['teacher'],
+        badge: null,
+        menuKey: 'announcements',
+        children: [
+          { path: '/teacher/advisories', label: 'Heat Data & Advisories', icon: <MdAutoAwesome />, sectionId: 'advisories-top' },
+          { path: '/teacher/advisories', label: 'Principal Announcements', icon: <MdCampaign />, sectionId: 'principal-announcements' },
+        ],
+      },
+      { path: '/teacher/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['teacher'], badge: null },
+      { path: '/teacher/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['teacher'], badge: null },
+    ];
 
   const defaultMenuItems: SidebarMenuItem[] = [
     { path: '/admin', icon: <MdDashboard />, label: 'Admin Dashboard', roles: ['admin'], badge: null },
@@ -175,8 +197,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
       location.pathname.startsWith('/head-teacher/advisories') ||
       location.pathname.startsWith('/head-teacher/announcements')
     );
-  const isTeacherMessagesActive =
+  const isTeacherQuestionsConcernsActive =
     userRole === 'teacher' && location.pathname.startsWith('/teacher/messages');
+
+  const isTeacherAnnouncementsActive =
+    userRole === 'teacher' && (
+      location.pathname.startsWith('/teacher/advisories') ||
+      location.pathname.startsWith('/teacher/announcements')
+    );
 
   useEffect(() => {
     if (isParentQuestionsConcernsActive) {
@@ -199,8 +227,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
       return;
     }
 
-    if (isTeacherMessagesActive) {
-      setOpenMenu('messages');
+    if (isTeacherQuestionsConcernsActive) {
+      setOpenMenu('questions-concerns');
+      return;
+    }
+
+    if (isTeacherAnnouncementsActive) {
+      setOpenMenu('announcements');
       return;
     }
 
@@ -211,32 +244,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     isHeadTeacherIncidentReviewActive,
     isHeadTeacherIncidentReportsActive,
     isHeadTeacherAnnouncementsActive,
-    isTeacherMessagesActive,
+    isTeacherAnnouncementsActive,
+    isTeacherQuestionsConcernsActive,
   ]);
 
   const setStatusVisibility = (visible: boolean) => {
     setShowNetworkStatus(visible);
-      roles: ['head-teacher'],
-      badge: null,
-      menuKey: 'announcements',
   };
 
   const updateNetworkStatus = async () => {
     try {
       if (!navigator.onLine) {
         networkStatusRef.current = 'offline';
-    {
-      path: '/teacher/messages',
-      icon: <MdForum />,
-      label: 'Messages',
-      roles: ['teacher'],
-      badge: null,
-      menuKey: 'messages',
-      children: [
-        { path: '/teacher/messages', label: 'Inbox', icon: <MdChat />, sectionId: 'teacher-messages-top' },
-        { path: '/teacher/messages', label: 'Compose Reply', icon: <MdForum />, sectionId: 'teacher-message-compose' },
-      ],
-    },
         setNetworkStatus('offline');
         setStatusVisibility(true);
         if (statusHideTimerRef.current) {
@@ -423,50 +442,49 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
                   </NavLink>
 
                     {item.menuKey && openMenu === item.menuKey && (
-                    <ul className="sidebar-submenu" id={`sidebar-submenu-${item.menuKey}`}>
-                      {item.children.map((child) => (
-                        <li key={`${item.menuKey}-${child.sectionId || child.label}`} className="sidebar-submenu-item">
-                          {child.sectionId ? (
-                            <button
-                              type="button"
-                              className="sidebar-submenu-link sidebar-submenu-button"
-                              onClick={() => scrollToSection(child.path, child.sectionId)}
-                            >
-                              <span className="sidebar-submenu-icon">{child.icon}</span>
-                              <span className="sidebar-submenu-label">{child.label}</span>
-                            </button>
-                          ) : (
+                      <ul className="sidebar-submenu" id={`sidebar-submenu-${item.menuKey}`}>
+                        {item.children.map((child) => (
+                          <li key={`${item.menuKey}-${child.sectionId || child.label}`} className="sidebar-submenu-item">
                             <NavLink
                               to={child.path}
                               className={({ isActive }) =>
                                 `sidebar-submenu-link ${isActive ? 'sidebar-submenu-link-active' : ''}`
                               }
-                              end={child.path === '/parent/announcements'}
+                              end
+                                onClick={(e) => {
+                                  if (child.sectionId) {
+                                    e.preventDefault();
+                                    scrollToSection(child.path, child.sectionId!);
+                                  } else {
+                                    // allow navigation, then scroll to top of the new page
+                                    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+                                  }
+                                }}
                             >
                               <span className="sidebar-submenu-icon">{child.icon}</span>
                               <span className="sidebar-submenu-label">{child.label}</span>
                             </NavLink>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </>
-              ) : (
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
-                  }
-                  end={item.path === '/'}
-                >
-                  <span className="sidebar-icon">{item.icon}</span>
-                  <span className="sidebar-label">{item.label}</span>
-                  {item.badge && item.badge > 0 && (
-                    <span className="sidebar-badge">{item.badge}</span>
-                  )}
-                </NavLink>
-              )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                ) : (
+                  <NavLink
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
+                    }
+                    end={item.path === '/'}
+                    onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50)}
+                  >
+                    <span className="sidebar-icon">{item.icon}</span>
+                    <span className="sidebar-label">{item.label}</span>
+                    {item.badge && item.badge > 0 && (
+                      <span className="sidebar-badge">{item.badge}</span>
+                    )}
+                  </NavLink>
+                )}
             </li>
           ))}
         </ul>

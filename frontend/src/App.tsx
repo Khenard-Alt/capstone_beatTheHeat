@@ -207,19 +207,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <div className="public-layout">
-      <Header user={null} />
-      <main className="public-main">
-        <div className="public-content">{children}</div>
-      </main>
-      
-      <SmartAdvisoryBot />
-      <Footer variant="public" />
-    </div>
-  );
-};
+// PublicLayout was removed because it was not referenced in the routes.
 
 const LoginLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -238,7 +226,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/register" element={<Navigate to="/login" replace />} />
 
       <Route path="/" element={<LandingRoute />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
 
       <Route
         path="/dashboard"

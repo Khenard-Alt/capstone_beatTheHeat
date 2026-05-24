@@ -1,64 +1,130 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Card } from '../../components/Card';
 import { useAuth } from '../../hooks/useAuth';
-import { ParentSectionPage } from './ParentSectionPage';
-import { fetchParentMessages, sendParentMessage } from '../../services/parentMessages.service';
-import type { ParentMessage } from '../../services/parentMessages.service';
+import { fetchParentMessages, sendParentMessage, type ParentMessage } from '../../services/parentMessages.service';
 import { fetchUsersByRole, type AppUser } from '../../services/users.service';
+import { ParentSectionPage } from './ParentSectionPage';
 import '../../styles/ParentQuestionsConcerns.css';
+import '../../styles/Messenger.css';
+
+type TeacherThread = {
+  id: string;
+  teacher: AppUser;
+  messages: ParentMessage[];
+  preview: string;
+  updatedAt: string | null;
+};
+
+const formatTime = (value?: string | null) => {
+  if (!value) return 'No messages yet';
+  return new Date(value).toLocaleString();
+};
+
+const getDisplayName = (person?: AppUser) => (person ? `${person.firstName} ${person.lastName}`.trim() : 'Unknown teacher');
 
 export const ParentQuestionsConcerns: React.FC = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ParentMessage[]>([]);
   const [teachers, setTeachers] = useState<AppUser[]>([]);
-  const [selectedTeacherId, setSelectedTeacherId] = useState('');
+  const [activeTeacherId, setActiveTeacherId] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
   const currentParentId = user?.id ?? 'parent-1';
 
-  const teacherOptions = useMemo(() => teachers, [teachers]);
+  const loadMessages = async () => {
+    try {
+      setLoading(true);
+      const [messageData, teacherData] = await Promise.all([
+        fetchParentMessages({ limit: 100, offset: 0, parentId: currentParentId }),
+        fetchUsersByRole('teacher'),
+      ]);
+
+      setMessages(messageData);
+      setTeachers(teacherData);
+
+      setActiveTeacherId((current) => {
+        if (current && teacherData.some((teacher) => teacher.id === current)) {
+          return current;
+        }
+
+        const threadWithHistory = teacherData.find((teacher) =>
+          messageData.some((message) => message.teacher_id === teacher.id)
+        );
+
+        return threadWithHistory?.id || teacherData[0]?.id || '';
+      });
+    } catch (error) {
+      console.error('Failed to load parent messages:', error);
+      setMessages([]);
+      setTeachers([]);
+      setActiveTeacherId('');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        const [messageData, teacherData] = await Promise.all([
-          fetchParentMessages(10, 0),
-          fetchUsersByRole('teacher'),
-        ]);
+    void loadMessages();
 
-        if (mounted) {
-          setMessages(messageData.filter((message) => !user?.id || message.parent_user_id === user.id));
-          setTeachers(teacherData);
-          setSelectedTeacherId((current) => current || teacherData[0]?.id || '');
-        }
-      } catch (err) {
-        // ignore
-      }
+    const intervalId = window.setInterval(() => {
+      void loadMessages();
+    }, 30000);
+
+    return () => {
+      window.clearInterval(intervalId);
     };
-    void load();
-    return () => { mounted = false; };
-  }, [user?.id]);
+  }, [currentParentId]);
 
-  const recipientTeacher = useMemo(() => teachers.find((teacher) => teacher.id === selectedTeacherId) ?? teachers[0], [selectedTeacherId, teachers]);
+  const teacherThreads = useMemo<TeacherThread[]>(() => {
+    return teachers.map((teacher) => {
+      const threadMessages = messages
+        .filter((message) => message.teacher_id === teacher.id)
+        .slice()
+        .sort((left, right) => new Date(left.created_at || '').getTime() - new Date(right.created_at || '').getTime());
+
+      const latestMessage = threadMessages.at(-1);
+
+      return {
+        id: teacher.id,
+        teacher,
+        messages: threadMessages,
+        preview: latestMessage?.body || 'Start a new conversation with this teacher.',
+        updatedAt: latestMessage?.created_at || null,
+      };
+    });
+  }, [messages, teachers]);
+
+  const activeTeacher = useMemo(() => teachers.find((teacher) => teacher.id === activeTeacherId) ?? null, [activeTeacherId, teachers]);
+  const activeThread = useMemo(() => teacherThreads.find((thread) => thread.id === activeTeacherId) ?? null, [activeTeacherId, teacherThreads]);
 
   const handleSend = async () => {
-    if (!subject.trim() || !body.trim() || !recipientTeacher) return;
+    if (!activeTeacher || !body.trim()) {
+      return;
+    }
+
     try {
+      setSending(true);
       const created = await sendParentMessage({
         parentUserId: currentParentId,
-        teacherUserId: recipientTeacher.id,
-        studentId: null,
-        subject: subject.trim(),
+        teacherUserId: activeTeacher.id,
+        senderRole: 'parent',
+        subject: subject.trim() || `Re: ${getDisplayName(activeTeacher)}`,
         body: body.trim(),
       });
+
       setMessages((prev) => [created, ...prev]);
       setSubject('');
       setBody('');
-    } catch (err) {
-      console.error('Send message failed', err);
+    } catch (error) {
+      console.error('Send message failed', error);
+    } finally {
+      setSending(false);
     }
   };
+
   return (
     <>
       <ParentSectionPage
@@ -105,52 +171,124 @@ export const ParentQuestionsConcerns: React.FC = () => {
         ]}
         footerNote="For live, scoped answers, go to the Chatbot page and ask a question in English, Tagalog, or Taglish."
       />
-      <section className="parent-messaging-section" aria-labelledby="question-and-concern-heading">
-        <div className="parent-section-header" id="question-and-concern-form">
-          <p className="parent-section-eyebrow">Question and Concern</p>
-          <h2 id="question-and-concern-heading">Send a question or concern to the advisory teacher</h2>
+
+      <section className="messenger-section" id="question-and-concern-form" aria-labelledby="question-and-concern-heading">
+        <div className="parent-section-header">
+          <p className="parent-section-eyebrow">Adviser Messages</p>
+          <h2 id="question-and-concern-heading">Messenger-style parent chat</h2>
           <p className="parent-section-copy">
-            Use this form for practical parent questions, safety concerns, or follow-up details that need a direct school response.
+            Every teacher gets their own conversation thread, so recent chats stay grouped by adviser and are easy to follow.
           </p>
         </div>
 
-        <div className="parent-message-form">
-          <label className="parent-message-field" htmlFor="teacherRecipient">
-            <span className="parent-message-field-label">Teacher recipient</span>
-            <select
-              id="teacherRecipient"
-              value={selectedTeacherId}
-              onChange={(e) => setSelectedTeacherId(e.target.value)}
-            >
-              <option value="">Select a teacher</option>
-              {teacherOptions.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.firstName} {teacher.lastName}
-                </option>
+        <div className="messenger-shell">
+          <aside className="messenger-thread-rail">
+            <div>
+              <p className="parent-section-eyebrow">Recent Threads</p>
+              <p className="messenger-hint">Chats are grouped per teacher. Pick one thread, then send your follow-up below.</p>
+            </div>
+
+            <div className="messenger-thread-list">
+              {loading && <div className="messenger-empty">Loading teacher conversations...</div>}
+              {!loading && teacherThreads.length === 0 && <div className="messenger-empty">No teacher threads yet.</div>}
+              {teacherThreads.map((thread) => (
+                <button
+                  key={thread.id}
+                  type="button"
+                  className={`messenger-thread-button ${activeTeacherId === thread.id ? 'active' : ''}`}
+                  onClick={() => setActiveTeacherId(thread.id)}
+                >
+                  <div className="messenger-thread-top">
+                    <div>
+                      <div className="messenger-thread-title">{getDisplayName(thread.teacher)}</div>
+                      <div className="messenger-thread-subtitle">Teacher adviser</div>
+                    </div>
+                    <div className="messenger-thread-subtitle">{thread.messages.length} msgs</div>
+                  </div>
+                  <div className="messenger-thread-preview">{thread.preview}</div>
+                  <div className="messenger-thread-meta">
+                    <span>Latest</span>
+                    <span>{formatTime(thread.updatedAt)}</span>
+                  </div>
+                </button>
               ))}
-            </select>
-          </label>
-          <input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
-          <textarea placeholder="Write your question or concern..." value={body} onChange={(e) => setBody(e.target.value)} />
-          <div className="parent-message-actions">
-            <button onClick={handleSend} className="primary" disabled={!recipientTeacher}>Send to Teacher</button>
+            </div>
+          </aside>
+
+          <div className="messenger-chat-panel">
+            <div className="messenger-chat-header">
+              <div>
+                <p className="parent-section-eyebrow">Conversation</p>
+                <h2>{activeTeacher ? getDisplayName(activeTeacher) : 'Select a teacher thread'}</h2>
+                <p>{activeThread ? `${activeThread.messages.length} message${activeThread.messages.length === 1 ? '' : 's'} in this thread` : 'Choose a teacher to review the thread and continue the chat.'}</p>
+              </div>
+              <div className="messenger-chat-badge">Parent view</div>
+            </div>
+
+            <div className="messenger-chat-bubble-list">
+              {activeThread?.messages && activeThread.messages.length > 0 ? (
+                activeThread.messages.map((message) => {
+                  const outgoing = message.sender_role === 'parent';
+                  return (
+                    <article key={message.id} className={`messenger-message ${outgoing ? 'outgoing' : 'incoming'}`}>
+                      <div className="messenger-avatar">{outgoing ? 'ME' : 'AD'}</div>
+                      <div className="messenger-bubble">
+                        <span className="messenger-meta">
+                          {outgoing ? 'You' : getDisplayName(activeTeacher ?? undefined)} · {formatTime(message.created_at)}
+                        </span>
+                        {message.subject && <strong style={{ display: 'block', marginBottom: 8 }}>{message.subject}</strong>}
+                        <div>{message.body}</div>
+                      </div>
+                    </article>
+                  );
+                })
+              ) : (
+                <div className="messenger-empty">Open a teacher thread to see the message history here.</div>
+              )}
+            </div>
+
+            <div className="messenger-compose">
+              <div className="messenger-compose-grid">
+                <label className="messenger-compose-field">
+                  <span className="parent-section-eyebrow">Teacher recipient</span>
+                  <select value={activeTeacherId} onChange={(event) => setActiveTeacherId(event.target.value)}>
+                    <option value="">Select a teacher</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {getDisplayName(teacher)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="messenger-compose-field">
+                  <span className="parent-section-eyebrow">Subject</span>
+                  <input placeholder="Optional subject line for this thread" value={subject} onChange={(event) => setSubject(event.target.value)} />
+                </label>
+              </div>
+
+              <textarea placeholder="Write your question or concern..." value={body} onChange={(event) => setBody(event.target.value)} />
+
+              <div className="messenger-compose-actions">
+                <div className="messenger-hint">
+                  Keep the tone short and specific. The thread stays under the selected teacher so your chat history is easy to review later.
+                </div>
+                <button type="button" className="primary" onClick={() => void handleSend()} disabled={sending || !activeTeacher}>
+                  {sending ? 'Sending...' : 'Send to Teacher'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="parent-message-list" id="adviser-messages" aria-labelledby="adviser-messages-heading">
-          <div className="parent-section-header">
-            <p className="parent-section-eyebrow">Adviser Messages</p>
-            <h2 id="adviser-messages-heading">Recent messages</h2>
-          </div>
-
-          {messages.length === 0 && <div className="empty-state">No messages yet</div>}
-          {messages.map((m) => (
-            <article key={m.id} className="parent-message-item">
-              <strong>{m.subject}</strong>
-              <p>{m.body}</p>
-              <small>{m.created_at ? new Date(m.created_at).toLocaleString() : ''}</small>
-            </article>
-          ))}
+        <div className="messenger-side-panel">
+          <Card title="How to use this chat" className="teacher-panel-card tone-success">
+            <ul className="teacher-list">
+              <li>Select the correct adviser thread before sending a follow-up.</li>
+              <li>Use one conversation per teacher so the history stays easy to trace.</li>
+              <li>If the issue is urgent, treat the message as a follow-up only and escalate through the proper school channel.</li>
+            </ul>
+          </Card>
         </div>
       </section>
     </>

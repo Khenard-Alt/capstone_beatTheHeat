@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { MdAutoAwesome, MdOutlineChat, MdSend, MdSmartToy } from 'react-icons/md';
+import { MdOutlineChat, MdSend, MdSmartToy } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
 import '../../styles/TeacherPanel.css';

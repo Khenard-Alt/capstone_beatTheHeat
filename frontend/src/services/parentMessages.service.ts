@@ -3,17 +3,20 @@ import type { ApiEnvelope } from './api';
 
 export interface ParentMessage {
   id: string;
-  parent_user_id?: string;
-  teacher_user_id?: string;
-  student_id?: string | null;
+  parent_id?: string | null;
+  teacher_id?: string | null;
+  sender_role?: 'parent' | 'teacher' | null;
   subject: string;
   body: string;
   created_at?: string;
 }
 
-export const fetchParentMessages = async (limit = 20, offset = 0): Promise<ParentMessage[]> => {
+export const fetchParentMessages = async (options: { limit?: number; offset?: number; parentId?: string; teacherId?: string } = {}): Promise<ParentMessage[]> => {
   try {
-    const { data } = await apiClient.get<ApiEnvelope<ParentMessage[]>>('/api/parent-messages', { params: { limit, offset } });
+    const { limit = 20, offset = 0, parentId, teacherId } = options;
+    const { data } = await apiClient.get<ApiEnvelope<ParentMessage[]>>('/api/parent-messages', {
+      params: { limit, offset, parentId, teacherId },
+    });
     return data.data || [];
   } catch (err) {
     // log error and return empty list to avoid breaking the UI when server returns 500
@@ -24,7 +27,7 @@ export const fetchParentMessages = async (limit = 20, offset = 0): Promise<Paren
   }
 };
 
-export const sendParentMessage = async (payload: { parentUserId: string; teacherUserId: string; studentId?: string | null; subject: string; body: string; }) => {
+export const sendParentMessage = async (payload: { parentUserId: string; teacherUserId: string; senderRole: 'parent' | 'teacher'; subject: string; body: string; }) => {
   const { data } = await apiClient.post<ApiEnvelope<ParentMessage>>('/api/parent-messages', payload);
   return data.data;
 };
