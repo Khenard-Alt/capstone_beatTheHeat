@@ -58,12 +58,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     {
       path: '/parent/questions-concerns',
       icon: <MdForum />,
-      label: 'Questions and Concerns',
+      label: "teacher's panel",
       roles: ['parent'],
       badge: 4,
       menuKey: 'questions-concerns',
       children: [
-        { path: '/parent/questions-concerns', label: 'Question and Concern', icon: <MdForum />, sectionId: 'question-and-concern-top' },
+        { path: '/parent/questions-concerns', label: "Teacher's Panel", icon: <MdForum />, sectionId: 'question-and-concern-top' },
         { path: '/parent/questions-concerns', label: 'Adviser Messages', icon: <MdChat />, sectionId: 'adviser-messages' },
       ],
     },
