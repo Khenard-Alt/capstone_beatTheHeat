@@ -80,7 +80,11 @@ temp/
 # Backend specific
 backend/dist/
 backend/coverage/
+backend/coverage/**
+backend/logs/
+backend/logs/**
 
 # Frontend specific
 frontend/dist/
 frontend/.env.local
+frontend/dist/**
