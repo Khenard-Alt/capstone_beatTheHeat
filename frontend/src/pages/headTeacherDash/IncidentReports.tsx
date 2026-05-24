@@ -47,13 +47,14 @@ const IncidentReports: React.FC = () => {
     const normalized = searchTerm.trim().toLowerCase();
 
     return incidents.filter((incident) => {
+      const isTeacherReport = !incident.reporterRole || String(incident.reporterRole).toLowerCase() === 'teacher';
       const statusMatch = statusFilter === 'all' || String(incident.status).toLowerCase() === statusFilter;
       const searchableText = [incident.studentName, incident.gradeLevel, incident.section, incident.incidentType, incident.description, incident.reportedBy, incident.parentName]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
 
-      return statusMatch && (!normalized || searchableText.includes(normalized));
+      return isTeacherReport && statusMatch && (!normalized || searchableText.includes(normalized));
     });
   }, [incidents, searchTerm, statusFilter]);
 
@@ -63,7 +64,7 @@ const IncidentReports: React.FC = () => {
         <div>
           <p className="teacher-eyebrow">Head teacher panel</p>
           <h1>Incident Reports</h1>
-          <p>All student incidents reported by teachers and stored in the database, ready for principal and parent follow-up.</p>
+          <p>Teacher-submitted student incidents stored in the database, ready for processing and follow-up.</p>
         </div>
         <div className="teacher-hero-card">
           <MdInfoOutline className="teacher-hero-icon" />

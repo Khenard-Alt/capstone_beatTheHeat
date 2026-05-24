@@ -1,36 +1,47 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MdInfoOutline, MdOutlineAssignment, MdOutlineThermostat } from 'react-icons/md';
 import { Card } from '../../components/Card';
-import { fetchIncidents, type IncidentRecord } from '../../services/incidents.service';
+import { fetchIncidents, createIncident, type IncidentRecord } from '../../services/incidents.service';
+import { useAuth } from '../../hooks/useAuth';
 import '../../styles/TeacherPanel.css';
 
 const statusOrder = ['pending', 'monitoring', 'treated', 'resolved'];
 
 const IncidentReports: React.FC = () => {
+  const { user } = useAuth();
   const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<'all' | IncidentRecord['status']>('all');
   const [selectedIncident, setSelectedIncident] = useState<IncidentRecord | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [incidentType, setIncidentType] = useState('heat-exhaustion');
+  const [description, setDescription] = useState('');
+  const [actionTaken, setActionTaken] = useState('Moved student to shaded area, gave water, and informed the clinic.');
+  const [heatIndex, setHeatIndex] = useState('');
+
+  const loadIncidents = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchIncidents(50, 0);
+      setIncidents(data);
+    } catch (error) {
+      console.error('Failed to load teacher incidents:', error);
+      setIncidents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchIncidents(50, 0);
-        if (mounted) {
-          setIncidents(data);
-        }
-      } catch (error) {
-        console.error('Failed to load teacher incidents:', error);
-        if (mounted) {
-          setIncidents([]);
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+      await loadIncidents();
+      if (!mounted) {
+        return;
       }
     };
 
@@ -40,6 +51,46 @@ const IncidentReports: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  const handleCreateIncident = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!description.trim()) {
+      setSubmitMessage('Please provide incident details before submitting.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setSubmitMessage('');
+
+      await createIncident({
+        schoolId: user?.schoolId || 'school-1',
+        reporterId: user?.id,
+        studentId: studentId.trim() || undefined,
+        type: incidentType,
+        description: [
+          `Student: ${studentName.trim() || 'Unknown student'}`,
+          description.trim(),
+        ].filter(Boolean).join(' | '),
+        actionTaken: actionTaken.trim() || undefined,
+        heatIndex: heatIndex.trim() ? Number(heatIndex) : undefined,
+      });
+
+      setStudentName('');
+      setStudentId('');
+      setIncidentType('heat-exhaustion');
+      setDescription('');
+      setActionTaken('Moved student to shaded area, gave water, and informed the clinic.');
+      setHeatIndex('');
+      setSubmitMessage('Incident submitted. Head teacher can now process this case in Incident Review.');
+      await loadIncidents();
+    } catch (error) {
+      console.error('Failed to create incident:', error);
+      setSubmitMessage('Unable to submit incident right now. Please retry.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const filteredIncidents = useMemo(() => {
     if (selectedStatus === 'all') {
@@ -90,6 +141,80 @@ const IncidentReports: React.FC = () => {
 
       <div className="teacher-layout">
         <div className="teacher-main">
+          <Card title="Create Incident Report" className="teacher-panel-card tone-alert">
+            <form onSubmit={handleCreateIncident} className="teacher-form-grid">
+              <div className="teacher-form-field">
+                <label htmlFor="incidentStudentName">Student name</label>
+                <input
+                  id="incidentStudentName"
+                  value={studentName}
+                  onChange={(event) => setStudentName(event.target.value)}
+                  placeholder="Enter student name"
+                />
+              </div>
+              <div className="teacher-form-field">
+                <label htmlFor="incidentStudentId">Student ID (optional)</label>
+                <input
+                  id="incidentStudentId"
+                  value={studentId}
+                  onChange={(event) => setStudentId(event.target.value)}
+                  placeholder="Student reference ID"
+                />
+              </div>
+              <div className="teacher-form-field">
+                <label htmlFor="incidentType">Incident type</label>
+                <select id="incidentType" value={incidentType} onChange={(event) => setIncidentType(event.target.value)}>
+                  <option value="heat-exhaustion">Heat Exhaustion</option>
+                  <option value="dehydration">Dehydration</option>
+                  <option value="dizziness">Dizziness</option>
+                  <option value="nausea">Nausea</option>
+                  <option value="headache">Headache</option>
+                  <option value="asthma-attack">Asthma Attack</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="teacher-form-field">
+                <label htmlFor="incidentHeatIndex">Heat index at time</label>
+                <input
+                  id="incidentHeatIndex"
+                  type="number"
+                  step="0.1"
+                  value={heatIndex}
+                  onChange={(event) => setHeatIndex(event.target.value)}
+                  placeholder="e.g. 43.2"
+                />
+              </div>
+              <div className="teacher-form-field" style={{ gridColumn: '1 / -1' }}>
+                <label htmlFor="incidentDescription">Observed symptoms / situation</label>
+                <textarea
+                  id="incidentDescription"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="Describe what happened and the student's condition"
+                />
+              </div>
+              <div className="teacher-form-field" style={{ gridColumn: '1 / -1' }}>
+                <label htmlFor="incidentActionTaken">Action taken</label>
+                <textarea
+                  id="incidentActionTaken"
+                  value={actionTaken}
+                  onChange={(event) => setActionTaken(event.target.value)}
+                  placeholder="What immediate response was done"
+                />
+              </div>
+              <div className="teacher-form-actions" style={{ gridColumn: '1 / -1' }}>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit for Head Teacher Review'}
+                </button>
+              </div>
+              {submitMessage && (
+                <div className="teacher-sidebar-note" style={{ gridColumn: '1 / -1' }}>
+                  {submitMessage}
+                </div>
+              )}
+            </form>
+          </Card>
+
           <Card title="Incident Log" className="teacher-panel-card">
             <div className="teacher-pill-list" style={{ marginBottom: 16 }}>
               {(['all', ...statusOrder] as const).map((status) => (

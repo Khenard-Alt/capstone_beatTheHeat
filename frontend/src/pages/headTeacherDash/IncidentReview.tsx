@@ -16,7 +16,13 @@ const IncidentReview: React.FC = () => {
     try {
       setLoading(true);
       const data = await fetchIncidents(50, 0);
-      setIncidents(data.filter((incident) => String(incident.status).toLowerCase() !== 'resolved'));
+      setIncidents(
+        data.filter((incident) => {
+          const isUnresolved = String(incident.status).toLowerCase() !== 'resolved';
+          const isTeacherReport = !incident.reporterRole || String(incident.reporterRole).toLowerCase() === 'teacher';
+          return isUnresolved && isTeacherReport;
+        })
+      );
     } catch (error) {
       console.error(error);
       setIncidents([]);
@@ -86,7 +92,7 @@ const IncidentReview: React.FC = () => {
         <div>
           <p className="teacher-eyebrow">Head teacher panel</p>
           <h1>Incident Review</h1>
-          <p>Review teacher-submitted incident reports, update their status, and delete duplicate entries when needed.</p>
+          <p>Review teacher-submitted incident reports, update status, and process student heat cases until resolution.</p>
         </div>
         <div className="teacher-hero-card">
           <MdOutlineLocalHospital className="teacher-hero-icon" />
