@@ -18,6 +18,7 @@ import {
   MdKeyboardArrowDown,
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
+import schoolLogo from '../../assets/mayamotlogo.png';
 import '../../styles/Sidebar.css';
 
 interface SidebarProps {
@@ -183,6 +184,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
   const filteredItems = menuItems.filter((item) =>
     userRole ? item.roles.includes(userRole) : true
   );
+
+  const profilePath = userRole === 'parent'
+    ? '/parent/profile-settings'
+    : userRole === 'principal'
+    ? '/principal/profile-settings'
+    : userRole === 'head-teacher'
+    ? '/head-teacher/profile-settings'
+    : userRole === 'teacher'
+    ? '/teacher/profile-settings'
+    : '/profile';
 
   const isParentQuestionsConcernsActive =
     userRole === 'parent' && location.pathname.startsWith('/parent/questions-concerns');
@@ -407,11 +418,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
     <aside className={sidebarClasses}>
       {/* Sidebar Header/Branding */}
       <div className="sidebar-header">
-        
-      
-          <div className="sidebar-brand">
+          <div className="sidebar-branding">
+            <img className="sidebar-logo-image" src={schoolLogo} alt="Mayamot Elementary School logo" />
+            <div className="sidebar-brand">
             <h3 className="sidebar-brand-title">Beat The Heat</h3>
             <p className="sidebar-brand-subtitle">MAYAMOT ELEMENTARY</p>
+            </div>
           </div>
         </div>
       
@@ -507,7 +519,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
         </div>
 
         <div className="sidebar-user-wrap">
-          <div className="sidebar-user" title="Account">
+          <NavLink className="sidebar-user" to={profilePath} title="Open profile settings">
             <div className="sidebar-user-avatar">
               {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
             </div>
@@ -515,7 +527,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
               <div className="sidebar-user-name">{user?.firstName} {user?.lastName}</div>
               <div className="sidebar-user-role">{user?.role}</div>
             </div>
-          </div>
+            <MdPerson className="sidebar-user-edit-icon" aria-hidden="true" />
+          </NavLink>
 
           {onLogout && (
             <button className="sidebar-logout-btn" onClick={onLogout} aria-label="Logout">

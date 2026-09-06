@@ -7,6 +7,8 @@ import { getGreeting } from '../../utils/helpers';
 import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
 import { fetchIncidents, type IncidentRecord } from '../../services/incidents.service';
 import { fetchRealtimeAdvisory, type RealtimeAdvisoryResponse } from '../../services/healthAdvisory.service';
+import { fetchCurrentWeather } from '../../services/weather.service';
+import type { WeatherData } from '../../types';
 import { formatDateTimeGlobal } from '../../utils/formatters';
 import '../../styles/TeacherPanel.css';
 
@@ -18,6 +20,7 @@ export const TeacherDashboard: React.FC = () => {
   const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
   const [incidentsLoading, setIncidentsLoading] = useState(true);
   const [realtimeAdvisory, setRealtimeAdvisory] = useState<RealtimeAdvisoryResponse | null>(null);
+  const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
 
   const latestIncident = incidents[0];
 
@@ -90,11 +93,25 @@ export const TeacherDashboard: React.FC = () => {
       }
     };
 
+    const loadCurrentWeather = async () => {
+      try {
+        const data = await fetchCurrentWeather();
+        if (mounted) {
+          setCurrentWeather(data);
+        }
+      } catch (error) {
+        console.error('Failed to load teacher dashboard weather:', error);
+      }
+    };
+
     void loadIncidents();
     void loadRealtimeAdvisory();
+    void loadCurrentWeather();
 
     const refreshInterval = window.setInterval(() => {
       void loadIncidents();
+      void loadRealtimeAdvisory();
+      void loadCurrentWeather();
     }, 30000);
 
     return () => {
@@ -119,13 +136,25 @@ export const TeacherDashboard: React.FC = () => {
             {getGreeting()}, {user?.firstName}. Track heat alerts, submit forms, and keep class decisions aligned with the latest school safety guidance.
           </p>
         </div>
-        <div className="teacher-hero-card">
-          <MdOutlineThermostat className="teacher-hero-icon" />
-          <div>
-            <strong>{realtimeAdvisory?.riskLevel?.toUpperCase() || 'DANGER'}</strong>
-            <p>
-              {realtimeAdvisory?.summary || 'Live heat guidance is loading. Keep hydration and indoor alternatives ready.'}
-            </p>
+        <div className="teacher-hero-side">
+          <div className="teacher-weather-card" aria-label="Current weather measurements">
+            <div>
+              <span>Temperature</span>
+              <strong>{currentWeather ? `${currentWeather.temperature.toFixed(1)}°C` : 'Loading...'}</strong>
+            </div>
+            <div>
+              <span>Heat index</span>
+              <strong>{currentWeather ? `${currentWeather.feelsLike.toFixed(1)}°C` : 'Loading...'}</strong>
+            </div>
+          </div>
+          <div className="teacher-hero-card">
+            <MdOutlineThermostat className="teacher-hero-icon" />
+            <div>
+              <strong>{realtimeAdvisory?.riskLevel?.toUpperCase() || 'DANGER'}</strong>
+              <p>
+                {realtimeAdvisory?.summary || 'Live heat guidance is loading. Keep hydration and indoor alternatives ready.'}
+              </p>
+            </div>
           </div>
         </div>
       </div>

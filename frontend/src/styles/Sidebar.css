@@ -27,6 +27,22 @@
   gap: 4px;
 }
 
+.sidebar-branding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-logo-image {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: white;
+  padding: 3px;
+}
+
 .sidebar-brand-title {
   font-size: 22px;
   font-weight: 800;
@@ -369,6 +385,17 @@
   /* approximate logout button height + gap (48px + 8px) */
   transform: translateY(56px) translateZ(0);
   will-change: transform, opacity;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sidebar-user:hover,
+.sidebar-user:focus-visible {
+  background: #f8fbff;
+  border-color: #93c5fd;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+  outline: none;
 }
 
 .sidebar-user-avatar {
@@ -389,6 +416,12 @@
 .sidebar-user-info {
   flex: 1;
   min-width: 0;
+}
+
+.sidebar-user-edit-icon {
+  flex-shrink: 0;
+  color: #2563eb;
+  font-size: 18px;
 }
 
 .sidebar-user-name {

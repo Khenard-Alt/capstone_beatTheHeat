@@ -49,9 +49,52 @@
   backdrop-filter: blur(10px);
 }
 
+.teacher-hero-side {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.8fr) minmax(280px, 1.2fr);
+  align-items: stretch;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 620px;
+  width: 100%;
+}
+
 .teacher-hero-card strong {
   display: block;
   margin-bottom: 4px;
+}
+
+.teacher-weather-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  justify-content: center;
+  align-items: center;
+}
+
+.teacher-weather-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.teacher-weather-card span {
+  font-size: 11px;
+  color: rgba(239, 246, 255, 0.76);
+}
+
+.teacher-weather-card strong {
+  margin: 0;
+  font-size: 16px;
+  color: #ffffff;
 }
 
 .teacher-hero-icon {
@@ -456,6 +499,11 @@
   .teacher-hero {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .teacher-hero-side {
+    grid-template-columns: 1fr;
+    max-width: 100%;
   }
 
   .teacher-stats-grid,

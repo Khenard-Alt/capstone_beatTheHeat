@@ -292,6 +292,25 @@
   animation: pulse 2s ease-in-out infinite;
 }
 
+.login-school-logo {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  flex: 0 0 88px;
+  border-radius: 50%;
+  background: white;
+  padding: 5px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.login-brand-school {
+  margin: 8px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
+  opacity: 0.9;
+}
+
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
@@ -345,8 +364,10 @@
 }
 
 .feature-icon {
-  font-size: 32px;
-  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex: 0 0 32px;
 }
 
 .feature-text h3 {

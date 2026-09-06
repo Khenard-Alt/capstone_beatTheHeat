@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MdAccountCircle, MdNotifications, MdClose, MdCheckCircle, MdWarning, MdInfo } from 'react-icons/md';
 import { useNotification } from '../hooks/useNotification';
 import { getTimeAgo } from '../utils/helpers';
+import schoolLogo from '../assets/mayamotlogo.png';
 import '../styles/Header.css';
 
 interface HeaderProps {
@@ -48,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
     <header className="header">
       <div className="header-left">
         <Link to={homePath} className="header-logo">
-          <span className="header-logo-icon" style={{ fontSize: '1.8rem' }}>🔥</span>
+          <img className="header-logo-image" src={schoolLogo} alt="Mayamot Elementary School logo" />
           <div className="header-logo-content">
             <span className="header-logo-text">Beat The Heat</span>
             <span className="header-logo-subtitle">Mayamot Elementary School</span>

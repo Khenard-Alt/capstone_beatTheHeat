@@ -4,7 +4,6 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { useAuth } from './hooks/useAuth';
-import { Header } from './components/Header';
 import { Sidebar } from './components/sidebar/Sidebar';
 import { Footer } from './components/Footer';
 import { Loading } from './components/Loading';
@@ -186,8 +185,6 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="app-layout">
-      <Header user={user} />
-
       <div className="app-container">
         <Sidebar
           isOpen={true}

@@ -7,6 +7,10 @@ import { Button } from '../components/Button';
 import { isValidEmail } from '../utils/validators';
 import { STORAGE_KEYS } from '../utils/constants';
 import { MdEmail, MdLock, MdClose, MdAdminPanelSettings } from 'react-icons/md';
+import schoolLogo from '../assets/mayamotlogo.png';
+import realtimeIcon from '../assets/login/realtime.svg';
+import healthAdvisoryIcon from '../assets/login/healthAdvisory.svg';
+import aiPoweredAnalysisIcon from '../assets/login/aiPoweredAnalysis.svg';
 import '../styles/Login.css';
 import RegisterModal from './Register';
 
@@ -226,29 +230,32 @@ export const Login: React.FC = () => {
           
           <div className="login-brand-content">
             <div className="login-brand-logo">
-              <div className="login-logo-icon"></div>
-              <h1 className="login-brand-title">Beat The Heat</h1>
+              <img className="login-school-logo" src={schoolLogo} alt="Mayamot Elementary School logo" />
+              <div>
+                <h1 className="login-brand-title">Beat The Heat</h1>
+                <p className="login-brand-school">Mayamot Elementary School</p>
+              </div>
             </div>
             <p className="login-brand-description">
               AI-Integrated Smart Heat Index and Real-Time Health Advisory System
             </p>
             <div className="login-brand-features">
               <div className="feature-item">
-                <div className="feature-icon">📊</div>
+                <img className="feature-icon" src={realtimeIcon} alt="" aria-hidden="true" />
                 <div className="feature-text">
                   <h3>Real-Time Monitoring</h3>
                   <p>Track heat index levels across school premises</p>
                 </div>
               </div>
               <div className="feature-item">
-                <div className="feature-icon">🏥</div>
+                <img className="feature-icon" src={healthAdvisoryIcon} alt="" aria-hidden="true" />
                 <div className="feature-text">
                   <h3>Health Advisories</h3>
                   <p>Instant alerts for heat-related health concerns</p>
                 </div>
               </div>
               <div className="feature-item">
-                <div className="feature-icon">🤖</div>
+                <img className="feature-icon" src={aiPoweredAnalysisIcon} alt="" aria-hidden="true" />
                 <div className="feature-text">
                   <h3>AI-Powered Analysis</h3>
                   <p>Smart predictions and recommendations</p>
