@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-05-24T16:21:09.877801+00:00",
-  "rows": 125,
-  "train_size": 100,
-  "test_size": 25,
+  "generated_at": "2026-09-06T19:12:32.203685+00:00",
+  "rows": 108606,
+  "train_size": 86884,
+  "test_size": 21722,
   "min_class_count": 0,
   "class_counts": {
-    "safe": 25,
-    "caution": 25,
-    "extreme-caution": 25,
-    "danger": 25,
-    "extreme-danger": 25
+    "safe": 1139,
+    "caution": 15100,
+    "extreme-caution": 59948,
+    "danger": 32304,
+    "extreme-danger": 115
   },
   "label_map": {
     "caution": 0,
@@ -24,190 +24,188 @@
   "metrics": {
     "cv_metrics": {
       "caution": {
-        "precision": 0.9230769230769231,
-        "recall": 0.96,
-        "f1-score": 0.9411764705882353,
-        "support": 25.0
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 13861.0
       },
       "danger": {
-        "precision": 0.8421052631578947,
-        "recall": 0.9411764705882353,
-        "f1-score": 0.8888888888888888,
-        "support": 17.0
+        "precision": 0.9999658201456062,
+        "recall": 1.0,
+        "f1-score": 0.9999829097807325,
+        "support": 29256.0
       },
       "extreme-caution": {
-        "precision": 0.92,
-        "recall": 0.92,
-        "f1-score": 0.92,
-        "support": 25.0
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 53379.0
       },
       "extreme-danger": {
         "precision": 1.0,
-        "recall": 0.8571428571428571,
-        "f1-score": 0.9230769230769231,
-        "support": 21.0
+        "recall": 0.991304347826087,
+        "f1-score": 0.9956331877729258,
+        "support": 115.0
       },
       "safe": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
-        "support": 25.0
+        "support": 1135.0
       },
-      "accuracy": 0.9380530973451328,
+      "accuracy": 0.9999897694023285,
       "macro avg": {
-        "precision": 0.9370364372469636,
-        "recall": 0.9356638655462184,
-        "f1-score": 0.9346284565108094,
-        "support": 113.0
+        "precision": 0.9999931640291212,
+        "recall": 0.9982608695652175,
+        "f1-score": 0.9991232195107317,
+        "support": 97746.0
       },
       "weighted avg": {
-        "precision": 0.9415284296513919,
-        "recall": 0.9380530973451328,
-        "f1-score": 0.9382755598268353,
-        "support": 113.0
+        "precision": 0.9999897697520088,
+        "recall": 0.9999897694023285,
+        "f1-score": 0.9999897471522006,
+        "support": 97746.0
       }
     },
     "final_metrics": {
       "caution": {
-        "precision": 1.0,
+        "precision": 0.999639379733141,
         "recall": 1.0,
-        "f1-score": 1.0,
-        "support": 5.0
+        "f1-score": 0.999819657348963,
+        "support": 2772.0
       },
       "danger": {
         "precision": 1.0,
-        "recall": 0.5,
-        "f1-score": 0.6666666666666666,
-        "support": 4.0
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 5852.0
       },
       "extreme-caution": {
-        "precision": 0.7142857142857143,
-        "recall": 1.0,
-        "f1-score": 0.8333333333333334,
-        "support": 5.0
+        "precision": 1.0,
+        "recall": 0.9999063319595354,
+        "f1-score": 0.9999531637862396,
+        "support": 10676.0
       },
       "extreme-danger": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
-        "support": 4.0
+        "support": 23.0
       },
       "safe": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
-        "support": 5.0
+        "support": 227.0
       },
-      "accuracy": 0.9130434782608695,
+      "accuracy": 0.9999488491048594,
       "macro avg": {
-        "precision": 0.9428571428571428,
-        "recall": 0.9,
-        "f1-score": 0.9,
-        "support": 23.0
+        "precision": 0.9999278759466282,
+        "recall": 0.9999812663919071,
+        "f1-score": 0.9999545642270405,
+        "support": 19550.0
       },
       "weighted avg": {
-        "precision": 0.9378881987577639,
-        "recall": 0.9130434782608695,
-        "f1-score": 0.9057971014492753,
-        "support": 23.0
+        "precision": 0.9999488675509087,
+        "recall": 0.9999488491048594,
+        "f1-score": 0.9999488525193462,
+        "support": 19550.0
       }
     },
     "holdout_metrics": {
       "caution": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1-score": 0.0,
-        "support": 0.0
+        "precision": 0.9825535289452815,
+        "recall": 1.0,
+        "f1-score": 0.9912,
+        "support": 1239.0
       },
       "danger": {
         "precision": 1.0,
-        "recall": 0.375,
-        "f1-score": 0.5454545454545454,
-        "support": 8.0
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 3048.0
       },
       "extreme-caution": {
+        "precision": 1.0,
+        "recall": 0.9966509362155579,
+        "f1-score": 0.998322659347362,
+        "support": 6569.0
+      },
+      "extreme-danger": {
         "precision": 0.0,
         "recall": 0.0,
         "f1-score": 0.0,
         "support": 0.0
       },
-      "extreme-danger": {
+      "safe": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
         "support": 4.0
       },
-      "safe": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1-score": 0.0,
-        "support": 0.0
-      },
-      "accuracy": 0.5833333333333334,
+      "accuracy": 0.9979742173112339,
       "macro avg": {
-        "precision": 0.4,
-        "recall": 0.275,
-        "f1-score": 0.3090909090909091,
-        "support": 12.0
+        "precision": 0.7965107057890564,
+        "recall": 0.7993301872431116,
+        "f1-score": 0.7979045318694724,
+        "support": 10860.0
       },
       "weighted avg": {
-        "precision": 1.0,
-        "recall": 0.5833333333333334,
-        "f1-score": 0.6969696969696969,
-        "support": 12.0
+        "precision": 0.9980095600702766,
+        "recall": 0.9979742173112339,
+        "f1-score": 0.9979814317912358,
+        "support": 10860.0
       }
     },
     "stratified_test_metrics": {
       "caution": {
-        "precision": 1.0,
+        "precision": 0.999639379733141,
         "recall": 1.0,
-        "f1-score": 1.0,
-        "support": 5.0
+        "f1-score": 0.999819657348963,
+        "support": 2772.0
       },
       "danger": {
         "precision": 1.0,
-        "recall": 0.5,
-        "f1-score": 0.6666666666666666,
-        "support": 4.0
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 5852.0
       },
       "extreme-caution": {
-        "precision": 0.7142857142857143,
-        "recall": 1.0,
-        "f1-score": 0.8333333333333334,
-        "support": 5.0
+        "precision": 1.0,
+        "recall": 0.9999063319595354,
+        "f1-score": 0.9999531637862396,
+        "support": 10676.0
       },
       "extreme-danger": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
-        "support": 4.0
+        "support": 23.0
       },
       "safe": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
-        "support": 5.0
+        "support": 227.0
       },
-      "accuracy": 0.9130434782608695,
+      "accuracy": 0.9999488491048594,
       "macro avg": {
-        "precision": 0.9428571428571428,
-        "recall": 0.9,
-        "f1-score": 0.9,
-        "support": 23.0
+        "precision": 0.9999278759466282,
+        "recall": 0.9999812663919071,
+        "f1-score": 0.9999545642270405,
+        "support": 19550.0
       },
       "weighted avg": {
-        "precision": 0.9378881987577639,
-        "recall": 0.9130434782608695,
-        "f1-score": 0.9057971014492753,
-        "support": 23.0
+        "precision": 0.9999488675509087,
+        "recall": 0.9999488491048594,
+        "f1-score": 0.9999488525193462,
+        "support": 19550.0
       }
     },
     "promotion_blocked": true,
     "promotion_reasons": [
-      "Holdout missing class: caution",
-      "Holdout missing class: extreme-caution",
-      "Holdout missing class: safe",
-      "Perfect f1 for extreme-danger with low support (4)"
+      "Holdout missing class: extreme-danger",
+      "Perfect f1 for safe with low support (4)"
     ]
   }
 }

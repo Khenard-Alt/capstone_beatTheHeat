@@ -99,7 +99,10 @@ export const env = {
 		return 'gemini';
 	},
 	get pythonExecutable(): string {
-		return process.env.PYTHON_EXECUTABLE?.trim() || defaultPythonExecutable();
+		const configuredExecutable = process.env.PYTHON_EXECUTABLE?.trim();
+		return configuredExecutable && existsSync(configuredExecutable)
+			? configuredExecutable
+			: defaultPythonExecutable();
 	},
 	get pythonModelDir(): string {
 		return (
