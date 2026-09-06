@@ -5,9 +5,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.hasTwilioConfig = exports.hasAndroidSmsGatewayConfig = exports.hasWeatherSchedulerToken = exports.hasGeminiApiKey = exports.hasWeatherApiKey = exports.env = void 0;
 const path_1 = __importDefault(require("path"));
+const fs_1 = require("fs");
 const defaultPythonExecutable = () => {
-    const base = path_1.default.resolve(process.cwd(), '.venv', process.platform === 'win32' ? 'Scripts' : 'bin', process.platform === 'win32' ? 'python.exe' : 'python');
-    return base;
+    const executable = process.platform === 'win32' ? 'python.exe' : 'python';
+    const binDirectory = process.platform === 'win32' ? 'Scripts' : 'bin';
+    const environmentCandidates = [process.cwd(), path_1.default.resolve(process.cwd(), '..')];
+    for (const environmentRoot of environmentCandidates) {
+        const executablePath = path_1.default.resolve(environmentRoot, '.venv', binDirectory, executable);
+        if ((0, fs_1.existsSync)(executablePath)) {
+            return executablePath;
+        }
+    }
+    return executable;
 };
 exports.env = {
     get nodeEnv() {
@@ -92,7 +101,7 @@ exports.env = {
         return 'gemini';
     },
     get pythonExecutable() {
-        return process.env.PYTHON_EXECUTABLE ?? defaultPythonExecutable();
+        return process.env.PYTHON_EXECUTABLE?.trim() || defaultPythonExecutable();
     },
     get pythonModelDir() {
         return (process.env.PYTHON_MODEL_DIR ??
