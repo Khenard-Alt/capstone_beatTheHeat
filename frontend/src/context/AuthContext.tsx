@@ -115,6 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: data.role,
         phone: data.phone,
         childId: data.childId,
+        oauthAccessToken: data.oauthAccessToken,
       });
 
       const newUser: User = {

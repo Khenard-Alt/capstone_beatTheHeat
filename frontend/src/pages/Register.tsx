@@ -54,6 +54,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [pendingGoogle, setPendingGoogle] = useState<{ accessToken: string; email: string; firstName: string; lastName: string } | null>(null);
 
   const formatStudentLabel = (student: StudentOption) => {
     const gradeSection = [student.grade, student.section]
@@ -98,7 +99,20 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
         setErrorMessage('Could not load student list. Please check your connection.');
       }
     };
-    if (open) fetchStudents();
+    if (open) {
+      const pending = sessionStorage.getItem('bth_pending_google_registration');
+      if (pending) {
+        try {
+          const oauthData = JSON.parse(pending);
+          setPendingGoogle(oauthData);
+          setFormData((prev: any) => ({ ...prev, ...oauthData, role: 'parent' }));
+          setStep('child-search');
+        } catch {
+          sessionStorage.removeItem('bth_pending_google_registration');
+        }
+      }
+      fetchStudents();
+    }
   }, [open]);
 
   // Reset on close
@@ -123,6 +137,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
       setErrors({});
       setErrorMessage('');
       setSuccessMessage('');
+      setPendingGoogle(null);
       setSearchQuery('');
       setSearchResults([]);
     }
@@ -244,7 +259,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
       await register({
         ...formData,
         role: 'parent',
+        oauthAccessToken: pendingGoogle?.accessToken,
       });
+      sessionStorage.removeItem('bth_pending_google_registration');
       setSuccessMessage('Registration complete!');
 
       // Close modal and redirect to parent dashboard

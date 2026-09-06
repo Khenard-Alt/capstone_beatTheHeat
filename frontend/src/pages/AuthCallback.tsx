@@ -1,25 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { apiClient } from '../services/api';
 import { supabase } from '../services/supabase';
-import type { User } from '../types';
-import { STORAGE_KEYS } from '../utils/constants';
-
-const getLandingPath = (role: string): string => {
-  switch (role) {
-    case 'parent': return '/parent/dashboard';
-    case 'principal': return '/principal/dashboard';
-    case 'head-teacher': return '/head-teacher/dashboard';
-    case 'teacher': return '/teacher/dashboard';
-    case 'admin': return '/admin';
-    default: return '/dashboard';
-  }
-};
 
 export const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
-  const { updateUser } = useAuth();
   const [message, setMessage] = useState('Completing Google sign-in...');
 
   useEffect(() => {
@@ -37,23 +21,19 @@ export const AuthCallback: React.FC = () => {
         return;
       }
 
-      try {
-        const response = await apiClient.post<{ success: boolean; user: User; token: string }>(
-          '/api/users/oauth/sync',
-          { accessToken: data.session.access_token },
-        );
-        if (!active) return;
-        updateUser(response.data.user);
-        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.token);
-        navigate(getLandingPath(response.data.user.role), { replace: true });
-      } catch (requestError) {
-        setMessage(requestError instanceof Error ? requestError.message : 'Could not sync your Google account.');
-      }
+      const metadata = data.session.user.user_metadata ?? {};
+      sessionStorage.setItem('bth_pending_google_registration', JSON.stringify({
+        accessToken: data.session.access_token,
+        email: data.session.user.email ?? '',
+        firstName: metadata.first_name ?? metadata.given_name ?? metadata.name?.split(' ')[0] ?? '',
+        lastName: metadata.last_name ?? metadata.family_name ?? metadata.name?.split(' ').slice(1).join(' ') ?? '',
+      }));
+      if (active) navigate('/login?oauth=google', { replace: true });
     };
 
     void completeSignIn();
     return () => { active = false; };
-  }, [navigate, updateUser]);
+  }, [navigate]);
 
   return <main style={{ padding: 32, textAlign: 'center' }}><h1>{message}</h1></main>;
 };

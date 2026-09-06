@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { apiClient } from '../services/api';
 import { Input } from '../components/Input';
@@ -31,12 +32,17 @@ export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [searchParams] = useSearchParams();
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [adminAuthEmail, setAdminAuthEmail] = useState('admin@beattheheat.local');
   const [adminAuthSecret, setAdminAuthSecret] = useState('');
   const [adminAuthError, setAdminAuthError] = useState('');
   const [adminAuthSuccess, setAdminAuthSuccess] = useState('');
   const [isAuthenticatingAdmin, setIsAuthenticatingAdmin] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('oauth') === 'google') setIsRegisterOpen(true);
+  }, [searchParams]);
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'a') {
