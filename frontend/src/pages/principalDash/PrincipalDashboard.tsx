@@ -223,7 +223,6 @@ export const PrincipalDashboard: React.FC = () => {
               <>
                 <HeatIndexCard
                   heatIndex={heatIndexData.heatIndex}
-                  temperature={heatIndexData.temperature}
                   humidity={heatIndexData.humidity}
                   level={heatIndexData.level}
                   lastUpdated={heatIndexData.timestamp}

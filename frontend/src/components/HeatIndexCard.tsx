@@ -1,12 +1,11 @@
 import React from 'react';
 import type { HeatLevel } from '../types';
 import { getHeatLabel } from '../utils/helpers';
-import { formatTemperature, formatDateTimeGlobal } from '../utils/formatters';
+import { formatDateTimeGlobal } from '../utils/formatters';
 import '../styles/HeatIndexCard.css';
 
 interface HeatIndexCardProps {
   heatIndex: number;
-  temperature: number;
   humidity: number;
   level: HeatLevel;
   lastUpdated: string;
@@ -14,7 +13,6 @@ interface HeatIndexCardProps {
 
 export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
   heatIndex,
-  temperature,
   
   level,
   lastUpdated,
@@ -41,15 +39,6 @@ export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
           <div className="heat-index-label">Heat Index</div>
         </div>
 
-        <div className="heat-index-metrics">
-          <div className="metric">
-            <span className="metric-icon">🌡️</span>
-            <div className="metric-content">
-              <div className="metric-value">{formatTemperature(temperature)}</div>
-              <div className="metric-label">Temperature</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="heat-index-footer">

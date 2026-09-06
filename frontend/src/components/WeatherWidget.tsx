@@ -26,12 +26,6 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
           <div className="weather-conditions">{weather.conditions}</div>
         </div>
 
-        <div className="weather-details minimal">
-          <div className="weather-detail">
-            <span className="weather-detail-label">Temperature</span>
-            <span className="weather-detail-value">{formatTemperature(weather.temperature)}</span>
-          </div>
-        </div>
       </div>
 
       <div className="weather-footer">
