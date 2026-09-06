@@ -36,7 +36,15 @@ export const formatDate = (date: string | Date, formatStr: string = DATE_FORMATS
  * Example: Mar-24-2026 05-01-39 AM
  */
 export const formatDateTimeGlobal = (date: string | Date): string => {
-  return formatDate(date, 'MMM-dd-yyyy hh-mm-ss a');
+  // Use a clear human-friendly 12-hour format and normalize to lowercase am/pm
+  try {
+    const dateObj = toDateSafe(date);
+    if (!dateObj) return 'Invalid date';
+    // Example: May 20, 2026 12:12pm
+    return format(dateObj, 'MMM dd, yyyy h:mma').replace(/\s+/, ' ').toLowerCase();
+  } catch (err) {
+    return 'Invalid date';
+  }
 };
 
 /**
@@ -44,7 +52,48 @@ export const formatDateTimeGlobal = (date: string | Date): string => {
  * Example: Mar-24 05:01 AM
  */
 export const formatDateTimeCompact = (date: string | Date): string => {
-  return formatDate(date, 'MMM-dd hh:mm a');
+  // Compact format for small UI elements. Example: May 20 12:12pm
+  try {
+    const dateObj = toDateSafe(date);
+    if (!dateObj) return 'Invalid date';
+    return format(dateObj, 'MMM dd h:mma').toLowerCase();
+  } catch (err) {
+    return 'Invalid date';
+  }
+};
+
+/**
+ * Format notification timestamps as: 12:12 pm Mar 27, 2002
+ */
+export const formatNotificationTimestamp = (date: string | Date): string => {
+  try {
+    const dateObj = toDateSafe(date);
+    if (!dateObj) return 'Invalid date';
+    return format(dateObj, 'h:mm a MMM d, yyyy')
+      .replace(/\bAM\b/g, 'am')
+      .replace(/\bPM\b/g, 'pm');
+  } catch (err) {
+    return 'Invalid date';
+  }
+};
+
+/**
+ * Format scheduled advisory time labels as: 12:00 am
+ */
+export const formatScheduledTime = (time: string): string => {
+  const [hoursPart, minutesPart] = time.split(':');
+  const hours = Number.parseInt(hoursPart, 10);
+  const minutes = Number.parseInt(minutesPart, 10);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return time;
+  }
+
+  const ampm = hours >= 12 ? 'pm' : 'am';
+  let normalizedHours = hours % 12;
+  if (normalizedHours === 0) normalizedHours = 12;
+
+  return `${normalizedHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 };
 
 /**

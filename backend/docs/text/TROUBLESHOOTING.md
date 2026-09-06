@@ -22,10 +22,10 @@ rm -rf node_modules package-lock.json  # Mac/Linux
 Remove-Item -Recurse -Force node_modules, package-lock.json  # Windows PowerShell
 
 # 3. Reinstall
-npm install
+npm ci
 
 # 4. Try with legacy peer deps (if conflicts persist)
-npm install --legacy-peer-deps
+npm ci --legacy-peer-deps
 ```
 
 ### Issue: Node version mismatch

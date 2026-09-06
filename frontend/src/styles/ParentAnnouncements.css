@@ -1,0 +1,30 @@
+.parent-announcements-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.parent-announcements-section {
+  padding: 18px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.parent-announcements-section h2 {
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-size: clamp(20px, 2.4vw, 28px);
+}
+
+.parent-announcements-section .advisory-table-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.parent-announcements-section .loading-state,
+.parent-announcements-section .error-alert,
+.parent-announcements-section .empty-state-text {
+  margin: 0 0 12px;
+}

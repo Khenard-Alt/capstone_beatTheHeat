@@ -100,10 +100,15 @@
 
 .parent-priority-metrics .heat-index-value {
   font-size: 64px;
+  line-height: 1;
+  letter-spacing: -3px;
 }
 
 .parent-priority-metrics .weather-temp {
-  font-size: 52px;
+  /* make weather temp visually equal to heat-index in two-up layout */
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: -3px;
 }
 
 .parent-priority-metrics .loading-placeholder {

@@ -2,14 +2,18 @@ import React, { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types';
 import { STORAGE_KEYS } from '../utils/constants';
+import axios from 'axios';
+import { apiClient } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => void;
   register: (data: any) => Promise<void>;
+  setAdminAuthSession: (user: User) => void;
+  updateUser: (u: User) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +25,19 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const setAdminAuthSession = (adminUser: User) => {
+    setUser(adminUser);
+    localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(adminUser));
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'admin-auth-token');
+  };
+
+  const updateUser = (u: User) => {
+    setUser(u);
+    try {
+      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(u));
+    } catch (_) {}
+  };
 
   useEffect(() => {
     // Check for stored user data on mount
@@ -35,25 +52,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, _password: string) => {
+  const login = async (email: string, _password: string): Promise<User> => {
     setIsLoading(true);
     try {
-      // Mock login - replace with actual API call
-      const mockUser: User = {
-        id: '1',
+      const { data } = await apiClient.post('/api/users/login', {
         email,
-        role: 'admin',
-        firstName: 'John',
-        lastName: 'Doe',
-        schoolId: 'school-1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+        password: _password,
+      });
+
+      const mockUser: User = data.user;
 
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mockUser));
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'mock-token');
       setUser(mockUser);
+      return mockUser;
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const responseData = error.response?.data;
+        const message =
+          responseData && typeof responseData === 'object' && 'message' in responseData
+            ? String(responseData.message)
+            : error.message || 'Login failed';
+        console.error('Login error:', error);
+        throw new Error(message);
+      }
       console.error('Login error:', error);
       throw error;
     } finally {
@@ -70,18 +92,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (data: any) => {
     setIsLoading(true);
     try {
-      // Mock registration - replace with actual API call
+      const { data: result } = await apiClient.post('/api/users/register', {
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role,
+        phone: data.phone,
+        childId: data.childId,
+      });
+
       const newUser: User = {
-        id: Date.now().toString(),
-        ...data,
-        schoolId: 'school-1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        id: result.user.id,
+        email: result.user.email,
+        role: result.user.role,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        schoolId: result.user.schoolId,
+        createdAt: result.user.createdAt,
+        updatedAt: result.user.updatedAt,
       };
 
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(newUser));
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'auth-token');
       setUser(newUser);
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const responseData = error.response?.data;
+        const message =
+          responseData && typeof responseData === 'object' && 'message' in responseData
+            ? String(responseData.message)
+            : error.message || 'Registration failed';
+        console.error('Registration error:', error);
+        throw new Error(message);
+      }
       console.error('Registration error:', error);
       throw error;
     } finally {
@@ -98,6 +142,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         logout,
         register,
+        setAdminAuthSession,
+          updateUser,
       }}
     >
       {children}

@@ -1,0 +1,66 @@
+name: Retrain AI Model
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 0'
+
+jobs:
+  retrain:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install venv dependencies
+        shell: pwsh
+        run: |
+          .\backend\scripts\setup-python-venv.ps1 -PythonExe (Get-Command python).Source
+
+      - name: Run trainer tests
+        shell: pwsh
+        run: |
+          .\backend\scripts\run-trainer-tests.ps1
+
+      - name: Audit training data
+        shell: pwsh
+        run: |
+          node .\backend\scripts\audit-training-data.js .\backend\logs\audit-events.jsonl .\backend\data\training_audit_report.json --compare-report .\backend\components\AIModel\python\model\training_report.json --fail-on-drift
+
+      - name: Retrain model
+        shell: pwsh
+        run: |
+          .\backend\scripts\run-retrain.ps1 -MinClassCount 0
+
+      - name: Promote model artifacts
+        shell: pwsh
+        run: |
+          .\backend\scripts\promote-model.ps1 -AllowNeedsReview
+
+      - name: Package deployment artifacts
+        shell: pwsh
+        run: |
+          .\backend\scripts\package-model-artifacts.ps1
+
+      - name: Upload model archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-release
+          path: backend/deploy/model-release/*.zip
+
+      - name: Upload published model
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-model
+          path: backend/deploy/published-models/**

@@ -1,0 +1,232 @@
+/* Head Teacher specific overrides and layout
+   Scoped to #incident-reports-top and #incident-review-top so other pages are unaffected
+*/
+
+/* Constrain the main content area and keep sidebar width predictable */
+#incident-reports-top .teacher-layout,
+#incident-review-top .teacher-layout {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Ensure the notes card sits above the tables and spans main column */
+#incident-reports-top .teacher-main > .teacher-panel-card.tone-success,
+#incident-review-top .teacher-main > .teacher-panel-card.tone-success {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
+/* Prevent the right column from moving the notes card visually */
+#incident-reports-top .teacher-side,
+#incident-review-top .teacher-side {
+  width: 320px;
+}
+
+/* Table density for head teacher pages */
+#incident-reports-top .teacher-dashboard-table,
+#incident-review-top .teacher-dashboard-table {
+  font-size: 14px;
+}
+
+#incident-reports-top .teacher-dashboard-table th,
+#incident-review-top .teacher-dashboard-table th,
+#incident-reports-top .teacher-dashboard-table td,
+#incident-review-top .teacher-dashboard-table td {
+  padding: 10px 12px;
+}
+
+/* Allow description cells to wrap on these pages */
+#incident-reports-top .teacher-dashboard-table td.description,
+#incident-review-top .teacher-dashboard-table td.description,
+#incident-reports-top .teacher-dashboard-table td.action-taken,
+#incident-review-top .teacher-dashboard-table td.action-taken {
+  max-width: 420px;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
+}
+
+/* Make the action select and delete button align nicely */
+#incident-review-top .teacher-dashboard-table td select.select-field {
+  min-width: 150px;
+}
+
+#incident-review-top .teacher-dashboard-table td .btn-danger {
+  margin-left: 8px;
+}
+
+/* Small screens: make layout single column but keep notes above table */
+@media (max-width: 1000px) {
+  #incident-reports-top .teacher-layout,
+  #incident-review-top .teacher-layout {
+    grid-template-columns: 1fr;
+  }
+
+  #incident-reports-top .teacher-side,
+  #incident-review-top .teacher-side {
+    display: none;
+  }
+}
+
+/* Strong overrides to neutralize inherited table/card styles for Head Teacher pages */
+#incident-reports-top .teacher-panel-card,
+#incident-review-top .teacher-panel-card {
+  /* ensure card visuals are consistent */
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+  border: 1px solid #e6eefc;
+  padding: 16px;
+}
+
+/* Table base reset to avoid global app-table interference */
+#incident-reports-top .teacher-dashboard-table.app-table,
+#incident-review-top .teacher-dashboard-table.app-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  min-width: 760px;
+  background: transparent !important;
+  border: none !important;
+  font-size: 14px !important;
+  color: #0f172a !important;
+}
+
+#incident-reports-top .teacher-dashboard-table thead th,
+#incident-review-top .teacher-dashboard-table thead th {
+  background: transparent !important;
+  color: #475569 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  font-weight: 700 !important;
+  padding: 10px 12px !important;
+  border-bottom: 2px solid #eef2f7 !important;
+}
+
+#incident-reports-top .teacher-dashboard-table th,
+#incident-reports-top .teacher-dashboard-table td,
+#incident-review-top .teacher-dashboard-table th,
+#incident-review-top .teacher-dashboard-table td {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  vertical-align: top !important;
+  text-align: left !important;
+}
+
+#incident-reports-top .teacher-dashboard-table tbody tr:nth-child(even),
+#incident-review-top .teacher-dashboard-table tbody tr:nth-child(even) {
+  background: #fbfdff !important;
+}
+
+/* Make description cells wrap neatly and avoid overflow */
+#incident-reports-top .teacher-dashboard-table td.description,
+#incident-review-top .teacher-dashboard-table td.description,
+#incident-reports-top .teacher-dashboard-table td.action-taken,
+#incident-review-top .teacher-dashboard-table td.action-taken {
+  max-width: 420px !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  word-break: break-word !important;
+}
+
+/* Status badge styling */
+#incident-reports-top .teacher-dashboard-table td .status-badge,
+#incident-review-top .teacher-dashboard-table td .status-badge {
+  display: inline-block !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+}
+
+/* Action select/button sizing */
+#incident-review-top .teacher-dashboard-table td select.select-field {
+  min-width: 140px !important;
+  padding: 8px 10px !important;
+}
+
+#incident-review-top .teacher-dashboard-table td .btn-danger {
+  margin-left: 8px !important;
+}
+
+/* Make sure the notes card header aligns with the table area */
+#incident-reports-top .teacher-main > .teacher-panel-card.tone-success .card-title,
+#incident-review-top .teacher-main > .teacher-panel-card.tone-success .card-title {
+  font-size: 18px;
+}
+
+/* Small adjustment for very narrow screens */
+@media (max-width: 720px) {
+  #incident-reports-top .teacher-dashboard-table td.description,
+  #incident-review-top .teacher-dashboard-table td.description {
+    max-width: 100% !important;
+  }
+}
+
+/* Toolbar: search and filter styling specific to head teacher pages */
+#incident-reports-top .teacher-incidents-toolbar,
+#incident-review-top .teacher-incidents-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+#incident-reports-top .teacher-incidents-search,
+#incident-review-top .teacher-incidents-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e6eef8;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+#incident-reports-top .teacher-incidents-search svg,
+#incident-review-top .teacher-incidents-search svg {
+  color: #64748b;
+}
+
+#incident-reports-top .teacher-incidents-search input,
+#incident-review-top .teacher-incidents-search input {
+  border: none;
+  outline: none;
+  padding: 6px 8px;
+  min-width: 260px;
+  font-size: 14px;
+  background: transparent;
+  color: #0f172a;
+}
+
+#incident-reports-top .teacher-incidents-filter,
+#incident-review-top .teacher-incidents-filter {
+  min-width: 160px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e6eef8;
+  background: #fff;
+  font-size: 14px;
+}
+
+/* Ensure the select-field class used in other components inherits the intended look on head teacher pages */
+#incident-reports-top .select-field,
+#incident-review-top .select-field {
+  width: auto !important;
+  padding: 8px 10px !important;
+  border: 1px solid #e6eef8 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+}
+
+/* Tweak the toolbar spacing inside the parent card to align with card header */
+#incident-reports-top .teacher-panel-card .teacher-incidents-toolbar,
+#incident-review-top .teacher-panel-card .teacher-incidents-toolbar {
+  margin-top: 6px;
+}

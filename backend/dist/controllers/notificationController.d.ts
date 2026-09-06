@@ -1,1 +1,30 @@
+import { Request, Response, NextFunction } from 'express';
+export declare const notificationController: {
+    getSmsGatewayHealth: (_req: Request, res: Response) => Promise<void>;
+    sendSmsTest: (req: Request, res: Response) => Promise<void>;
+    /**
+     * Send heat alert email to users
+     */
+    sendHeatAlert: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    /**
+     * Send health advisory notification email
+     */
+    sendAdvisoryNotification: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    /**
+     * Broadcast heat alert to all users in a school
+     */
+    broadcastHeatAlert: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    /**
+     * Get notifications for a user
+     */
+    getNotifications: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    /**
+     * Mark notification as read
+     */
+    markAsRead: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    /**
+     * Clear notifications for a user
+     */
+    clearAll: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+};
 //# sourceMappingURL=notificationController.d.ts.map

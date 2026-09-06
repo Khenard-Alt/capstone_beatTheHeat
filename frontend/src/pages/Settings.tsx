@@ -14,7 +14,7 @@ export const Settings: React.FC = () => {
     theme: 'light',
     language: 'en',
     temperatureUnit: 'celsius',
-    weatherUpdateFrequency: '15',
+    weatherUpdateFrequency: '1',
   });
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,6 +188,7 @@ export const Settings: React.FC = () => {
                   onChange={handleSelectChange}
                   className="select-field"
                 >
+                  <option value="1">Every 1 minute</option>
                   <option value="5">Every 5 minutes</option>
                   <option value="15">Every 15 minutes</option>
                   <option value="30">Every 30 minutes</option>

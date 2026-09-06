@@ -78,7 +78,8 @@ export const getHeatIndexHistory = async (
 					.in('id', weatherIds);
 
 				if (weatherError) {
-					error = weatherError;
+					// We log the error but continue as we can fallback to 0/empty values for missing weather
+					console.error('Weather data fetch error in history:', weatherError);
 				} else {
 					weatherById = new Map((weatherRows || []).map((row: any) => [row.id, row]));
 				}
@@ -125,52 +126,61 @@ export const getHeatIndexHistory = async (
 				}
 			});
 
-			// Aggregate grouped data
-			data = Array.from(grouped.entries())
-				.map(([time, records]) => {
-					const weatherRows = records
-						.map((r: any) => weatherById.get(r.weather_data_id))
-						.filter(Boolean);
+			// Only return aggregated data if we actually have matches for the requested period
+			if (grouped.size > 0) {
+				// Aggregate grouped data
+				data = Array.from(grouped.entries())
+					.map(([time, records]) => {
+						const weatherRows = records
+							.map((r: any) => weatherById.get(r.weather_data_id))
+							.filter(Boolean);
 
-					const temps = records
-						.map((_r: any, idx: number) => weatherRows[idx]?.temperature_c ?? 0)
-						.filter((t: number) => t > 0);
-					const humidities = records
-						.map((_r: any, idx: number) => weatherRows[idx]?.humidity_percent ?? 0)
-						.filter((h: number) => h > 0);
-					const heatIndexes = records.map((r: any) => Number(r.heat_index_c) || 0);
+						const temps = records
+							.map((_r: any, idx: number) => weatherRows[idx]?.temperature_c ?? 0)
+							.filter((t: number) => t > 0);
+						const humidities = records
+							.map((_r: any, idx: number) => weatherRows[idx]?.humidity_percent ?? 0)
+							.filter((h: number) => h > 0);
+						const heatIndexes = records.map((r: any) => Number(r.heat_index_c) || 0);
 
-					const avgTemp =
-						temps.length > 0
-							? temps.reduce((a, b) => a + b, 0) / temps.length
-							: 0;
-					const avgHumidity =
-						humidities.length > 0
-							? humidities.reduce((a, b) => a + b, 0) / humidities.length
-							: 0;
-					const avgHeatIndex =
-						heatIndexes.length > 0
-							? heatIndexes.reduce((a, b) => a + b, 0) / heatIndexes.length
-							: 0;
-					const minHeatIndex = heatIndexes.length > 0 ? Math.min(...heatIndexes) : 0;
-					const maxHeatIndex = heatIndexes.length > 0 ? Math.max(...heatIndexes) : 0;
+						const avgTemp =
+							temps.length > 0
+								? temps.reduce((a, b) => a + b, 0) / temps.length
+								: 0;
+						const avgHumidity =
+							humidities.length > 0
+								? humidities.reduce((a, b) => a + b, 0) / humidities.length
+								: 0;
+						const avgHeatIndex =
+							heatIndexes.length > 0
+								? heatIndexes.reduce((a, b) => a + b, 0) / heatIndexes.length
+								: 0;
+						const minHeatIndex = heatIndexes.length > 0 ? Math.min(...heatIndexes) : 0;
+						const maxHeatIndex = heatIndexes.length > 0 ? Math.max(...heatIndexes) : 0;
 
-					return {
-						time,
-						avgTemp: Math.round(avgTemp * 10) / 10,
-						avgHumidity: Math.round(avgHumidity * 10) / 10,
-						avgHeatIndex: Math.round(avgHeatIndex * 10) / 10,
-						minHeatIndex: Math.round(minHeatIndex * 10) / 10,
-						maxHeatIndex: Math.round(maxHeatIndex * 10) / 10,
-					};
-				})
-				.sort(
-					(a, b) =>
-						new Date(a.time).getTime() - new Date(b.time).getTime()
-				);
+						return {
+							time,
+							avgTemp: Math.round(avgTemp * 10) / 10,
+							avgHumidity: Math.round(avgHumidity * 10) / 10,
+							avgHeatIndex: Math.round(avgHeatIndex * 10) / 10,
+							minHeatIndex: Math.round(minHeatIndex * 10) / 10,
+							maxHeatIndex: Math.round(maxHeatIndex * 10) / 10,
+						};
+					})
+					.sort(
+						(a, b) =>
+							new Date(a.time).getTime() - new Date(b.time).getTime()
+					);
+			} else {
+				// If no real data for the period, use fallback generated data
+				data = await fallbackHistory(period, limit);
+			}
+		} else if (rawLogs && rawLogs.length === 0) {
+			// No logic error, just no logs in DB yet
+			data = await fallbackHistory(period, limit);
 		}
 
-		if (error) {
+		if (error && data.length === 0) {
 			res.status(500).json({
 				success: false,
 				message: 'Failed to fetch heat index history',

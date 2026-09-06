@@ -2,7 +2,7 @@
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'teacher' | 'staff';
+  role: 'admin' | 'principal' | 'head-teacher' | 'teacher' | 'staff' | 'parent';
   firstName: string;
   lastName: string;
   schoolId: string;
@@ -114,7 +114,7 @@ export interface RegisterData {
   confirmPassword: string;
   firstName: string;
   lastName: string;
-  role: 'teacher' | 'staff';
+  role: 'parent';
 }
 
 export interface AuthResponse {
@@ -165,6 +165,7 @@ export interface StudentHealthIncident {
   temperature: number;
   timestamp: string;
   actionTaken: string;
+  aiSuggestion?: string;
   reportedBy: string;
   status: 'reported' | 'treated' | 'monitoring' | 'resolved';
 }

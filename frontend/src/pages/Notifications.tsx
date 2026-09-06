@@ -1,14 +1,17 @@
-import React, {  useState } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useNotification } from '../hooks/useNotification';
 import { getTimeAgo } from '../utils/helpers';
+import { formatScheduledTime } from '../utils/formatters';
 import { MdNotifications, MdDelete, MdDone, MdDoneAll } from 'react-icons/md';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Notifications.css';
 
 export const Notifications: React.FC = () => {
   const { notifications, markAsRead, clearAll } = useNotification();
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const navigate = useNavigate();
 
   const filteredNotifications = notifications.filter((n) => {
     if (filter === 'unread') return n.status === 'unread';
@@ -26,6 +29,14 @@ export const Notifications: React.FC = () => {
       info: 'ℹ️',
     };
     return icons[type] || '🔔';
+  };
+
+  const safeTimeLabel = (date: string | Date) => {
+    try {
+      return getTimeAgo(date);
+    } catch (err) {
+      return 'Invalid date';
+    }
   };
 
   const getPriorityClass = (priority: string) => {
@@ -95,32 +106,33 @@ export const Notifications: React.FC = () => {
                 key={notification.id}
                 className={`notification-item ${notification.status === 'unread' ? 'notification-item-unread' : ''} ${getPriorityClass(notification.priority)}`}
               >
-                <div className="notification-icon">
-                  {getNotificationIcon(notification.type)}
-                </div>
+                <div className="notification-icon">{getNotificationIcon(notification.type)}</div>
 
-                <div className="notification-content">
+                <div className="notification-body">
                   <div className="notification-header">
-                    <h4 className="notification-title">{notification.title}</h4>
-                    <span className="notification-time">
-                      {getTimeAgo(notification.sentAt)}
-                    </span>
+                    <strong>{notification.title.replace(/Scheduled Advisory - (\d{2}:\d{2})/, (_m, t) => `Scheduled Advisory - ${formatScheduledTime(t)}`)}</strong>
+                    <small className="notification-time">{safeTimeLabel(notification.sentAt)}</small>
                   </div>
-
-                  <p className="notification-message">{notification.message}</p>
-
-                  <div className="notification-meta">
-                    <span className="notification-type">{notification.type}</span>
-                    <span className={`notification-priority ${notification.priority}`}>
-                      {notification.priority}
-                    </span>
-                  </div>
+                  <div className="notification-message">{notification.message}</div>
                 </div>
 
                 <div className="notification-actions">
+                  <button
+                    className="action-view-small"
+                    onClick={() => {
+                      if (notification.status === 'unread') markAsRead(notification.id);
+                      if (notification.type === 'advisory') navigate('/health-advisory');
+                      else if (notification.type === 'heat-alert') navigate('/heat-index');
+                      else navigate('/notifications');
+                    }}
+                    title="View"
+                  >
+                    View
+                  </button>
+
                   {notification.status === 'unread' ? (
                     <button
-                      className="action-btn"
+                      className="action-mark-read"
                       onClick={() => markAsRead(notification.id)}
                       title="Mark as read"
                     >

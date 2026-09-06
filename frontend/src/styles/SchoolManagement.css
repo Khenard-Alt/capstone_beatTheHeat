@@ -1,1 +1,406 @@
 /* SchoolManagement Page Styles */
+
+.school-management-page {
+	padding: 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	background: linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.98));
+}
+
+.page-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: end;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.page-header h1 {
+	margin: 0;
+	font-size: 30px;
+	font-weight: 800;
+	color: #0f172a;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.page-header p {
+	margin: 8px 0 0;
+	color: #475569;
+}
+
+.page-header-actions,
+.user-management-actions {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.management-status-row {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.management-status-pill,
+.role-pill {
+	display: inline-flex;
+	align-items: center;
+	border-radius: 999px;
+	padding: 6px 12px;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.management-status-pill.success {
+	background: #dcfce7;
+	color: #166534;
+}
+
+.management-status-pill.warning {
+	background: #fef3c7;
+	color: #92400e;
+}
+
+.management-status-pill.neutral {
+	background: #e2e8f0;
+	color: #334155;
+}
+
+.admin-inline-alert {
+	padding: 12px 14px;
+	border-radius: 12px;
+	font-weight: 600;
+}
+
+.admin-inline-alert.error {
+	background: #fef2f2;
+	color: #b91c1c;
+	border: 1px solid #fecaca;
+}
+
+.admin-inline-alert.success {
+	background: #ecfdf5;
+	color: #166534;
+	border: 1px solid #bbf7d0;
+}
+
+.school-grid,
+.management-panel-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 20px;
+}
+
+.management-panel-grid {
+	grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+	align-items: start;
+}
+
+.management-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 14px;
+}
+
+.management-locked-note {
+	padding: 12px 14px;
+	border-radius: 12px;
+	background: #eff6ff;
+	color: #1e3a8a;
+	font-weight: 600;
+}
+
+.management-form,
+.management-list-panel {
+	border: 1px solid #dbe4f0;
+	border-radius: 18px;
+	background: #fff;
+	padding: 18px;
+	box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
+}
+
+.management-form {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.form-section-title {
+	font-size: 18px;
+	font-weight: 800;
+	color: #0f172a;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.form-row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.select-group {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.select-label {
+	font-size: 13px;
+	font-weight: 700;
+	color: #334155;
+}
+
+.select-field {
+	width: 100%;
+	padding: 12px 14px;
+	border: 1px solid #cbd5e1;
+	border-radius: 12px;
+	background: #fff;
+	color: #0f172a;
+}
+
+.management-form-actions {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.management-table {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.management-table-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 14px;
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	background: #f8fafc;
+}
+
+.row-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	align-items: flex-end;
+	color: #475569;
+	font-size: 13px;
+}
+
+.muted-text {
+	color: #64748b;
+	font-size: 13px;
+	margin-top: 4px;
+}
+
+.role-pill {
+	background: #dbeafe;
+	color: #1d4ed8;
+}
+
+.list-panel-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.list-panel-header h3 {
+	margin: 0;
+	font-size: 18px;
+}
+
+.management-search-box {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 14px;
+	border: 1px solid #cbd5e1;
+	border-radius: 12px;
+	background: #fff;
+	color: #64748b;
+	margin-bottom: 14px;
+}
+
+.management-search-box input {
+	border: 0;
+	outline: 0;
+	width: 100%;
+	background: transparent;
+	color: #0f172a;
+}
+
+.empty-state {
+	padding: 16px;
+	border-radius: 12px;
+	background: #f8fafc;
+	border: 1px dashed #cbd5e1;
+	color: #64748b;
+}
+
+.admin-auth-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.6);
+	display: grid;
+	place-items: center;
+	z-index: 50;
+	padding: 20px;
+}
+
+.admin-auth-modal {
+	width: min(520px, 100%);
+	background: #fff;
+	border-radius: 22px;
+	padding: 22px;
+	box-shadow: 0 35px 90px rgba(15, 23, 42, 0.35);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.admin-auth-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: start;
+	gap: 12px;
+}
+
+.admin-auth-eyebrow {
+	font-size: 12px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #1d4ed8;
+	font-weight: 800;
+}
+
+.admin-auth-modal h2 {
+	margin: 4px 0 0;
+	font-size: 24px;
+	color: #0f172a;
+}
+
+.admin-auth-copy {
+	margin: 0;
+	color: #475569;
+	line-height: 1.6;
+}
+
+.admin-auth-close {
+	width: 40px;
+	height: 40px;
+	border-radius: 999px;
+	border: 1px solid #cbd5e1;
+	background: #fff;
+	display: grid;
+	place-items: center;
+	cursor: pointer;
+}
+
+.admin-auth-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.card-description {
+	color: #475569;
+	margin-top: 0;
+}
+
+.system-settings {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.setting-item {
+	padding: 16px;
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	background: #f8fafc;
+}
+
+.checkbox-label {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+	cursor: pointer;
+}
+
+.threshold-settings {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+}
+
+.no-access {
+	padding: 24px;
+}
+
+.btn-delete-small {
+	padding: 6px 12px;
+	background-color: #ef4444;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	white-space: nowrap;
+}
+
+.btn-delete-small:hover {
+	background-color: #dc2626;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete-small:active {
+	transform: translateY(0);
+}
+
+@media (max-width: 1100px) {
+	.school-grid,
+	.management-panel-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.management-stats-grid,
+	.threshold-settings {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 720px) {
+	.school-management-page {
+		padding: 16px;
+	}
+
+	.page-header,
+	.list-panel-header,
+	.management-table-row,
+	.admin-auth-modal-header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.form-row,
+	.management-stats-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.row-meta {
+		align-items: flex-start;
+	}
+}
