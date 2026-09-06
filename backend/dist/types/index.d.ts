@@ -26,6 +26,7 @@ export interface AdvisoryInput {
     query: string;
     weather: WeatherSnapshot;
     lang?: 'english' | 'tagalog' | 'taglish' | 'en' | 'tl';
+    audienceRole?: 'teacher' | 'principal' | 'head-teacher' | 'parent' | 'admin';
     single?: boolean;
 }
 export interface AdvisoryResult {
@@ -46,6 +47,7 @@ export interface AdvisoryResult {
     modelProfile: {
         mode: 'rule-grounded-ai';
         scope: 'system-only';
+        audienceRole?: AdvisoryInput['audienceRole'];
     };
     singleResponse?: string;
     healthDetails?: {

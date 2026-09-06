@@ -13,6 +13,7 @@ import healthAdvisoryIcon from '../assets/login/healthAdvisory.svg';
 import aiPoweredAnalysisIcon from '../assets/login/aiPoweredAnalysis.svg';
 import '../styles/Login.css';
 import RegisterModal from './Register';
+import { isSupabaseAuthConfigured } from '../services/supabase';
 
 const ADMIN_AUTH_STORAGE_KEY = 'school_management_admin_unlocked';
 
@@ -109,6 +110,17 @@ export const Login: React.FC = () => {
     } catch {
       setErrorMessage('Invalid email or password. Please try again.');
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setErrorMessage('');
+    setIsLoading(true);
+    try {
+      await auth.loginWithGoogle();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Google sign-in failed.');
       setIsLoading(false);
     }
   };
@@ -342,6 +354,18 @@ export const Login: React.FC = () => {
                 )}
               </button>
             </form>
+
+            <div className="login-oauth-divider"><span>or</span></div>
+            <button
+              type="button"
+              className="google-signin-btn"
+              onClick={() => void handleGoogleSignIn()}
+              disabled={isLoading || !isSupabaseAuthConfigured}
+              title={!isSupabaseAuthConfigured ? 'Configure Supabase Auth first' : 'Continue with Google'}
+            >
+              <span className="google-signin-mark" aria-hidden="true">G</span>
+              {isSupabaseAuthConfigured ? 'Continue with Google' : 'Google sign-in needs configuration'}
+            </button>
 
             <div className="login-signup">
               <p className="signup-prompt">Don't have an account?</p>

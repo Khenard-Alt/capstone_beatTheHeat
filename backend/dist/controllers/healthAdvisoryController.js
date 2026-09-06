@@ -151,11 +151,16 @@ const generateHealthAdvisory = async (req, res, next) => {
         const rawLang = req.body?.lang;
         const allowedLangs = ['english', 'tagalog', 'taglish', 'en', 'tl'];
         const langParam = rawLang && allowedLangs.includes(rawLang) ? rawLang : undefined;
+        const allowedRoles = ['teacher', 'principal', 'head-teacher', 'parent', 'admin'];
+        const roleParam = typeof req.body?.audienceRole === 'string' && allowedRoles.includes(req.body.audienceRole)
+            ? req.body.audienceRole
+            : undefined;
         const singleParam = req.body?.single === true || String(req.body?.single ?? '') === 'true';
         const advisory = await aiAnalysis_service_1.aiAnalysisService.generateScopedAdvisory({
             query,
             weather,
             lang: langParam,
+            audienceRole: roleParam,
             single: singleParam,
         });
         res.status(200).json({

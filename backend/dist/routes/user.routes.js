@@ -17,6 +17,11 @@ router.post('/register', userController_1.registerUser);
  */
 router.post('/login', userController_1.loginUser);
 /**
+ * POST /api/users/oauth/sync
+ * Verify a Supabase OAuth session and sync its application user record.
+ */
+router.post('/oauth/sync', userController_1.syncOAuthUser);
+/**
  * POST /api/users/admin-auth
  * Authenticate admin management actions via admin_auth table
  */

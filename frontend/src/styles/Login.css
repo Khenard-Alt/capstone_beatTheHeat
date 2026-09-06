@@ -650,6 +650,55 @@
 .signup-btn { padding:8px 14px; border-radius:999px; border: none; color: white; background: linear-gradient(90deg, var(--brand-accent,#06b6d4), var(--brand-primary-600,#2563eb)); text-decoration:none; font-weight:700; box-shadow: 0 8px 18px rgba(6,182,212,0.16); }
 .signup-btn:hover { transform: translateY(-3px); }
 
+.login-oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 12px;
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.login-oauth-divider::before,
+.login-oauth-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: #e2e8f0;
+}
+
+.google-signin-btn {
+  width: 100%;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1f2937;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.google-signin-btn:hover:not(:disabled) {
+  border-color: #93c5fd;
+  background: #f8fbff;
+}
+
+.google-signin-btn:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.google-signin-mark {
+  color: #4285f4;
+  font-size: 20px;
+  font-weight: 800;
+}
+
 .login-public-access {
   margin-top: 20px;
   padding: 18px 20px;

@@ -136,6 +136,11 @@ export const registerUser = async (
       return;
     }
 
+    if (!/^[^\s@]+@gmail\.com$/i.test(String(email).trim())) {
+      res.status(400).json({ success: false, message: 'Registration currently requires a Gmail account (@gmail.com).' });
+      return;
+    }
+
     if (!isAllowedRole(role)) {
       res.status(400).json({
         success: false,
@@ -377,6 +382,88 @@ export const loginUser = async (
     });
   } catch (error) {
     console.error('Login error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Sync a Supabase Google session into the application's users table.
+ * New OAuth users are created as parents until an administrator assigns another role.
+ */
+export const syncOAuthUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const accessToken = typeof req.body?.accessToken === 'string' ? req.body.accessToken : '';
+    if (!accessToken) {
+      res.status(400).json({ success: false, message: 'Supabase access token is required' });
+      return;
+    }
+
+    const client = getSupabaseAdminClient();
+    if (!client) {
+      res.status(503).json({ success: false, message: 'Supabase Auth is not configured on the backend' });
+      return;
+    }
+
+    const { data: authData, error: authError } = await client.auth.getUser(accessToken);
+    const authUser = authData.user;
+    if (authError || !authUser?.email) {
+      res.status(401).json({ success: false, message: 'Google session is invalid or expired' });
+      return;
+    }
+
+    const email = authUser.email.trim().toLowerCase();
+    const { data: existingUser, error: lookupError } = await client
+      .from('users')
+      .select('id, email, role, first_name, last_name, school_id, created_at, updated_at')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (lookupError) throw lookupError;
+
+    let user = existingUser;
+    if (!user) {
+      const metadata = authUser.user_metadata ?? {};
+      const fullName = String(metadata.full_name ?? metadata.name ?? '').trim().split(/\s+/).filter(Boolean);
+      const firstName = String(metadata.first_name ?? fullName[0] ?? 'Google').trim();
+      const lastName = String(metadata.last_name ?? fullName.slice(1).join(' ') ?? 'User').trim() || 'User';
+      const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+
+      const { data: createdUser, error: createError } = await client
+        .from('users')
+        .insert({
+          email,
+          password_hash: passwordHash,
+          first_name: firstName,
+          last_name: lastName,
+          role: 'parent',
+          phone: null,
+          school_id: 'school-1',
+          metadata: { auth_provider: 'google', supabase_user_id: authUser.id },
+        })
+        .select('id, email, role, first_name, last_name, school_id, created_at, updated_at')
+        .single();
+
+      if (createError || !createdUser) throw createError ?? new Error('Could not create OAuth user');
+      user = createdUser;
+    }
+
+    if (!isAllowedRole(user.role)) {
+      res.status(500).json({ success: false, message: 'User role is invalid in the database' });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: existingUser ? 'Google account linked' : 'Google account registered',
+      user: sanitizeUserRow(user),
+      token: accessToken,
+    });
+  } catch (error) {
+    console.error('OAuth user sync error:', error);
     next(error);
   }
 };

@@ -11,6 +11,7 @@ import { Dashboard } from './pages/Dashboard';
 import { AdminDashboard } from './pages/adminDash/AdminDashboard';
 import { ParentDashboard } from './pages/parentDash/ParentDashboard';
 import { Login } from './pages/Login';
+import { AuthCallback } from './pages/AuthCallback';
 import { HeatIndex } from './pages/HeatIndex';
 import { HealthAdvisory } from './pages/HealthAdvisory';
 import { Notifications } from './pages/Notifications';
@@ -220,6 +221,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginLayout><Login /></LoginLayout>} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/register" element={<Navigate to="/login" replace />} />
 
       <Route path="/" element={<LandingRoute />} />

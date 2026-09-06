@@ -4,12 +4,14 @@ import type { User } from '../types';
 import { STORAGE_KEYS } from '../utils/constants';
 import axios from 'axios';
 import { apiClient } from '../services/api';
+import { supabase } from '../services/supabase';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<User>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => void;
   register: (data: any) => Promise<void>;
   setAdminAuthSession: (user: User) => void;
@@ -89,6 +91,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const loginWithGoogle = async () => {
+    if (!supabase) {
+      throw new Error('Google sign-in is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+
+    if (error) throw error;
+  };
+
   const register = async (data: any) => {
     setIsLoading(true);
     try {
@@ -140,6 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAuthenticated: !!user,
         isLoading,
         login,
+        loginWithGoogle,
         logout,
         register,
         setAdminAuthSession,

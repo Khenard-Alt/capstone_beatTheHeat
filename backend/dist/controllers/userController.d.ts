@@ -10,6 +10,11 @@ export declare const registerUser: (req: Request, res: Response, next: NextFunct
  */
 export declare const loginUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 /**
+ * Sync a Supabase Google session into the application's users table.
+ * New OAuth users are created as parents until an administrator assigns another role.
+ */
+export declare const syncOAuthUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+/**
  * Authenticate admin tools access via admin_auth table
  * POST /api/users/admin-auth
  */

@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { registerUser, loginUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren } from '../controllers/userController';
+import { registerUser, loginUser, syncOAuthUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren } from '../controllers/userController';
 
 const router: Router = express.Router();
 
@@ -14,6 +14,12 @@ router.post('/register', registerUser);
  * Authenticate a user and return their stored role
  */
 router.post('/login', loginUser);
+
+/**
+ * POST /api/users/oauth/sync
+ * Verify a Supabase OAuth session and sync its application user record.
+ */
+router.post('/oauth/sync', syncOAuthUser);
 
 /**
  * POST /api/users/admin-auth

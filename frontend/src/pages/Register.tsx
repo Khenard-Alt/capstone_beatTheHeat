@@ -149,6 +149,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
     if (!formData.lastName) newErrors.lastName = 'Last name is required';
     if (!formData.email) newErrors.email = 'Email is required';
     else if (!isValidEmail(formData.email)) newErrors.email = 'Invalid email';
+    else if (!/^[^\s@]+@gmail\.com$/i.test(formData.email.trim())) newErrors.email = 'Please use a Gmail account (@gmail.com)';
     if (!formData.phone) newErrors.phone = 'Phone number is required';
     if (!formData.password) newErrors.password = 'Password is required';
     else if (!isValidPassword(formData.password)) newErrors.password = 'Use 8+ chars, uppercase, lowercase, and a number';
@@ -280,7 +281,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
         {step === 'basic' && (
           <div className="modal-step">
             <h3>Create Your Account</h3>
-            <p>Enter your basic information</p>
+            <p>Use your Gmail account to register and receive the verification code.</p>
 
             {errorMessage && <ErrorMessage message={errorMessage} type="warning" className="register-toast register-toast-warning" onClose={() => setErrorMessage('')} />}
 

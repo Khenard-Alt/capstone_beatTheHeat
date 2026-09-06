@@ -25,6 +25,9 @@ declare class AIAnalysisService {
     private pickExistingPath;
     private pathExists;
     private systemPrompt;
+    private roleContext;
+    private applyAudienceGuidance;
+    private applyAudiencePresentation;
     private getVariationSeed;
     private buildVariationHint;
     private applyVariation;
