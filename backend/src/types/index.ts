@@ -28,6 +28,7 @@ export interface AdvisoryInput {
 	query: string;
 	weather: WeatherSnapshot;
 	lang?: 'english' | 'tagalog' | 'taglish' | 'en' | 'tl';
+	audienceRole?: 'teacher' | 'principal' | 'head-teacher' | 'parent' | 'admin';
 	single?: boolean; // when true, request a single concise summary response
 }
 
@@ -49,6 +50,7 @@ export interface AdvisoryResult {
 	modelProfile: {
 		mode: 'rule-grounded-ai';
 		scope: 'system-only';
+		audienceRole?: AdvisoryInput['audienceRole'];
 	};
 	// Optional single-response text when the caller requests a concise single answer
 	singleResponse?: string;

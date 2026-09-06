@@ -217,12 +217,17 @@ export const generateHealthAdvisory = async (
 		const rawLang = req.body?.lang as string | undefined;
 		const allowedLangs = ['english', 'tagalog', 'taglish', 'en', 'tl'] as const;
 		const langParam = rawLang && (allowedLangs as readonly string[]).includes(rawLang) ? (rawLang as AdvisoryInput['lang']) : undefined;
+		const allowedRoles = ['teacher', 'principal', 'head-teacher', 'parent', 'admin'] as const;
+		const roleParam = typeof req.body?.audienceRole === 'string' && (allowedRoles as readonly string[]).includes(req.body.audienceRole)
+			? (req.body.audienceRole as AdvisoryInput['audienceRole'])
+			: undefined;
 		const singleParam = req.body?.single === true || String(req.body?.single ?? '') === 'true';
 
 		const advisory = await aiAnalysisService.generateScopedAdvisory({
 			query,
 			weather,
 			lang: langParam,
+			audienceRole: roleParam,
 			single: singleParam,
 		});
 

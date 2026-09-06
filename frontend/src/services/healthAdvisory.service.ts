@@ -53,6 +53,7 @@ export interface RealtimeAdvisoryResponse extends ScopedAdvisoryResponse {
 export interface ScopedAdvisoryOptions {
 	lang?: 'english' | 'tagalog' | 'taglish';
 	single?: boolean;
+	audienceRole?: 'teacher' | 'principal' | 'head-teacher' | 'parent' | 'admin';
 }
 
 export const generateScopedAdvisory = async (
@@ -72,6 +73,7 @@ export const generateScopedAdvisory = async (
 					query,
 					lang,
 					single: options.single ?? false,
+					audienceRole: options.audienceRole,
 				}
 			);
 			return data.data;

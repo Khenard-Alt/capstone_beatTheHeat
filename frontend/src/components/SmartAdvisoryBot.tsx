@@ -96,7 +96,7 @@ export const SmartAdvisoryBot: React.FC = () => {
       const level = getHeatLevel(heatIndex);
       const prompt = `Bigyan ako ng isang maikling heat advisory para sa isang ${roleLabel}. Ang current temperature ay ${weather.temperature.toFixed(1)}�C, heat index ay ${heatIndex.toFixed(1)}�C (${level}). Condition: ${weather.conditions}. Gawing maikli at praktikal.`;
 
-      const scoped = await generateScopedAdvisory(prompt, { single: true });
+      const scoped = await generateScopedAdvisory(prompt, { single: true, audienceRole: user?.role === 'teacher' || user?.role === 'principal' || user?.role === 'head-teacher' || user?.role === 'parent' || user?.role === 'admin' ? user.role : undefined });
       setNudgeText(scoped.singleResponse ?? scoped.summary);
     } catch (error) {
       setFallbackIndex((prev) => (prev + 1) % fallbackMessages.length);
@@ -120,7 +120,7 @@ export const SmartAdvisoryBot: React.FC = () => {
     setQuestion('');
     
     try {
-      const scoped = await generateScopedAdvisory(trimmed, { single: true, lang: inferLanguageFromQuery(trimmed) });
+      const scoped = await generateScopedAdvisory(trimmed, { single: true, lang: inferLanguageFromQuery(trimmed), audienceRole: user?.role === 'teacher' || user?.role === 'principal' || user?.role === 'head-teacher' || user?.role === 'parent' || user?.role === 'admin' ? user.role : undefined });
       const actions = (scoped.actions ?? []).slice(0, 3).map((item) => `- ${item}`).join('\n');
       const tips = (scoped.safetyTips ?? []).slice(0, 3).map((item) => `- ${item}`).join('\n');
       const summary = scoped.singleResponse ?? scoped.summary;

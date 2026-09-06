@@ -68,7 +68,7 @@ export const ParentChatbot: React.FC = () => {
     setIsThinking(true);
 
     try {
-      const scoped = await generateScopedAdvisory(trimmed, { single: true, lang: inferLanguageFromQuery(trimmed) });
+      const scoped = await generateScopedAdvisory(trimmed, { single: true, lang: inferLanguageFromQuery(trimmed), audienceRole: 'parent' });
       const summary = scoped.singleResponse ?? scoped.summary;
       const reply = [
         summary,

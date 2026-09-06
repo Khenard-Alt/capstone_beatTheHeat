@@ -146,6 +146,7 @@ class AIAnalysisService {
 				? 'taglish'
 				: 'english')
 			: this.detectLanguageStyle(rawQuery || scopedQuery);
+		const roleContext = this.roleContext(input.audienceRole);
 		const intent = this.detectConversationIntent(rawQuery);
 
 		// Early shortcut: if user asks about failing a capstone/thesis/project,
@@ -188,7 +189,9 @@ class AIAnalysisService {
 		}
 		if (scenarioTemplate) {
 			const variedTemplate = this.applyVariation(scenarioTemplate, variationSeed, languageStyle);
-			const filled = this.fillHealthDefaults(variedTemplate, input.weather);
+			const roleAwareTemplate = this.applyAudiencePresentation(variedTemplate, input.audienceRole, languageStyle);
+			const filled = this.applyAudienceGuidance(this.fillHealthDefaults(roleAwareTemplate, input.weather), input.audienceRole);
+			filled.modelProfile.audienceRole = input.audienceRole;
 			await this.logAdvisoryAudit(input, scopedQuery, filled, 'fallback', 'intent-template');
 			return this.maybeAttachSingle(filled, input);
 		}
@@ -201,7 +204,7 @@ class AIAnalysisService {
 			return this.maybeAttachSingle(variedFallback, input);
 		}
 
-		const ensembleResult = await this.generateEnsembleAdvisory(input, scopedQuery, languageStyle, variationSeed, env.aiModelProvider);
+		const ensembleResult = await this.generateEnsembleAdvisory(input, `${roleContext} ${scopedQuery}`, languageStyle, variationSeed, env.aiModelProvider);
 		if (ensembleResult) {
 			return this.maybeAttachSingle(ensembleResult, input);
 		}
@@ -625,7 +628,8 @@ class AIAnalysisService {
 			const variedResult = this.applyVariation(adjustedResult, variationSeed, languageStyle);
 
 			// Apply server-side safety rules to ensure high heat-index forces higher risk levels.
-			const finalResult = this.applySafetyRules(variedResult, input.weather);
+			const finalResult = this.applyAudienceGuidance(this.applySafetyRules(variedResult, input.weather), input.audienceRole);
+			finalResult.modelProfile.audienceRole = input.audienceRole;
 
 			if (!skipAudit) {
 				await this.logAdvisoryAudit(input, scopedQuery, finalResult, 'python', 'local-sklearn');
@@ -719,6 +723,61 @@ class AIAnalysisService {
 			knowledgeContext ? `KNOWLEDGE BASE: ${knowledgeContext}` : '',
 			'Keep tone practical for school administrators, teachers, and parents.',
 		].join(' ');
+	}
+
+	private roleContext(role: AdvisoryInput['audienceRole']): string {
+		const contexts = {
+			teacher: 'Audience role: classroom teacher. Prioritize immediate classroom actions, PE/recess adjustments, student monitoring, incident documentation, and parent reminders.',
+			principal: 'Audience role: school principal. Prioritize school-wide decisions, schedule or activity controls, staff coordination, official announcements, escalation, and documented accountability. Do not make unilateral medical diagnoses.',
+			'head-teacher': 'Audience role: head teacher. Prioritize incident triage, teacher coordination, clinic escalation, consolidated reporting, and follow-up actions.',
+			parent: 'Audience role: parent. Prioritize child precautions, what to bring, warning signs, communication with school, and when to seek help.',
+			admin: 'Audience role: school administrator. Prioritize policy, operations, auditability, notifications, and safe escalation across the school.',
+		};
+		return role ? contexts[role] : 'Audience role: general school safety user.';
+	}
+
+	private applyAudienceGuidance(result: AdvisoryResult, role: AdvisoryInput['audienceRole']): AdvisoryResult {
+		const guidance: Record<NonNullable<AdvisoryInput['audienceRole']>, string[]> = {
+			teacher: [
+				'Adjust PE, recess, and outdoor tasks to the current heat level.',
+				'Record student symptoms and refer concerning cases to the clinic promptly.',
+			],
+			principal: [
+				'Confirm any school-wide activity or schedule change through policy and current heat data.',
+				'Coordinate the notice with teachers, parents, and the school clinic.',
+			],
+			'head-teacher': [
+				'Consolidate teacher reports and identify students or activities needing follow-up.',
+				'Escalate unresolved incidents to the principal and clinic with documented details.',
+			],
+			parent: [
+				'Prepare water, light clothing, and a plan for prompt communication with the school.',
+				'Contact the school if the child develops persistent heat-related symptoms.',
+			],
+			admin: [
+				'Apply the current risk level consistently across school operations and notifications.',
+				'Keep the decision, data source, and recipient groups auditable.',
+			],
+		};
+		if (!role) return result;
+		return { ...result, actions: [...guidance[role], ...result.actions].slice(0, 5) };
+	}
+
+	private applyAudiencePresentation(result: AdvisoryResult, role: AdvisoryInput['audienceRole'], languageStyle: LanguageStyle): AdvisoryResult {
+		if (!role || role === 'parent' || !/parent|child|bata|anak|family/i.test(result.summary)) {
+			return result;
+		}
+
+		const prefix = languageStyle === 'tagalog' || languageStyle === 'taglish' ? 'Hello' : 'Hello';
+		const audienceLabel = role === 'principal'
+			? 'principal'
+			: role === 'head-teacher'
+			? 'head teacher'
+			: role === 'teacher'
+			? 'teacher'
+			: 'school administrator';
+		const summary = `${prefix} ${audienceLabel}. ${result.summary.replace(/Hi parent\.?|Hello parent\.?/gi, '').replace(/for your child|para sa child mo|para sa inyong anak/gi, 'for your school safety decisions').trim()}`;
+		return { ...result, summary };
 	}
 
 	private getVariationSeed(): number {

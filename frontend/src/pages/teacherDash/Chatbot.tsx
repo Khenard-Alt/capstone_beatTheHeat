@@ -57,7 +57,7 @@ const Chatbot: React.FC = () => {
     setIsThinking(true);
 
     try {
-      const scoped = await generateScopedAdvisory(trimmed, { single: true, lang: inferLanguageFromQuery(trimmed) });
+      const scoped = await generateScopedAdvisory(trimmed, { single: true, lang: inferLanguageFromQuery(trimmed), audienceRole: 'teacher' });
       const reply = [
         scoped.singleResponse ?? scoped.summary,
         '',
