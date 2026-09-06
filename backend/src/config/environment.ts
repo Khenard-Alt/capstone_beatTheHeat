@@ -1,13 +1,19 @@
 import path from 'path';
+import { existsSync } from 'fs';
 
 const defaultPythonExecutable = (): string => {
-	const base = path.resolve(
-		process.cwd(),
-		'.venv',
-		process.platform === 'win32' ? 'Scripts' : 'bin',
-		process.platform === 'win32' ? 'python.exe' : 'python'
-	);
-	return base;
+	const executable = process.platform === 'win32' ? 'python.exe' : 'python';
+	const binDirectory = process.platform === 'win32' ? 'Scripts' : 'bin';
+	const environmentCandidates = [process.cwd(), path.resolve(process.cwd(), '..')];
+
+	for (const environmentRoot of environmentCandidates) {
+		const executablePath = path.resolve(environmentRoot, '.venv', binDirectory, executable);
+		if (existsSync(executablePath)) {
+			return executablePath;
+		}
+	}
+
+	return executable;
 };
 
 export const env = {
