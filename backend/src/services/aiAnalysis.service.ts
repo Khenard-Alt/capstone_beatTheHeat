@@ -50,7 +50,7 @@ type AdvisoryPayload = Partial<AdvisoryResult> & {
 		sampleAnnouncementText?: string;
 		announcement?: string;
 };
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-2.0-flash-lite'];
+const GEMINI_MODELS = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-2.0-flash-lite'];
 const execFileAsync = promisify(execFile);
 
 class AIAnalysisService {

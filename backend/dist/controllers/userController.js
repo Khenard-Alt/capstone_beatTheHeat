@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserChildren = exports.updateUser = exports.deleteUser = exports.getOTPStatus = exports.verifyOTPCode = exports.sendOTP = exports.getUserProfile = exports.listUsers = exports.authenticateAdminTools = exports.loginUser = exports.registerUser = void 0;
 const supabase_1 = require("../config/supabase");
-const bcrypt_1 = __importDefault(require("bcrypt"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
 const otp_service_1 = require("../services/otp.service");
 const email_service_1 = require("../services/email.service"); // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -130,7 +130,7 @@ const registerUser = async (req, res, next) => {
             console.error('Check user error:', checkError);
         }
         // Hash password
-        const hashedPassword = await bcrypt_1.default.hash(password, 10);
+        const hashedPassword = await bcryptjs_1.default.hash(password, 10);
         // Insert new user
         const { data: newUser, error: insertError } = await client
             .from('users')
@@ -287,7 +287,7 @@ const loginUser = async (req, res, next) => {
             res.status(500).json({ success: false, message: 'User role is invalid in the database' });
             return;
         }
-        const passwordMatches = await bcrypt_1.default.compare(password, user.password_hash ?? '');
+        const passwordMatches = await bcryptjs_1.default.compare(password, user.password_hash ?? '');
         if (!passwordMatches) {
             res.status(401).json({ success: false, message: 'Invalid email or password' });
             return;
@@ -351,7 +351,7 @@ const authenticateAdminTools = async (req, res, next) => {
             res.status(401).json({ success: false, message: 'Invalid admin authentication' });
             return;
         }
-        const matches = await bcrypt_1.default.compare(secret, authRecord.secret_hash ?? '');
+        const matches = await bcryptjs_1.default.compare(secret, authRecord.secret_hash ?? '');
         if (!matches) {
             res.status(401).json({ success: false, message: 'Invalid admin authentication' });
             return;

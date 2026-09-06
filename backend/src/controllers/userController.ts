@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { getSupabaseAdminClient } from '../config/supabase';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { createOTP, verifyOTP, isOTPVerified, clearOTP as _clearOTP, getOTPExpiryTime } from '../services/otp.service';
 import { sendOTPEmail, sendWelcomeEmail as _sendWelcomeEmail } from '../services/email.service'; // eslint-disable-line @typescript-eslint/no-unused-vars

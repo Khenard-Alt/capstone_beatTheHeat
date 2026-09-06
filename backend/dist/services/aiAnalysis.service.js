@@ -14,7 +14,7 @@ const environment_1 = require("../config/environment");
 const auditLog_service_1 = require("./auditLog.service");
 const projectPolicyFAQ_1 = require("../knowledge/projectPolicyFAQ");
 const weather_service_1 = require("./weather.service");
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-2.0-flash-lite'];
+const GEMINI_MODELS = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-2.0-flash-lite'];
 const execFileAsync = (0, util_1.promisify)(child_process_1.execFile);
 class AIAnalysisService {
     constructor() {
