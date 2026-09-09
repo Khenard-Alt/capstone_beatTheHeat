@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
+import { AvatarUpload } from '../../components/AvatarUpload';
 import { useAuth } from '../../hooks/useAuth';
 import { MdNotifications, MdPerson, MdTune, MdSave } from 'react-icons/md';
 import '../../styles/ParentPortalPages.css';
@@ -160,10 +161,10 @@ export const ParentProfileSettings: React.FC = () => {
         <div>
           <p className="parent-portal-eyebrow">Account</p>
           <h1>Profile / Settings</h1>
-          <p>Manage parent contact details and the notifications you want to receive from the heat safety system.</p>
+          <p>Manage your personal information and the notifications you want to receive from the heat safety system.</p>
         </div>
         <div className="parent-portal-hero-card">
-          <MdPerson className="parent-portal-hero-icon" />
+          <AvatarUpload size={64} />
           <div>
             <strong>{user?.firstName} {user?.lastName}</strong>
             <p>{user?.email}</p>

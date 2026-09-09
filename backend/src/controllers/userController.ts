@@ -1,9 +1,42 @@
 import { Request, Response, NextFunction } from 'express';
+import multer from 'multer';
 import { getSupabaseAdminClient } from '../config/supabase';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { createOTP, verifyOTP, isOTPVerified, clearOTP as _clearOTP, getOTPExpiryTime } from '../services/otp.service';
 import { sendOTPEmail, sendWelcomeEmail as _sendWelcomeEmail } from '../services/email.service'; // eslint-disable-line @typescript-eslint/no-unused-vars
+
+const AVATAR_BUCKET = 'avatars';
+const MAX_AVATAR_BYTES = 3 * 1024 * 1024; // 3MB
+
+export const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_AVATAR_BYTES },
+  fileFilter: (_req, file, cb) => {
+    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.mimetype)) {
+      cb(new Error('Only PNG, JPG, WEBP, or GIF images are allowed.'));
+      return;
+    }
+    cb(null, true);
+  },
+});
+
+let avatarBucketReady = false;
+
+const ensureAvatarBucket = async (client: NonNullable<ReturnType<typeof getSupabaseAdminClient>>): Promise<void> => {
+  if (avatarBucketReady) {
+    return;
+  }
+
+  const { data: buckets } = await client.storage.listBuckets();
+  const exists = buckets?.some((bucket) => bucket.name === AVATAR_BUCKET);
+
+  if (!exists) {
+    await client.storage.createBucket(AVATAR_BUCKET, { public: true, fileSizeLimit: MAX_AVATAR_BYTES });
+  }
+
+  avatarBucketReady = true;
+};
 
 const allowedRoles = ['admin', 'principal', 'head-teacher', 'teacher', 'staff', 'parent'] as const;
 
@@ -66,6 +99,7 @@ const sanitizeUserRow = (user: {
   first_name: string;
   last_name: string;
   school_id: string;
+  avatar_url?: string | null;
   created_at: string;
   updated_at: string;
 }) => ({
@@ -75,6 +109,7 @@ const sanitizeUserRow = (user: {
   firstName: user.first_name,
   lastName: user.last_name,
   schoolId: user.school_id,
+  avatarUrl: user.avatar_url ?? null,
   createdAt: user.created_at,
   updatedAt: user.updated_at,
 });
@@ -87,6 +122,7 @@ const mapUserRow = (user: {
   last_name: string;
   phone: string | null;
   school_id: string;
+  avatar_url?: string | null;
   created_at: string;
   updated_at: string;
 }) => ({
@@ -97,6 +133,7 @@ const mapUserRow = (user: {
   lastName: user.last_name,
   phone: user.phone,
   schoolId: user.school_id,
+  avatarUrl: user.avatar_url ?? null,
   createdAt: user.created_at,
   updatedAt: user.updated_at,
 });
@@ -312,7 +349,7 @@ export const loginUser = async (
         // Supabase PostgrestBuilder isn't typed as a Promise; cast to Promise to satisfy raceWithTimeout
         (client
           .from('users')
-          .select('id, email, role, first_name, last_name, school_id, created_at, updated_at, password_hash')
+          .select('id, email, role, first_name, last_name, school_id, avatar_url, created_at, updated_at, password_hash')
           .eq('email', email)
           .single()) as unknown as Promise<{ data?: any; error?: any }>,
         loginTimeoutMs
@@ -432,7 +469,7 @@ export const syncOAuthUser = async (
     const email = authUser.email.trim().toLowerCase();
     const { data: existingUser, error: lookupError } = await client
       .from('users')
-      .select('id, email, role, first_name, last_name, school_id, created_at, updated_at')
+      .select('id, email, role, first_name, last_name, school_id, avatar_url, created_at, updated_at')
       .eq('email', email)
       .maybeSingle();
 
@@ -458,7 +495,7 @@ export const syncOAuthUser = async (
           school_id: 'school-1',
           metadata: { auth_provider: 'google', supabase_user_id: authUser.id },
         })
-        .select('id, email, role, first_name, last_name, school_id, created_at, updated_at')
+        .select('id, email, role, first_name, last_name, school_id, avatar_url, created_at, updated_at')
         .single();
 
       if (createError || !createdUser) throw createError ?? new Error('Could not create OAuth user');
@@ -592,7 +629,7 @@ export const listUsers = async (
 
     let query = client
       .from('users')
-      .select('id, email, role, first_name, last_name, phone, school_id, created_at, updated_at')
+      .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, created_at, updated_at')
       .order('created_at', { ascending: false });
 
     if (role) {
@@ -641,7 +678,7 @@ export const getUserProfile = async (
 
     const { data: user, error } = await client
       .from('users')
-      .select('id, email, role, first_name, last_name, school_id, created_at, updated_at')
+      .select('id, email, role, first_name, last_name, school_id, avatar_url, created_at, updated_at')
       .eq('id', id)
       .single();
 
@@ -870,7 +907,7 @@ export const updateUser = async (
       .from('users')
       .update(updatePayload)
       .eq('id', id)
-      .select('id, email, role, first_name, last_name, phone, school_id, created_at, updated_at')
+      .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, created_at, updated_at')
       .single();
 
     if (error) {
@@ -886,6 +923,7 @@ export const updateUser = async (
       lastName: data.last_name,
       phone: data.phone,
       schoolId: data.school_id,
+      avatarUrl: data.avatar_url ?? null,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
@@ -893,6 +931,75 @@ export const updateUser = async (
     res.status(200).json({ success: true, message: 'User updated', user: safeUser });
   } catch (error) {
     console.error('Update user error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Upload/replace a user's profile picture
+ * POST /api/users/:id/avatar  (multipart/form-data, field name "avatar")
+ */
+export const uploadAvatar = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const file = req.file;
+
+    if (!id) {
+      res.status(400).json({ success: false, message: 'User ID is required' });
+      return;
+    }
+
+    if (!file) {
+      res.status(400).json({ success: false, message: 'No image file was provided.' });
+      return;
+    }
+
+    const client = getSupabaseAdminClient();
+
+    if (!client) {
+      res.status(503).json({ success: false, message: 'Picture upload requires Supabase Storage configuration.' });
+      return;
+    }
+
+    await ensureAvatarBucket(client);
+
+    const extension = (file.originalname.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const objectPath = `${id}/${crypto.randomUUID()}.${extension}`;
+
+    const { error: uploadError } = await client.storage
+      .from(AVATAR_BUCKET)
+      .upload(objectPath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      res.status(500).json({ success: false, message: 'Failed to upload picture', error: uploadError.message });
+      return;
+    }
+
+    const { data: publicUrlData } = client.storage.from(AVATAR_BUCKET).getPublicUrl(objectPath);
+    const avatarUrl = publicUrlData.publicUrl;
+
+    const { data, error } = await client
+      .from('users')
+      .update({ avatar_url: avatarUrl })
+      .eq('id', id)
+      .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, created_at, updated_at')
+      .single();
+
+    if (error) {
+      res.status(500).json({ success: false, message: 'Picture uploaded but failed to save on profile', error: error.message });
+      return;
+    }
+
+    res.status(200).json({ success: true, message: 'Profile picture updated', user: mapUserRow(data) });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
     next(error);
   }
 };

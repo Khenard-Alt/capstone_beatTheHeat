@@ -121,29 +121,29 @@ const PrincipalReports: React.FC = () => {
             {incidents.length === 0 ? (
               <div className="empty-state">No incident reports available</div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+              <div className="table-wrap">
+                <table className="app-table">
                   <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
-                      <th style={{ padding: '12px 8px' }}>Student</th>
-                      <th style={{ padding: '12px 8px' }}>Incident Type</th>
-                      <th style={{ padding: '12px 8px' }}>Description</th>
-                      <th style={{ padding: '12px 8px' }}>Action Taken</th>
-                      <th style={{ padding: '12px 8px' }}>Status</th>
-                      <th style={{ padding: '12px 8px' }}>Date</th>
-                      <th style={{ padding: '12px 8px' }}>Action</th>
+                    <tr>
+                      <th>Student</th>
+                      <th>Incident Type</th>
+                      <th>Description</th>
+                      <th>Action Taken</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {incidents.map((incident) => (
-                      <tr key={incident.id} style={{ borderBottom: '1px solid #f1f5f9', verticalAlign: 'top' }}>
-                        <td style={{ padding: '12px 8px', fontWeight: 600 }}>{incident.studentName || 'Unknown student'}</td>
-                        <td style={{ padding: '12px 8px', textTransform: 'capitalize' }}>{incident.incidentType || '—'}</td>
-                        <td style={{ padding: '12px 8px', color: '#334155', maxWidth: 240 }}>{incident.description || '—'}</td>
-                        <td style={{ padding: '12px 8px', color: '#334155', maxWidth: 240 }}>{incident.actionTaken || '—'}</td>
-                        <td style={{ padding: '12px 8px' }}>{incident.status || '—'}</td>
-                        <td style={{ padding: '12px 8px', color: '#64748b', whiteSpace: 'nowrap' }}>{incident.timestamp ? formatDateTimeGlobal(incident.timestamp) : '—'}</td>
-                        <td style={{ padding: '12px 8px' }}>
+                      <tr key={incident.id}>
+                        <td style={{ fontWeight: 600 }}>{incident.studentName || 'Unknown student'}</td>
+                        <td style={{ textTransform: 'capitalize' }}>{incident.incidentType || '—'}</td>
+                        <td className="muted" style={{ maxWidth: 240 }}>{incident.description || '—'}</td>
+                        <td className="muted" style={{ maxWidth: 240 }}>{incident.actionTaken || '—'}</td>
+                        <td>{incident.status || '—'}</td>
+                        <td className="muted" style={{ whiteSpace: 'nowrap' }}>{incident.timestamp ? formatDateTimeGlobal(incident.timestamp) : '—'}</td>
+                        <td>
                           <button
                             type="button"
                             onClick={() => setSelectedIncident(incident)}

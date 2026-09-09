@@ -333,6 +333,20 @@
   line-height: 1.6;
 }
 
+.teacher-link-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #2563eb;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.teacher-link-btn:hover {
+  color: #1d4ed8;
+}
+
 .teacher-chatbot-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;

@@ -1,0 +1,75 @@
+.avatar-image {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+}
+
+.avatar-initials {
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatar-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-upload-frame {
+  position: relative;
+}
+
+.avatar-upload-frame .avatar-image,
+.avatar-upload-frame .avatar-initials {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-upload-btn {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 2px solid #ffffff;
+  background: #2563eb;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+.avatar-upload-btn:hover {
+  background: #1d4ed8;
+}
+
+.avatar-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.avatar-upload-status {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.avatar-upload-error {
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+  text-align: center;
+  max-width: 200px;
+}

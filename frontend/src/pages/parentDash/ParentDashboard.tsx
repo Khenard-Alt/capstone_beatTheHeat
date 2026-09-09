@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HeatIndexCard } from '../../components/HeatIndexCard';
 import { WeatherWidget } from '../../components/WeatherWidget';
 import { AdvisoryAlert } from '../../components/AdvisoryAlert';
@@ -14,7 +15,20 @@ import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatt
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { mapRealtimeAdvisory } from '../../utils/advisory';
 import type { IncidentRecord } from '../../services/incidents.service';
-import { MdClose, MdSend, MdChat, MdSearch } from 'react-icons/md';
+import {
+  MdClose,
+  MdSend,
+  MdChat,
+  MdSearch,
+  MdThermostat,
+  MdWaterDrop,
+  MdMonitorHeart,
+  MdCampaign,
+  MdNotificationsActive,
+  MdCheckCircle,
+  MdUpdate,
+  MdInbox,
+} from 'react-icons/md';
 import '../../styles/ParentDashboard.css';
 
 interface ParentChatMessage {
@@ -76,6 +90,7 @@ const mapIncidentRecord = (incident: IncidentRecord): StudentHealthIncident => (
 });
 
 export const ParentDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [weatherHistory, setWeatherHistory] = useState<WeatherData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,9 +126,16 @@ export const ParentDashboard: React.FC = () => {
     'Taglish: safe ba mag-recess sa ganitong init?',
   ];
 
+  const ANNOUNCEMENTS_PAGE_SIZE = 10;
+
   const [healthIncidents, setHealthIncidents] = useState<StudentHealthIncident[]>([]);
   const [incidentsLoading, setIncidentsLoading] = useState(true);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsOffset, setAnnouncementsOffset] = useState(0);
+  const [announcementsHasMore, setAnnouncementsHasMore] = useState(true);
+  const [announcementsLoadingMore, setAnnouncementsLoadingMore] = useState(false);
+  const [viewingAnnouncement, setViewingAnnouncement] = useState<Announcement | null>(null);
+  const announcementsListRef = useRef<HTMLDivElement | null>(null);
   const [aiAdvisory, setAiAdvisory] = useState<HealthAdvisory | null>(null);
 
   useEffect(() => {
@@ -171,8 +193,12 @@ export const ParentDashboard: React.FC = () => {
     let mounted = true;
     const load = async () => {
       try {
-        const data = await fetchAnnouncements(5, 0);
-        if (mounted) setAnnouncements(data);
+        const data = await fetchAnnouncements(ANNOUNCEMENTS_PAGE_SIZE, 0);
+        if (mounted) {
+          setAnnouncements(data);
+          setAnnouncementsOffset(data.length);
+          setAnnouncementsHasMore(data.length === ANNOUNCEMENTS_PAGE_SIZE);
+        }
       } catch (err) {
         // ignore
       }
@@ -183,6 +209,28 @@ export const ParentDashboard: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  const loadMoreAnnouncements = useCallback(async () => {
+    if (announcementsLoadingMore || !announcementsHasMore) return;
+    setAnnouncementsLoadingMore(true);
+    try {
+      const data = await fetchAnnouncements(ANNOUNCEMENTS_PAGE_SIZE, announcementsOffset);
+      setAnnouncements((prev) => [...prev, ...data]);
+      setAnnouncementsOffset((prev) => prev + data.length);
+      setAnnouncementsHasMore(data.length === ANNOUNCEMENTS_PAGE_SIZE);
+    } catch (err) {
+      // ignore
+    } finally {
+      setAnnouncementsLoadingMore(false);
+    }
+  }, [announcementsLoadingMore, announcementsHasMore, announcementsOffset]);
+
+  const handleAnnouncementsScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 60) {
+      void loadMoreAnnouncements();
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -585,42 +633,122 @@ export const ParentDashboard: React.FC = () => {
         </div>
 
         <div className="parent-dashboard-side">
-          <Card title="Quick Guidance">
-            <ul className="parent-guidance">
-              <li>Check heat index before outdoor activities.</li>
-              <li>Encourage students to drink water regularly.</li>
-              <li>Monitor for dizziness or fatigue during high heat.</li>
-              <li>Follow school announcements for schedule changes.</li>
-            </ul>
-          </Card>
-
-          <Card title="Announcements">
-            <div className="parent-announcements">
-              {announcements.length === 0 && <div className="empty-state">No announcements</div>}
-              {announcements.map((a) => (
-                <article key={a.id} className="parent-announcement-item">
-                  <h4>{a.title}</h4>
-                  <p className="parent-announcement-body">{a.body}</p>
-                  <small className="parent-announcement-meta">{a.created_at ? new Date(a.created_at).toLocaleString() : ''}</small>
-                </article>
-              ))}
-            </div>
-          </Card>
-
           <Card title="School Status">
             <div className="parent-status">
-              <div>
-                <span className="parent-status-label">Campus Condition</span>
-                <span className="parent-status-value">Normal Operations</span>
+              <div className="parent-status-row">
+                <span className="parent-status-icon parent-status-icon-ok"><MdCheckCircle /></span>
+                <div>
+                  <span className="parent-status-label">Campus Condition</span>
+                  <span className="parent-status-value parent-status-value-ok">Normal Operations</span>
+                </div>
               </div>
-              <div>
-                <span className="parent-status-label">Last Update</span>
-                <span className="parent-status-value">Just now</span>
+              <div className="parent-status-row">
+                <span className="parent-status-icon"><MdUpdate /></span>
+                <div>
+                  <span className="parent-status-label">Last Update</span>
+                  <span className="parent-status-value">Just now</span>
+                </div>
               </div>
             </div>
+          </Card>
+
+          <Card
+            title="Announcements"
+            actions={
+              <button
+                type="button"
+                className="parent-view-all-btn"
+                onClick={() => navigate('/parent/announcements')}
+              >
+                View All
+              </button>
+            }
+          >
+            <div
+              className="parent-announcements"
+              ref={announcementsListRef}
+              onScroll={handleAnnouncementsScroll}
+            >
+              {announcements.length === 0 && (
+                <div className="parent-announcements-empty">
+                  <MdInbox className="parent-announcements-empty-icon" />
+                  <span>No announcements yet</span>
+                </div>
+              )}
+              {announcements.map((a) => (
+                <article
+                  key={a.id}
+                  className="parent-announcement-item parent-announcement-item-clickable"
+                  onClick={() => setViewingAnnouncement(a)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setViewingAnnouncement(a);
+                    }
+                  }}
+                >
+                  <span className="parent-announcement-icon"><MdNotificationsActive /></span>
+                  <div className="parent-announcement-content">
+                    <h4>{a.title}</h4>
+                    <p className="parent-announcement-body">{a.body}</p>
+                    <small className="parent-announcement-meta">{a.created_at ? new Date(a.created_at).toLocaleString() : ''}</small>
+                  </div>
+                </article>
+              ))}
+              {announcementsLoadingMore && (
+                <div className="parent-announcements-loading-more">Loading more…</div>
+              )}
+            </div>
+          </Card>
+
+          <Card title="Quick Guidance">
+            <ul className="parent-guidance">
+              <li>
+                <span className="parent-guidance-icon"><MdThermostat /></span>
+                <span>Check heat index before outdoor activities.</span>
+              </li>
+              <li>
+                <span className="parent-guidance-icon"><MdWaterDrop /></span>
+                <span>Encourage students to drink water regularly.</span>
+              </li>
+              <li>
+                <span className="parent-guidance-icon"><MdMonitorHeart /></span>
+                <span>Monitor for dizziness or fatigue during high heat.</span>
+              </li>
+              <li>
+                <span className="parent-guidance-icon"><MdCampaign /></span>
+                <span>Follow school announcements for schedule changes.</span>
+              </li>
+            </ul>
           </Card>
         </div>
       </div>
+
+      {viewingAnnouncement && (
+        <div
+          className="parent-announcement-modal-backdrop"
+          onClick={() => setViewingAnnouncement(null)}
+        >
+          <div className="parent-announcement-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="parent-announcement-modal-close"
+              onClick={() => setViewingAnnouncement(null)}
+              aria-label="Close"
+            >
+              <MdClose />
+            </button>
+            <span className="parent-announcement-modal-icon"><MdNotificationsActive /></span>
+            <h3>{viewingAnnouncement.title}</h3>
+            <small className="parent-announcement-meta">
+              {viewingAnnouncement.created_at ? new Date(viewingAnnouncement.created_at).toLocaleString() : ''}
+            </small>
+            <p className="parent-announcement-modal-body">{viewingAnnouncement.body}</p>
+          </div>
+        </div>
+      )}
 
       {showParentPopup && (
         <div className="parent-advisory-popup" role="alert">

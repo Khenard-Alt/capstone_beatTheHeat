@@ -45,6 +45,7 @@ export const ParentAdvisory: React.FC = () => {
         },
       ]}
       footerNote="If you want a conversational explanation of an advisory result, open Chatbot and ask the same question in plain language."
+      footerAction={{ label: 'Open Chatbot', to: '/parent/chatbot' }}
     />
   );
 };

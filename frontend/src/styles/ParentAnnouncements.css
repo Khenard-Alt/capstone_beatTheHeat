@@ -23,6 +23,26 @@
   overflow: hidden;
 }
 
+/* Keep the long AI advisory tables from growing the whole page indefinitely —
+   scroll inside the table once it has more than a handful of rows. */
+#active-advisories + .advisory-table-wrap,
+#announcement-history + .advisory-table-wrap {
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+#active-advisories + .advisory-table-wrap::-webkit-scrollbar,
+#announcement-history + .advisory-table-wrap::-webkit-scrollbar {
+  width: 6px;
+}
+
+#active-advisories + .advisory-table-wrap::-webkit-scrollbar-thumb,
+#announcement-history + .advisory-table-wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
 .parent-announcements-section .loading-state,
 .parent-announcements-section .error-alert,
 .parent-announcements-section .empty-state-text {

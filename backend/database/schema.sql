@@ -36,6 +36,7 @@ create table if not exists public.users (
 	last_name text not null,
 	role text not null check (role in ('admin', 'principal', 'head-teacher', 'teacher', 'staff', 'parent')),
 	phone text,
+	avatar_url text,
 	school_id text not null default 'school-1' references public.schools(id) on delete restrict,
 	metadata jsonb not null default '{}'::jsonb,
 	created_at timestamptz not null default now(),

@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
-import { MdNotifications, MdOutlineThermostat, MdPerson, MdSave } from 'react-icons/md';
+import React, { useState } from 'react';
+import { MdNotifications, MdPerson, MdSave } from 'react-icons/md';
 import { Card } from '../../components/Card';
+import { AvatarUpload } from '../../components/AvatarUpload';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/TeacherPanel.css';
 
@@ -13,8 +14,6 @@ const ProfileSettings: React.FC = () => {
   const [defaultBrief, setDefaultBrief] = useState('Send me danger-level heat advisories and incident summaries.');
   const [statusMessage, setStatusMessage] = useState('');
 
-  const initials = useMemo(() => `${user?.firstName?.charAt(0) ?? ''}${user?.lastName?.charAt(0) ?? ''}` || 'T', [user?.firstName, user?.lastName]);
-
   const handleSave = (event: React.FormEvent) => {
     event.preventDefault();
     setStatusMessage('Teacher settings updated locally. Connect this form to persistence when ready.');
@@ -26,22 +25,9 @@ const ProfileSettings: React.FC = () => {
         <div>
           <p className="teacher-eyebrow">Teacher panel</p>
           <h1>Profile / Settings</h1>
-          <p>Manage your account details, notification preferences, and default heat safety brief.</p>
         </div>
         <div className="teacher-hero-card">
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 14,
-              background: 'rgba(255,255,255,0.14)',
-              display: 'grid',
-              placeItems: 'center',
-              fontWeight: 800,
-            }}
-          >
-            {initials}
-          </div>
+          <AvatarUpload size={44} />
           <div>
             <strong>{user?.role ?? 'teacher'}</strong>
             <p>{user?.schoolId || 'school-1'}</p>
@@ -96,7 +82,6 @@ const ProfileSettings: React.FC = () => {
               <div className="teacher-info-card">
                 <div className="teacher-info-label">Role</div>
                 <div className="teacher-info-value" style={{ fontSize: 16 }}>{user?.role || 'teacher'}</div>
-                <div className="teacher-info-copy">This panel follows the teacher safety workflow and the current school color palette.</div>
               </div>
             </div>
           </Card>
@@ -107,7 +92,6 @@ const ProfileSettings: React.FC = () => {
             <div className="teacher-pill-list">
               <span className="teacher-pill accent"><MdPerson /> {user?.firstName || 'Teacher'}</span>
               <span className="teacher-pill"><MdNotifications /> Alerts on</span>
-              <span className="teacher-pill"><MdOutlineThermostat /> Heat-safe workflow</span>
             </div>
           </Card>
 
@@ -115,7 +99,6 @@ const ProfileSettings: React.FC = () => {
             <ul className="teacher-list">
               <li>Keep your default brief short so it can be pasted into announcements quickly.</li>
               <li>Turn on SMS for danger-level heat if you are often outside class.</li>
-              <li>Use the chatbot page when you need a faster heat safety explanation.</li>
             </ul>
           </Card>
         </div>

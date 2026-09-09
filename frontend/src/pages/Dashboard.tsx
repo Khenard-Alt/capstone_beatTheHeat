@@ -26,7 +26,7 @@ export const Dashboard: React.FC = () => {
     humidity: 75,
     feelsLike: 38,
     conditions: 'Partly Cloudy',
-    icon: '02d',
+    icon: 'cloudy',
     windSpeed: 12.5,
     pressure: 1013,
     timestamp: new Date().toISOString(),

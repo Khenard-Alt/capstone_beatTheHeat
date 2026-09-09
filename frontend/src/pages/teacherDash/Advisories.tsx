@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MdBolt, MdCheckCircle, MdOutlineThermostat } from 'react-icons/md';
 import { Card } from '../../components/Card';
+import { TeacherHeatReminder } from '../../components/TeacherHeatReminder';
 import { fetchHealthAdvisories, fetchRealtimeAdvisory, type LoggedAdvisory, type RealtimeAdvisoryResponse } from '../../services/healthAdvisory.service';
 import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
 import { formatDateTimeGlobal } from '../../utils/formatters';
@@ -102,7 +103,7 @@ const Advisories: React.FC = () => {
         <div>
           <p className="teacher-eyebrow">Teacher panel</p>
           <h1>Heat Advisories</h1>
-          <p>Use this page to brief yourself before class, pull the latest advisory, and review logged school guidance.</p>
+          <p>Live guidance and logged advisories for your classroom.</p>
         </div>
         <div className="teacher-hero-card">
           <MdOutlineThermostat className="teacher-hero-icon" />
@@ -218,16 +219,11 @@ const Advisories: React.FC = () => {
           <Card title="Teacher heat guide" className="teacher-panel-card">
             <ul className="teacher-list">
               <li>Use the live advisory before outdoor classes.</li>
-              <li>Keep a spare water supply and cool towel in the room.</li>
               <li>Share the advisory with co-teachers if your class is split.</li>
             </ul>
           </Card>
 
-          <Card title="School reminder" className="teacher-panel-card tone-alert">
-            <div className="teacher-sidebar-note">
-              Danger-level heat means safety comes first: indoor alternatives, hydration breaks, and a fast report if symptoms appear.
-            </div>
-          </Card>
+          <TeacherHeatReminder title="School reminder" />
         </div>
       </div>
     </div>

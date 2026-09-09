@@ -399,17 +399,8 @@
 }
 
 .sidebar-user-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 50%;
   font-size: 16px;
-  font-weight: 700;
-  color: white;
-  flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
@@ -494,13 +485,89 @@
   font-size: 18px;
 }
 
+/* Mobile hamburger toggle button (hidden on desktop) */
+.sidebar-toggle-btn {
+  display: none;
+}
+
+/* Backdrop shown behind the sidebar drawer on mobile */
+.sidebar-backdrop {
+  display: none;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
+    width: min(280px, 82vw);
   }
 
   .sidebar-open {
     transform: translateX(0);
+  }
+
+  .sidebar-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(2, 6, 23, 0.18);
+    z-index: 1100;
+    cursor: pointer;
+  }
+
+  .sidebar-toggle-bars {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 16px;
+  }
+
+  .sidebar-toggle-bars span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: #1e293b;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+  }
+
+  .sidebar-toggle-bars span + span {
+    margin-top: 4px;
+  }
+
+  .sidebar-toggle-bars.is-open span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .sidebar-toggle-bars.is-open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .sidebar-toggle-bars.is-open span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 999;
+    animation: sidebar-backdrop-fade 0.2s ease;
+  }
+
+  @keyframes sidebar-backdrop-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 }

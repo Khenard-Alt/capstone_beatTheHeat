@@ -6,6 +6,14 @@
   gap: 24px;
 }
 
+/* Container query context: breakpoints below are measured against this
+   page's own available width, not the browser window, since the persistent
+   280px left nav eats into the real space regardless of window size. */
+.parent-chatbot-page {
+  container-type: inline-size;
+  container-name: parent-chatbot;
+}
+
 .parent-portal-hero,
 .parent-chatbot-hero {
   display: flex;
@@ -68,6 +76,139 @@
   color: #fef08a;
 }
 
+/* Help button + popover — replaces the always-visible hero info card */
+.parent-portal-help-wrap {
+  position: relative;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.parent-portal-help-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(15, 23, 42, 0.28);
+  color: #eff6ff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s ease;
+}
+
+.parent-portal-help-btn svg {
+  font-size: 18px;
+  color: #fef08a;
+}
+
+.parent-portal-help-btn:hover {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.parent-portal-help-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(320px, 80vw);
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.25);
+  z-index: 20;
+  animation: parentHelpPopIn 0.15s ease;
+}
+
+.parent-portal-help-popover strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0f172a;
+}
+
+.parent-portal-help-popover p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+@keyframes parentHelpPopIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Accordion sections (replaces the static section-card grid) — a row of
+   collapsed cards; align-items:start keeps opening one from stretching
+   its siblings to match its height. */
+.parent-portal-accordion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.parent-portal-accordion-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.parent-portal-accordion-item.is-open {
+  border-color: #bfdbfe;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.06);
+}
+
+.parent-portal-accordion-item.tone-alert {
+  border-color: rgba(220, 38, 38, 0.18);
+}
+
+.parent-portal-accordion-item.tone-success {
+  border-color: rgba(16, 185, 129, 0.18);
+}
+
+.parent-portal-accordion-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: left;
+}
+
+.parent-portal-accordion-caret {
+  flex-shrink: 0;
+  font-size: 20px;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.parent-portal-accordion-item.is-open .parent-portal-accordion-caret {
+  transform: rotate(180deg);
+  color: #2563eb;
+}
+
+.parent-portal-accordion-body {
+  padding: 0 20px 18px;
+  animation: parentAccordionDrop 0.18s ease;
+}
+
+@keyframes parentAccordionDrop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .parent-portal-highlights,
 .parent-portal-sections {
   display: grid;
@@ -86,6 +227,14 @@
 
 .parent-portal-sections {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* The accordion variant overrides the grid layout above (higher specificity
+   via the combined class selector wins regardless of source order). */
+.parent-portal-sections.parent-portal-accordion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: start;
 }
 
 .parent-card-large {
@@ -184,6 +333,20 @@
   margin: 0;
 }
 
+.parent-chatbot-fast-access-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.parent-chatbot-accordion-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
 .parent-chatbot-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -192,7 +355,8 @@
 }
 
 .parent-chatbot-main {
-  min-height: 72vh;
+  /* No fixed min-height — the card should hug its content instead of
+     leaving a large empty gap when the conversation is short. */
 }
 
 .parent-chatbot-header {
@@ -208,13 +372,48 @@
   color: #64748b;
 }
 
+.parent-chatbot-messages-wrap {
+  position: relative;
+}
+
 .parent-chatbot-messages {
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 20px;
+  min-height: 220px;
   max-height: 52vh;
   overflow-y: auto;
+}
+
+.parent-chatbot-scroll-to-bottom {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid #dbeafe;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.16);
+  cursor: pointer;
+  z-index: 5;
+  animation: parentScrollBtnPop 0.15s ease;
+}
+
+.parent-chatbot-scroll-to-bottom:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+@keyframes parentScrollBtnPop {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .parent-chatbot-message {
@@ -489,13 +688,19 @@
   flex-wrap: wrap;
 }
 
-@media (max-width: 1024px) {
+@container parent-chatbot (max-width: 900px) {
   .parent-chatbot-layout {
     grid-template-columns: 1fr;
   }
 
   .parent-chatbot-side {
     grid-row: auto;
+  }
+}
+
+@container parent-chatbot (max-width: 560px) {
+  .parent-chatbot-accordion-row {
+    grid-template-columns: 1fr;
   }
 }
 

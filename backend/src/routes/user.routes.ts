@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { registerUser, loginUser, syncOAuthUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren } from '../controllers/userController';
+import { registerUser, loginUser, syncOAuthUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren, uploadAvatar, avatarUpload } from '../controllers/userController';
 
 const router: Router = express.Router();
 
@@ -64,6 +64,12 @@ router.get('/:id', getUserProfile);
  * Update user profile (name, phone, email change requires OTP verified)
  */
 router.put('/:id', updateUser);
+
+/**
+ * POST /api/users/:id/avatar
+ * Upload/replace a user's profile picture (multipart/form-data, field "avatar")
+ */
+router.post('/:id/avatar', avatarUpload.single('avatar'), uploadAvatar);
 
 /**
  * DELETE /api/users/:id

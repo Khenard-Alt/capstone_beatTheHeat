@@ -2,6 +2,9 @@ import React from 'react';
 import type { HeatLevel } from '../types';
 import { getHeatLabel } from '../utils/helpers';
 import { formatDateTimeGlobal } from '../utils/formatters';
+import highTempIcon from '../assets/dashboard/hightemperate.svg';
+import moderateTempIcon from '../assets/dashboard/moderateTemperature.svg';
+import normalTempIcon from '../assets/dashboard/normalTemperature.svg';
 import '../styles/HeatIndexCard.css';
 
 interface HeatIndexCardProps {
@@ -11,17 +14,26 @@ interface HeatIndexCardProps {
   lastUpdated: string;
 }
 
+const HEAT_LEVEL_ICONS: Record<HeatLevel, string> = {
+  normal: normalTempIcon,
+  caution: moderateTempIcon,
+  'extreme-caution': moderateTempIcon,
+  danger: highTempIcon,
+  'extreme-danger': highTempIcon,
+};
+
 export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
   heatIndex,
-  
+
   level,
   lastUpdated,
 }) => {
   const label = getHeatLabel(level);
+  const icon = HEAT_LEVEL_ICONS[level] || normalTempIcon;
 
   return (
-    <div 
-      className="heat-index-card" 
+    <div
+      className="heat-index-card"
       data-heat-level={level}
     >
       <div className="heat-index-header">
@@ -33,6 +45,7 @@ export const HeatIndexCard: React.FC<HeatIndexCardProps> = ({
 
       <div className="heat-index-body">
         <div className="heat-index-main">
+          <img className="heat-index-icon" src={icon} alt={`${label} heat index`} />
           <div className="heat-index-value big-metric" data-heat-level={level}>
             {heatIndex.toFixed(1)}°C
           </div>

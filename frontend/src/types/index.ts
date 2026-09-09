@@ -6,6 +6,7 @@ export interface User {
   firstName: string;
   lastName: string;
   schoolId: string;
+  avatarUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }

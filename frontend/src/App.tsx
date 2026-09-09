@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -183,14 +183,38 @@ const HomeRoute: React.FC = () => {
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth > 768);
 
   return (
     <div className="app-layout">
       <div className="app-container">
+        <button
+          type="button"
+          className="sidebar-toggle-btn"
+          onClick={() => setIsSidebarOpen((open) => !open)}
+          aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isSidebarOpen}
+        >
+          <span className={`sidebar-toggle-bars ${isSidebarOpen ? 'is-open' : ''}`}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+
+        {isSidebarOpen && (
+          <div
+            className="sidebar-backdrop"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         <Sidebar
-          isOpen={true}
+          isOpen={isSidebarOpen}
           userRole={user?.role}
           onLogout={logout}
+          onNavigate={() => setIsSidebarOpen(window.innerWidth > 768)}
         />
 
         <main className="app-main">
@@ -198,7 +222,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </main>
       </div>
 
-      
+
       <SmartAdvisoryBot />
       <Footer />
     </div>

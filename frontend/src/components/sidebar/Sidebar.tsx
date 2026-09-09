@@ -18,6 +18,7 @@ import {
   MdKeyboardArrowDown,
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
+import { Avatar } from '../Avatar';
 import schoolLogo from '../../assets/mayamotlogo.png';
 import '../../styles/Sidebar.css';
 
@@ -25,6 +26,7 @@ interface SidebarProps {
   isOpen: boolean;
   userRole?: string;
   onLogout?: () => void;
+  onNavigate?: () => void;
 }
 
 interface SidebarSectionLink {
@@ -44,7 +46,7 @@ interface SidebarMenuItem {
   children?: SidebarSectionLink[];
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, onNavigate }) => {
   const { user } = useAuth();
   const [networkStatus, setNetworkStatus] = useState<'online' | 'offline' | 'slow'>('online');
   const [showNetworkStatus, setShowNetworkStatus] = useState(false);
@@ -142,7 +144,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
       {
         path: '/teacher/advisories',
         icon: <MdCampaign />,
-        label: 'Announcements',
+        label: 'Advisories',
         roles: ['teacher'],
         badge: null,
         menuKey: 'announcements',
@@ -471,6 +473,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
                                     // allow navigation, then scroll to top of the new page
                                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
                                   }
+                                  onNavigate?.();
                                 }}
                             >
                               <span className="sidebar-submenu-icon">{child.icon}</span>
@@ -488,7 +491,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
                       `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
                     }
                     end={item.path === '/'}
-                    onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50)}
+                    onClick={() => {
+                      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+                      onNavigate?.();
+                    }}
                   >
                     <span className="sidebar-icon">{item.icon}</span>
                     <span className="sidebar-label">{item.label}</span>
@@ -520,9 +526,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout }) 
 
         <div className="sidebar-user-wrap">
           <NavLink className="sidebar-user" to={profilePath} title="Open profile settings">
-            <div className="sidebar-user-avatar">
-              {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-            </div>
+            <Avatar
+              src={user?.avatarUrl}
+              firstName={user?.firstName}
+              lastName={user?.lastName}
+              size={44}
+              className="sidebar-user-avatar"
+            />
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.firstName} {user?.lastName}</div>
               <div className="sidebar-user-role">{user?.role}</div>

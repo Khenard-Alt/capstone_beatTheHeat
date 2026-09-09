@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MdInfoOutline, MdOutlineAssignment, MdOutlineThermostat } from 'react-icons/md';
+import { useNavigate } from 'react-router-dom';
+import { MdInfoOutline, MdOutlineAssignment } from 'react-icons/md';
 import { Card } from '../../components/Card';
+import { TeacherHeatReminder } from '../../components/TeacherHeatReminder';
 import { fetchIncidents, createIncident, type IncidentRecord } from '../../services/incidents.service';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/TeacherPanel.css';
@@ -9,6 +11,7 @@ const statusOrder = ['pending', 'monitoring', 'treated', 'resolved'];
 
 const IncidentReports: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<'all' | IncidentRecord['status']>('all');
@@ -113,13 +116,12 @@ const IncidentReports: React.FC = () => {
         <div>
           <p className="teacher-eyebrow">Teacher panel</p>
           <h1>Incident Reports</h1>
-          <p>Track class incidents, review timestamps, and keep a fast response trail for heat-related events.</p>
+          <p>Track class incidents and keep a fast response trail for heat-related events.</p>
         </div>
         <div className="teacher-hero-card">
           <MdOutlineAssignment className="teacher-hero-icon" />
           <div>
             <strong>{stats.total} records</strong>
-            <p>Current incident queue for the teacher panel.</p>
           </div>
         </div>
       </div>
@@ -281,33 +283,26 @@ const IncidentReports: React.FC = () => {
             )}
           </Card>
 
-          <Card title="Incident handling guide" className="teacher-panel-card tone-success">
-            <div className="teacher-section-grid">
-              <div className="teacher-info-card">
-                <div className="teacher-info-label">Observe</div>
-                <div className="teacher-info-copy">Watch for dizziness, heavy sweating, headache, nausea, or confusion during hot periods.</div>
-              </div>
-              <div className="teacher-info-card">
-                <div className="teacher-info-label">Move</div>
-                <div className="teacher-info-copy">Move the student away from direct heat, then give water and notify the clinic if symptoms persist.</div>
-              </div>
-              <div className="teacher-info-card">
-                <div className="teacher-info-label">Document</div>
-                <div className="teacher-info-copy">Log the details immediately so the school can respond and follow up quickly.</div>
-              </div>
-            </div>
-          </Card>
         </div>
 
         <div className="teacher-side">
-          <Card title="Heat check" className="teacher-panel-card tone-alert">
-            <div className="teacher-pill-list">
-              <span className="teacher-pill accent"><MdOutlineThermostat /> Danger level heat</span>
-              <span className="teacher-pill">Keep classes indoor</span>
-            </div>
-            <div className="teacher-sidebar-note" style={{ marginTop: 16 }}>
-              If you see repeated reports in one class, notify the head teacher and clinic immediately so they can coordinate a schedule change.
-            </div>
+          <TeacherHeatReminder
+            title="Heat check"
+            extra={
+              <div className="teacher-sidebar-note" style={{ marginTop: 10 }}>
+                Repeated reports in one class? Notify the head teacher and clinic immediately so they can coordinate a schedule change.
+              </div>
+            }
+          />
+
+          <Card title="Response steps" className="teacher-panel-card tone-success">
+            <p className="teacher-info-copy">
+              Full observe/move/document guidance lives on the{' '}
+              <button type="button" className="teacher-link-btn" onClick={() => navigate('/teacher/conduct-form')}>
+                Conduct Form
+              </button>{' '}
+              page.
+            </p>
           </Card>
 
           <Card title="Quick recap" className="teacher-panel-card">

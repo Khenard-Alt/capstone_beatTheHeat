@@ -130,8 +130,8 @@ const TeacherMessages: React.FC = () => {
 			<div className="teacher-hero">
 				<div>
 					<p className="teacher-eyebrow">Teacher panel</p>
-					<h1>Messages</h1>
-					<p>Reply to parent concerns in a messenger-style thread that keeps each parent conversation separate and easy to review.</p>
+					<h1 id="teacher-messages-heading">Messages</h1>
+					<p>Replies stay grouped in a per-parent thread, easy to review.</p>
 				</div>
 				<div className="teacher-hero-card">
 					<div>
@@ -142,19 +142,10 @@ const TeacherMessages: React.FC = () => {
 			</div>
 
 			<section className="messenger-section" id="teacher-messages-top" aria-labelledby="teacher-messages-heading">
-				<div className="parent-section-header">
-					<p className="parent-section-eyebrow">Adviser Messages</p>
-					<h2 id="teacher-messages-heading">Parent chat inbox</h2>
-					<p className="parent-section-copy">
-						Recent chats are grouped by parent so your replies stay inside the right conversation history.
-					</p>
-				</div>
-
 				<div className="messenger-shell">
 					<aside className="messenger-thread-rail">
 						<div>
 							<p className="parent-section-eyebrow">Recent Chats</p>
-							<p className="messenger-hint">Pick a parent thread, review the history, then send your reply from the composer.</p>
 						</div>
 
 						<div className="messenger-thread-list">
@@ -216,7 +207,7 @@ const TeacherMessages: React.FC = () => {
 							)}
 						</div>
 
-						<div className="messenger-compose">
+						<div className="messenger-compose" id="teacher-message-compose">
 							<div className="messenger-compose-grid">
 								<label className="messenger-compose-field">
 									<span className="parent-section-eyebrow">Parent recipient</span>
@@ -239,9 +230,6 @@ const TeacherMessages: React.FC = () => {
 							<textarea placeholder="Write your reply or note..." value={body} onChange={(event) => setBody(event.target.value)} />
 
 							<div className="messenger-compose-actions">
-								<div className="messenger-hint">
-									Use short, factual replies that stay aligned with the school heat guidance and keep one thread per parent.
-								</div>
 								<button type="button" className="primary" onClick={() => void handleSend()} disabled={sending || !activeParent}>
 									{sending ? 'Sending...' : 'Send to Parent'}
 								</button>
@@ -256,13 +244,6 @@ const TeacherMessages: React.FC = () => {
 							<li>Keep replies short, factual, and tied to school heat guidance.</li>
 							<li>Use the parent sender name before giving follow-up instructions.</li>
 							<li>Continue the same thread instead of starting a new topic for the same concern.</li>
-						</ul>
-					</Card>
-
-					<Card title="Quick tips" className="teacher-panel-card tone-alert">
-						<ul className="teacher-list">
-							<li>Use the inbox before sending a new message.</li>
-							<li>Match the parent panel wording for consistency.</li>
 							<li>Send a follow-up if the concern changes status.</li>
 						</ul>
 					</Card>

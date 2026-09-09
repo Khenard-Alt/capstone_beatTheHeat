@@ -132,9 +132,7 @@ export const TeacherDashboard: React.FC = () => {
         <div>
           <p className="teacher-eyebrow">Teacher panel</p>
           <h1>Class Safety Command Center</h1>
-          <p>
-            {getGreeting()}, {user?.firstName}. Track heat alerts, submit forms, and keep class decisions aligned with the latest school safety guidance.
-          </p>
+          <p>{getGreeting()}, {user?.firstName}.</p>
         </div>
         <div className="teacher-hero-side">
           <div className="teacher-weather-card" aria-label="Current weather measurements">
@@ -172,44 +170,33 @@ export const TeacherDashboard: React.FC = () => {
       <div className="teacher-layout">
         <div className="teacher-main">
           <Card title="Today’s Class Safety Brief" className="teacher-panel-card tone-alert">
-            <div className="teacher-grid-two">
-              <div>
-                <div className="teacher-pill-list" style={{ marginBottom: 14 }}>
-                  <span className="teacher-pill accent"><MdHealthAndSafety /> Heat safety</span>
-                  <span className="teacher-pill"><MdCheckCircle /> Indoor backup</span>
-                  <span className="teacher-pill"><MdDateRange /> Updated now</span>
-                </div>
-                <p className="teacher-info-copy">
-                  {realtimeAdvisory?.summary || 'Danger-level heat requires indoor activities, hydration breaks, and early escalation for any symptom reports.'}
-                </p>
-                <div className="teacher-section-grid" style={{ marginTop: 16 }}>
-                  <div className="teacher-info-card">
-                    <div className="teacher-info-label">Actions</div>
-                    <div className="teacher-info-copy">
-                      {(realtimeAdvisory?.actions || [
-                        'Postpone strenuous outdoor activity.',
-                        'Ensure water access in every classroom.',
-                        'Observe students for dizziness, fatigue, or headache.',
-                      ]).slice(0, 3).map((item) => <div key={item}>• {item}</div>)}
-                    </div>
-                  </div>
-                  <div className="teacher-info-card">
-                    <div className="teacher-info-label">Safety tips</div>
-                    <div className="teacher-info-copy">
-                      {(realtimeAdvisory?.safetyTips || [
-                        'Keep students in shaded or indoor locations.',
-                        'Remind hydration every 15 to 20 minutes.',
-                        'Escalate repeated symptoms to the clinic.',
-                      ]).slice(0, 3).map((item) => <div key={item}>• {item}</div>)}
-                    </div>
-                  </div>
+            <div className="teacher-pill-list" style={{ marginBottom: 14 }}>
+              <span className="teacher-pill accent"><MdHealthAndSafety /> Heat safety</span>
+              <span className="teacher-pill"><MdCheckCircle /> Indoor backup</span>
+              <span className="teacher-pill"><MdDateRange /> Updated now</span>
+            </div>
+            <p className="teacher-info-copy">
+              {realtimeAdvisory?.summary || 'Danger-level heat requires indoor activities, hydration breaks, and early escalation for any symptom reports.'}
+            </p>
+            <div className="teacher-section-grid" style={{ marginTop: 16 }}>
+              <div className="teacher-info-card">
+                <div className="teacher-info-label">Actions</div>
+                <div className="teacher-info-copy">
+                  {(realtimeAdvisory?.actions || [
+                    'Postpone strenuous outdoor activity.',
+                    'Ensure water access in every classroom.',
+                    'Observe students for dizziness, fatigue, or headache.',
+                  ]).slice(0, 3).map((item) => <div key={item}>• {item}</div>)}
                 </div>
               </div>
               <div className="teacher-info-card">
-                <div className="teacher-info-label">Current heat level</div>
-                <div className="teacher-info-value" style={{ textTransform: 'uppercase' }}>{realtimeAdvisory?.riskLevel || 'danger'}</div>
+                <div className="teacher-info-label">Safety tips</div>
                 <div className="teacher-info-copy">
-                  Keep this brief visible before class starts. If PE or outdoor work is planned, move it indoors or shorten it.
+                  {(realtimeAdvisory?.safetyTips || [
+                    'Keep students in shaded or indoor locations.',
+                    'Remind hydration every 15 to 20 minutes.',
+                    'Escalate repeated symptoms to the clinic.',
+                  ]).slice(0, 3).map((item) => <div key={item}>• {item}</div>)}
                 </div>
               </div>
             </div>
@@ -298,9 +285,7 @@ export const TeacherDashboard: React.FC = () => {
 
           <Card title="Teacher Notes" className="teacher-panel-card">
             <ul className="teacher-list">
-              <li>Use the conduct form for any heat-related observation, even if the student recovers quickly.</li>
               <li>Keep a water bottle, fan, or cool cloth ready in class during danger-level heat.</li>
-              <li>Ask the chatbot for direct guidance when you need a short advisory message.</li>
             </ul>
           </Card>
         </div>

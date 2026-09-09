@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { MdOutlineChat, MdSend, MdSmartToy } from 'react-icons/md';
 import { Card } from '../../components/Card';
+import { TeacherHeatReminder } from '../../components/TeacherHeatReminder';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
 import '../../styles/TeacherPanel.css';
 
@@ -84,13 +85,12 @@ const Chatbot: React.FC = () => {
         <div>
           <p className="teacher-eyebrow">Teacher panel</p>
           <h1>Chatbot</h1>
-          <p>Ask short questions about heat-related class decisions and get a scoped advisory for the school day.</p>
+          <p>Ask short questions about heat-related class decisions and get a scoped advisory.</p>
         </div>
         <div className="teacher-hero-card">
           <MdSmartToy className="teacher-hero-icon" />
           <div>
             <strong>Teacher assistant</strong>
-            <p>Fast answers for classroom safety, advisories, and report wording.</p>
           </div>
         </div>
       </div>
@@ -100,7 +100,7 @@ const Chatbot: React.FC = () => {
           <div className="teacher-chat-header">
             <div>
               <h2>Usapan</h2>
-              <p>Gumamit ng Tagalog, English, o Taglish. Magbibigay ang assistant ng practical response at next steps.</p>
+              <p>Tagalog, English, o Taglish — suportado.</p>
             </div>
           </div>
 
@@ -171,11 +171,7 @@ const Chatbot: React.FC = () => {
             </ul>
           </Card>
 
-          <Card title="Quick hint" className="teacher-panel-card tone-alert">
-            <div className="teacher-sidebar-note">
-              If the heat is danger-level, prioritize hydration, indoor activity, and a quick report before the situation escalates.
-            </div>
-          </Card>
+          <TeacherHeatReminder title="Quick hint" />
         </div>
       </div>
     </div>

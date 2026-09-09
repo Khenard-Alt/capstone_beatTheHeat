@@ -117,11 +117,6 @@ export const ParentAnnouncements: React.FC = () => {
       topId="announcements-top"
       description="A parent-facing notice board for heat advisories, school schedule changes, and operational reminders."
       summary="This page keeps principal announcements and AI advisories short, actionable, and directly tied to school heat-safety operations."
-      highlights={[
-        { label: 'Latest notice', value: 'Heat monitoring active' },
-        { label: 'Tone', value: 'Clear and actionable' },
-        { label: 'Coverage', value: 'Principal notices and AI advisories' },
-      ]}
       sections={[
         {
           title: 'Current principal announcements',
@@ -173,6 +168,7 @@ export const ParentAnnouncements: React.FC = () => {
         },
       ]}
       footerNote="Need a conversational explanation? Open Chatbot and ask the same question in plain language."
+      footerAction={{ label: 'Open Chatbot', to: '/parent/chatbot' }}
     >
       <div className="parent-announcements-page">
         <div className="advisory-section parent-announcements-section">

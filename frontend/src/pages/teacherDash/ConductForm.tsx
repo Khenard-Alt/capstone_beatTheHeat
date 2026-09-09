@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { MdCheckCircle, MdHealthAndSafety, MdOutlineAssignment, MdOutlineThermostat } from 'react-icons/md';
+import { MdOutlineAssignment } from 'react-icons/md';
 import { Card } from '../../components/Card';
+import { TeacherHeatReminder } from '../../components/TeacherHeatReminder';
 import { useAuth } from '../../hooks/useAuth';
 import { createIncident } from '../../services/incidents.service';
 import '../../styles/TeacherPanel.css';
@@ -82,7 +83,7 @@ const ConductForm: React.FC = () => {
           <p className="teacher-eyebrow">Teacher panel</p>
           <h1>Conduct Form</h1>
           <p>
-            Log heat-related student conditions quickly and consistently. Use this form as soon as symptoms appear so the clinic and admin can respond.
+            Log heat-related student conditions as soon as symptoms appear.
           </p>
         </div>
         <div className="teacher-hero-card">
@@ -186,16 +187,10 @@ const ConductForm: React.FC = () => {
             </ul>
           </Card>
 
-          <Card title="Heat reminders" className="teacher-panel-card tone-alert">
-            <div className="teacher-pill-list">
-              <span className="teacher-pill accent"><MdOutlineThermostat /> Danger heat</span>
-              <span className="teacher-pill"><MdHealthAndSafety /> Hydration first</span>
-              <span className="teacher-pill"><MdCheckCircle /> Report fast</span>
-            </div>
-            <div className="teacher-sidebar-note" style={{ marginTop: 16 }}>
-              Keep the report short, factual, and school-safe. The goal is fast response, not a long narrative.
-            </div>
-          </Card>
+          <TeacherHeatReminder
+            title="Heat reminders"
+            note="Keep the report short, factual, and school-safe — the goal is fast response, not a long narrative."
+          />
         </div>
       </div>
     </div>

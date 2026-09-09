@@ -3,38 +3,65 @@
 .table-wrap {
   overflow-x: auto;
   background: #ffffff;
-  border: 1px solid #e6eefc;
-  border-radius: 12px;
-  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .app-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   min-width: 640px;
   font-size: 14px;
-  color: #0f172a;
+  color: #1e293b;
 }
 
 .app-table thead th {
-  background: #f8fafc;
-  color: #475569;
-  font-size: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, #eff6ff 0%, #e0edff 100%);
+  color: #1d4ed8;
+  font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 700;
+  border-bottom: 2px solid #bfdbfe;
+}
+
+.app-table thead th:first-child {
+  border-top-left-radius: 10px;
+}
+
+.app-table thead th:last-child {
+  border-top-right-radius: 10px;
 }
 
 .app-table th,
 .app-table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid #edf2f7;
+  padding: 13px 16px;
+  border-bottom: 1px solid #eef2f7;
   vertical-align: top;
   text-align: left;
+  line-height: 1.5;
 }
 
 .app-table tbody tr:nth-child(even) {
-  background: #fbfdff;
+  background: #f8fafc;
+}
+
+.app-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.app-table tbody tr:hover {
+  background: #eff6ff;
+}
+
+.app-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .app-table .muted { color: #64748b; }

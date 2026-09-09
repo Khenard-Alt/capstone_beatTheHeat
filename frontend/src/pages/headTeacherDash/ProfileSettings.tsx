@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { MdNotifications, MdOutlineThermostat, MdPerson, MdSave } from 'react-icons/md';
 import { Card } from '../../components/Card';
+import { AvatarUpload } from '../../components/AvatarUpload';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/TeacherPanel.css';
 
@@ -11,8 +12,6 @@ const ProfileSettings: React.FC = () => {
   const [receiveEmails, setReceiveEmails] = useState(true);
   const [receiveSms, setReceiveSms] = useState(true);
   const [statusMessage, setStatusMessage] = useState('');
-
-  const initials = useMemo(() => `${user?.firstName?.charAt(0) ?? ''}${user?.lastName?.charAt(0) ?? ''}` || 'HT', [user?.firstName, user?.lastName]);
 
   const handleSave = (event: React.FormEvent) => {
     event.preventDefault();
@@ -28,7 +27,7 @@ const ProfileSettings: React.FC = () => {
           <p>Manage your profile details and notification preferences while keeping the school safety palette consistent.</p>
         </div>
         <div className="teacher-hero-card">
-          <div className="teacher-avatar">{initials}</div>
+          <AvatarUpload size={44} />
           <div>
             <strong>{user?.role || 'head-teacher'}</strong>
             <p>{user?.schoolId || 'school-1'}</p>

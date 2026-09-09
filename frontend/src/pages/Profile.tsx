@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { AvatarUpload } from '../components/AvatarUpload';
 import { useAuth } from '../hooks/useAuth';
 import { MdPerson, MdEmail, MdPhone, MdSave } from 'react-icons/md';
 import { formatDate } from '../utils/formatters';
@@ -43,9 +44,7 @@ export const Profile: React.FC = () => {
       <div className="profile-grid">
         <Card title="Profile Information">
           <div className="profile-header">
-            <div className="profile-avatar">
-              <MdPerson size={80} />
-            </div>
+            <AvatarUpload size={80} />
             <div className="profile-info">
               <h2>
                 {user.firstName} {user.lastName}

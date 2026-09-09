@@ -60,36 +60,9 @@
 	color: #64748b;
 }
 
-.advisory-table-wrap {
-	overflow-x: auto;
-	background: #ffffff;
-	border: 1px solid #e2e8f0;
-	border-radius: 12px;
-}
-
-.advisory-table {
-	width: 100%;
-	border-collapse: collapse;
-	min-width: 640px;
-}
-
-.advisory-table thead {
-	background: #f8fafc;
-}
-
-.advisory-table th,
-.advisory-table td {
-	text-align: left;
-	padding: 12px 14px;
-	border-bottom: 1px solid #e2e8f0;
-	font-size: 14px;
-	color: #0f172a;
-	vertical-align: top;
-}
-
-.advisory-table tbody tr:nth-child(even) {
-	background: #f9fbff;
-}
+/* Table chrome (.advisory-table-wrap, .advisory-table) is intentionally not
+   redefined here — those elements also carry .table-wrap/.app-table from
+   Tables.css, which is the single source of truth for table styling. */
 
 .advisory-level {
 	display: inline-flex;

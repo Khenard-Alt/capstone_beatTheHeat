@@ -170,15 +170,13 @@ export const ParentQuestionsConcerns: React.FC = () => {
           },
         ]}
         footerNote="For live, scoped answers, go to the Chatbot page and ask a question in English, Tagalog, or Taglish."
+        footerAction={{ label: 'Open Chatbot', to: '/parent/chatbot' }}
       />
 
       <section className="messenger-section" id="question-and-concern-form" aria-labelledby="question-and-concern-heading">
         <div className="parent-section-header">
-          <p className="parent-section-eyebrow">Adviser Messages</p>
-          <h2 id="question-and-concern-heading">Messenger-style parent chat</h2>
-          <p className="parent-section-copy">
-            Every teacher gets their own conversation thread, so recent chats stay grouped by adviser and are easy to follow.
-          </p>
+          <p className="parent-section-eyebrow">Adviser Messages</p>   
+
         </div>
 
         <div className="messenger-shell">
@@ -281,15 +279,6 @@ export const ParentQuestionsConcerns: React.FC = () => {
           </div>
         </div>
 
-        <div className="messenger-side-panel">
-          <Card title="How to use this chat" className="teacher-panel-card tone-success">
-            <ul className="teacher-list">
-              <li>Select the correct adviser thread before sending a follow-up.</li>
-              <li>Use one conversation per teacher so the history stays easy to trace.</li>
-              <li>If the issue is urgent, treat the message as a follow-up only and escalate through the proper school channel.</li>
-            </ul>
-          </Card>
-        </div>
       </section>
     </>
   );
