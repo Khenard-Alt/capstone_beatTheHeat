@@ -131,6 +131,11 @@ export const Login: React.FC = () => {
     }
   };
 
+  const handleManualRegistration = () => {
+    sessionStorage.removeItem('bth_pending_google_registration');
+    setIsRegisterOpen(true);
+  };
+
   const handleAdminAuth = async (event: React.FormEvent) => {
     event.preventDefault();
     setAdminAuthError('');
@@ -375,7 +380,7 @@ export const Login: React.FC = () => {
 
             <div className="login-signup">
               <p className="signup-prompt">Don't have an account?</p>
-              <button className="signup-btn btn btn-secondary" onClick={() => setIsRegisterOpen(true)}>Create an account</button>
+              <button className="signup-btn btn btn-secondary" onClick={handleManualRegistration}>Create an account</button>
             </div>
           </div>
         </div>

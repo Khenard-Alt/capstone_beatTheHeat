@@ -298,7 +298,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
         {step === 'basic' && (
           <div className="modal-step">
             <h3>Create Your Account</h3>
-            <p>Use your Gmail account to register and receive the verification code.</p>
+            <p>Manual registration uses your Gmail address and requires email verification.</p>
 
             {errorMessage && <ErrorMessage message={errorMessage} type="warning" className="register-toast register-toast-warning" onClose={() => setErrorMessage('')} />}
 
@@ -343,7 +343,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
 
             <div className="modal-actions">
               <Button onClick={onClose} variant="secondary">Cancel</Button>
-              <Button onClick={handleSendOTP} variant="primary" loading={isLoading}>Send OTP</Button>
+              <Button onClick={handleSendOTP} variant="primary" loading={isLoading}>Send email verification code</Button>
             </div>
           </div>
         )}
