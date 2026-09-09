@@ -91,13 +91,14 @@ const raceWithTimeout = async (promise, timeoutMs) => {
  */
 const registerUser = async (req, res, next) => {
     try {
-        const { email, password, firstName, lastName, role, phone, childId, idProofUrl } = req.body;
+        const { email, password, firstName, lastName, role, phone, childId, idProofUrl, oauthAccessToken } = req.body;
+        const isGoogleRegistration = typeof oauthAccessToken === 'string' && oauthAccessToken.length > 0;
         // Validate required fields
-        if (!email || !password || !firstName || !lastName || !role) {
+        if (!email || !firstName || !lastName || !role || (!password && !isGoogleRegistration)) {
             res.status(400).json({ success: false, message: 'Missing required fields' });
             return;
         }
-        if (!/^[^\s@]+@gmail\.com$/i.test(String(email).trim())) {
+        if (!isGoogleRegistration && !/^[^\s@]+@gmail\.com$/i.test(String(email).trim())) {
             res.status(400).json({ success: false, message: 'Registration currently requires a Gmail account (@gmail.com).' });
             return;
         }
@@ -109,6 +110,17 @@ const registerUser = async (req, res, next) => {
             return;
         }
         const client = (0, supabase_1.getSupabaseAdminClient)();
+        if (isGoogleRegistration) {
+            if (!client) {
+                res.status(503).json({ success: false, message: 'Google registration requires Supabase Auth configuration.' });
+                return;
+            }
+            const { data: authData, error: authError } = await client.auth.getUser(oauthAccessToken);
+            if (authError || !authData?.user?.email || authData.user.email.toLowerCase() !== String(email).trim().toLowerCase()) {
+                res.status(401).json({ success: false, message: 'Google registration session is invalid or expired.' });
+                return;
+            }
+        }
         // If no database, return mock user
         if (!client) {
             const mockUser = fallbackUser(email, role);
@@ -134,7 +146,7 @@ const registerUser = async (req, res, next) => {
             console.error('Check user error:', checkError);
         }
         // Hash password
-        const hashedPassword = await bcryptjs_1.default.hash(password, 10);
+        const hashedPassword = await bcryptjs_1.default.hash(password || crypto_1.default.randomBytes(32).toString('hex'), 10);
         // Insert new user
         const { data: newUser, error: insertError } = await client
             .from('users')
@@ -327,7 +339,7 @@ const syncOAuthUser = async (req, res, next) => {
             return;
         }
         const { data: authData, error: authError } = await client.auth.getUser(accessToken);
-        const authUser = authData.user;
+        const authUser = authData?.user;
         if (authError || !authUser?.email) {
             res.status(401).json({ success: false, message: 'Google session is invalid or expired' });
             return;
@@ -378,6 +390,11 @@ const syncOAuthUser = async (req, res, next) => {
     }
     catch (error) {
         console.error('OAuth user sync error:', error);
+        if (process.env.NODE_ENV !== 'production') {
+            const message = error instanceof Error ? error.message : 'OAuth user sync failed';
+            res.status(500).json({ success: false, message: `OAuth user sync failed: ${message}` });
+            return;
+        }
         next(error);
     }
 };
