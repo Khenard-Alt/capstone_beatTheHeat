@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdCampaign, MdCheckCircle, MdHealthAndSafety, MdOutlineAssignment, MdOutlineThermostat } from 'react-icons/md';
 import { Card } from '../../components/Card';
+import { PredictiveHeatReport } from '../../components/PredictiveHeatReport';
 import IncidentModal from '../../components/IncidentModal';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
@@ -10,6 +11,7 @@ import { fetchHealthAdvisories, fetchRealtimeAdvisory, type LoggedAdvisory, type
 import { formatDateTimeGlobal } from '../../utils/formatters';
 import { getGreeting } from '../../utils/helpers';
 import '../../styles/TeacherPanel.css';
+import '../../styles/PredictiveHeatReport.css';
 
 type DashboardIncident = IncidentRecord;
 
@@ -117,6 +119,8 @@ export const HeadTeacherDashboard: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      <PredictiveHeatReport role="head-teacher" />
 
       <div className="teacher-layout">
         <div className="teacher-main">

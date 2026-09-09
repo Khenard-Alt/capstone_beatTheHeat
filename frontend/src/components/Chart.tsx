@@ -128,9 +128,9 @@ export const Chart = <T extends object>({
                 dataKey={dk.key}
                 name={dk.name}
                 stroke={dk.color || CHART_COLORS.temperature}
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
+                strokeWidth={3}
+                dot={{ r: 5, fill: dk.color || CHART_COLORS.temperature, stroke: '#ffffff', strokeWidth: 1.5 }}
+                activeDot={{ r: 7 }}
               />
             ))}
           </LineChart>

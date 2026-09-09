@@ -58,6 +58,11 @@ router.get('/:id', userController_1.getUserProfile);
  */
 router.put('/:id', userController_1.updateUser);
 /**
+ * POST /api/users/:id/avatar
+ * Upload/replace a user's profile picture (multipart/form-data, field "avatar")
+ */
+router.post('/:id/avatar', userController_1.avatarUpload.single('avatar'), userController_1.uploadAvatar);
+/**
  * DELETE /api/users/:id
  * Delete a user by ID
  */

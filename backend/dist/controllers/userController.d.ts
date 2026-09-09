@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
+import multer from 'multer';
+export declare const avatarUpload: multer.Multer;
 /**
  * Register a new user (parent or teacher)
  * POST /api/users/register
@@ -54,6 +56,11 @@ export declare const deleteUser: (req: Request, res: Response, next: NextFunctio
  * PUT /api/users/:id
  */
 export declare const updateUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+/**
+ * Upload/replace a user's profile picture
+ * POST /api/users/:id/avatar  (multipart/form-data, field name "avatar")
+ */
+export declare const uploadAvatar: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 /**
  * Get children/students linked to a parent user
  * GET /api/users/:id/children

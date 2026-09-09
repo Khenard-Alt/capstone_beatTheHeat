@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -33,6 +33,27 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<StudentOption[]>([]);
+  const [hasScrolledTerms, setHasScrolledTerms] = useState(false);
+  const termsBoxRef = useRef<HTMLDivElement | null>(null);
+
+  const handleTermsScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const el = event.currentTarget;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 24) {
+      setHasScrolledTerms(true);
+    }
+  };
+
+  useEffect(() => {
+    if (step !== 'terms') {
+      return;
+    }
+    setHasScrolledTerms(false);
+    // If the terms box isn't tall enough to need scrolling, don't block the user.
+    const el = termsBoxRef.current;
+    if (el && el.scrollHeight <= el.clientHeight + 4) {
+      setHasScrolledTerms(true);
+    }
+  }, [step]);
 
   const [formData, setFormData] = useState<any>({
     firstName: '',
@@ -507,7 +528,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
 
             <div className="terms-container register-terms-card">
               <h4>Beat The Heat - Terms of Service</h4>
-              <div className="terms-content">
+              <div className="terms-content" ref={termsBoxRef} onScroll={handleTermsScroll}>
                 <div className="terms-point">
                   <strong>Service Overview</strong>
                   <span>Beat The Heat is a real-time heat advisory and health monitoring system designed to help schools and parents protect students during extreme heat conditions.</span>
@@ -527,12 +548,17 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
               </div>
             </div>
 
-            <label className="terms-checkbox">
+            {!hasScrolledTerms && (
+              <p className="terms-scroll-hint">Scroll to the end of the terms to enable the checkbox.</p>
+            )}
+
+            <label className={`terms-checkbox ${!hasScrolledTerms ? 'disabled' : ''}`}>
               <input
                 type="checkbox"
                 name="termsAccepted"
                 checked={formData.termsAccepted}
                 onChange={handleChange}
+                disabled={!hasScrolledTerms}
               />
               <span>I accept the Terms and Conditions</span>
             </label>

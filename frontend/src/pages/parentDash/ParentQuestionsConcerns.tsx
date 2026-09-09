@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card } from '../../components/Card';
+import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchParentMessages, sendParentMessage, type ParentMessage } from '../../services/parentMessages.service';
 import { fetchUsersByRole, type AppUser } from '../../services/users.service';
@@ -197,9 +197,18 @@ export const ParentQuestionsConcerns: React.FC = () => {
                   onClick={() => setActiveTeacherId(thread.id)}
                 >
                   <div className="messenger-thread-top">
-                    <div>
-                      <div className="messenger-thread-title">{getDisplayName(thread.teacher)}</div>
-                      <div className="messenger-thread-subtitle">Teacher adviser</div>
+                    <div className="messenger-thread-identity">
+                      <Avatar
+                        className="messenger-thread-avatar"
+                        size={32}
+                        src={thread.teacher.avatarUrl}
+                        firstName={thread.teacher.firstName}
+                        lastName={thread.teacher.lastName}
+                      />
+                      <div>
+                        <div className="messenger-thread-title">{getDisplayName(thread.teacher)}</div>
+                        <div className="messenger-thread-subtitle">Teacher adviser</div>
+                      </div>
                     </div>
                     <div className="messenger-thread-subtitle">{thread.messages.length} msgs</div>
                   </div>
@@ -229,7 +238,13 @@ export const ParentQuestionsConcerns: React.FC = () => {
                   const outgoing = message.sender_role === 'parent';
                   return (
                     <article key={message.id} className={`messenger-message ${outgoing ? 'outgoing' : 'incoming'}`}>
-                      <div className="messenger-avatar">{outgoing ? 'ME' : 'AD'}</div>
+                      <Avatar
+                        className="messenger-avatar"
+                        size={36}
+                        src={outgoing ? user?.avatarUrl : activeTeacher?.avatarUrl}
+                        firstName={outgoing ? user?.firstName : activeTeacher?.firstName}
+                        lastName={outgoing ? user?.lastName : activeTeacher?.lastName}
+                      />
                       <div className="messenger-bubble">
                         <span className="messenger-meta">
                           {outgoing ? 'You' : getDisplayName(activeTeacher ?? undefined)} · {formatTime(message.created_at)}

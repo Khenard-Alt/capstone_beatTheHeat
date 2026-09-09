@@ -152,3 +152,52 @@ export const DEPED_RECOMMENDATIONS = {
     'Alert emergency medical services',
   ],
 };
+
+// The backend labels the safest tier "safe"; the rest of the frontend already
+// keys everything (HEAT_LABELS, HEAT_COLORS, DEPED_RECOMMENDATIONS) off "normal".
+export const normalizeHeatLevel = (level?: string | null): keyof typeof HEAT_LABELS => {
+  const value = (level || '').toLowerCase();
+  if (value === 'safe') return 'normal';
+  if (value in HEAT_LABELS) return value as keyof typeof HEAT_LABELS;
+  return 'normal';
+};
+
+// Role-specific preventive/recommended actions per heat level, for predictive
+// reports. Kept alongside DEPED_RECOMMENDATIONS (which is level-only, generic).
+export const ROLE_HEAT_RECOMMENDATIONS: Record<keyof typeof HEAT_LABELS, Record<'principal' | 'head-teacher' | 'teacher' | 'parent' | 'admin', string[]>> = {
+  normal: {
+    principal: ['No operational changes needed.', 'Confirm the weather monitoring feed is updating normally.'],
+    'head-teacher': ['Proceed with the regular class and activity schedule.', 'Spot-check that classrooms have drinking water available.'],
+    teacher: ['Continue normal outdoor activities.', 'Remind students to hydrate throughout the day.'],
+    parent: ['No special precautions needed today.', 'Pack a reusable water bottle as usual.'],
+    admin: ['No system alerts required.', 'Continue routine weather snapshot logging.'],
+  },
+  caution: {
+    principal: ['Notify head teachers to watch outdoor activity duration.', 'Confirm water stations are stocked school-wide.'],
+    'head-teacher': ['Coordinate shaded breaks for outdoor classes.', 'Ask teachers to report any early symptoms immediately.'],
+    teacher: ['Limit strenuous outdoor activities.', 'Provide frequent water breaks.', 'Watch for early signs of heat exhaustion.'],
+    parent: ['Send your child with extra water.', 'Ask about symptoms like dizziness or headache after school.'],
+    admin: ['Verify the caution-level advisory was sent to affected roles.', 'Monitor the heat index feed for further increases.'],
+  },
+  'extreme-caution': {
+    principal: ['Consider moving PE and recess to shaded or indoor areas.', 'Brief head teachers on possible activity adjustments.'],
+    'head-teacher': ['Move outdoor activities to shaded or indoor areas.', 'Set mandatory water breaks every 15-20 minutes.'],
+    teacher: ['Minimize outdoor activities.', 'Enforce water breaks every 15-20 minutes.', 'Monitor students closely for symptoms.'],
+    parent: ['Remind your child to drink water often.', 'Watch for signs of heat exhaustion after school hours.'],
+    admin: ['Confirm cooling stations/fans are operational campus-wide.', 'Escalate repeated symptom reports to the clinic.'],
+  },
+  danger: {
+    principal: ['Cancel outdoor activities and move classes indoors.', 'Prepare a possible schedule adjustment announcement.'],
+    'head-teacher': ['Direct all classes to remain indoors in cooled rooms.', 'Coordinate clinic readiness for heat-related cases.'],
+    teacher: ['Cancel all outdoor activities.', 'Keep students indoors in air-conditioned rooms.', 'Monitor for heat stroke symptoms.'],
+    parent: ['Expect indoor-only activities today.', 'Watch closely for heat stroke symptoms at pickup.'],
+    admin: ['Push a danger-level alert to all roles immediately.', 'Confirm emergency medical supplies are ready.'],
+  },
+  'extreme-danger': {
+    principal: ['Evaluate early dismissal or class suspension.', 'Alert DepEd leadership and coordinate an official announcement.'],
+    'head-teacher': ['Suspend all outdoor activities immediately.', 'Prepare for possible early dismissal.'],
+    teacher: ['Suspend all outdoor activities immediately.', 'Continuously monitor students for heat stroke.'],
+    parent: ['Be ready for a possible early dismissal notice.', 'Keep your phone reachable for school alerts.'],
+    admin: ['Alert emergency medical services.', 'Escalate to school and DepEd leadership without delay.'],
+  },
+};

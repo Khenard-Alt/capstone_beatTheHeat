@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card } from '../../components/Card';
+import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchParentMessages, sendParentMessage, type ParentMessage } from '../../services/parentMessages.service';
 import { fetchUsersByRole, type AppUser } from '../../services/users.service';
@@ -159,9 +160,18 @@ const TeacherMessages: React.FC = () => {
 									onClick={() => setActiveParentId(thread.id)}
 								>
 									<div className="messenger-thread-top">
-										<div>
-											<div className="messenger-thread-title">{getDisplayName(thread.parent)}</div>
-											<div className="messenger-thread-subtitle">Parent account</div>
+										<div className="messenger-thread-identity">
+											<Avatar
+												className="messenger-thread-avatar"
+												size={32}
+												src={thread.parent.avatarUrl}
+												firstName={thread.parent.firstName}
+												lastName={thread.parent.lastName}
+											/>
+											<div>
+												<div className="messenger-thread-title">{getDisplayName(thread.parent)}</div>
+												<div className="messenger-thread-subtitle">Parent account</div>
+											</div>
 										</div>
 										<div className="messenger-thread-subtitle">{thread.messages.length} msgs</div>
 									</div>
@@ -191,7 +201,13 @@ const TeacherMessages: React.FC = () => {
 									const outgoing = message.sender_role === 'teacher';
 									return (
 										<article key={message.id} className={`messenger-message ${outgoing ? 'outgoing' : 'incoming'}`}>
-											<div className="messenger-avatar">{outgoing ? 'ME' : 'PA'}</div>
+											<Avatar
+												className="messenger-avatar"
+												size={36}
+												src={outgoing ? user?.avatarUrl : activeParent?.avatarUrl}
+												firstName={outgoing ? user?.firstName : activeParent?.firstName}
+												lastName={outgoing ? user?.lastName : activeParent?.lastName}
+											/>
 											<div className="messenger-bubble">
 												<span className="messenger-meta">
 													{outgoing ? 'You' : getDisplayName(activeParent ?? undefined)} · {formatTime(message.created_at)}
@@ -222,8 +238,8 @@ const TeacherMessages: React.FC = () => {
 								</label>
 
 								<label className="messenger-compose-field">
-									<span className="parent-section-eyebrow">Subject</span>
-									<input placeholder="Optional subject line" value={subject} onChange={(event) => setSubject(event.target.value)} />
+									<span className="parent-section-eyebrow">Concerns / Inquiries</span>
+									<input placeholder="Optional concerns / inquiries line" value={subject} onChange={(event) => setSubject(event.target.value)} />
 								</label>
 							</div>
 

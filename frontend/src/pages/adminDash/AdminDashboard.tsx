@@ -4,6 +4,7 @@ import { WeatherWidget } from '../../components/WeatherWidget';
 import { AdvisoryAlert } from '../../components/AdvisoryAlert';
 import { Chart } from '../../components/Chart';
 import { Card } from '../../components/Card';
+import { PredictiveHeatReport } from '../../components/PredictiveHeatReport';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchCurrentWeather } from '../../services/weather.service';
 import { apiClient } from '../../services/api';
@@ -14,6 +15,7 @@ import { calculateHeatIndex, getHeatLevel, getGreeting } from '../../utils/helpe
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { mapRealtimeAdvisory } from '../../utils/advisory';
 import '../../styles/AdminDashboard.css';
+import '../../styles/PredictiveHeatReport.css';
 
 interface Trend {
   timestamp: string;
@@ -238,6 +240,8 @@ export const AdminDashboard: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      <PredictiveHeatReport role="admin" />
 
       <div className="admin-dashboard-grid">
         <div className="admin-dashboard-main">

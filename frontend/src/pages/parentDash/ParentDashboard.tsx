@@ -5,6 +5,8 @@ import { WeatherWidget } from '../../components/WeatherWidget';
 import { AdvisoryAlert } from '../../components/AdvisoryAlert';
 import { Chart } from '../../components/Chart';
 import { Card } from '../../components/Card';
+import { PredictiveHeatReport } from '../../components/PredictiveHeatReport';
+import { apiClient } from '../../services/api';
 import { fetchAnnouncements } from '../../services/announcements.service'; import type { Announcement } from '../../services/announcements.service';
 import { fetchIncidents } from '../../services/incidents.service';
 import { fetchCurrentWeather } from '../../services/weather.service';
@@ -30,6 +32,7 @@ import {
   MdInbox,
 } from 'react-icons/md';
 import '../../styles/ParentDashboard.css';
+import '../../styles/PredictiveHeatReport.css';
 
 interface ParentChatMessage {
   id: number;
@@ -73,6 +76,13 @@ const normalizeStatus = (value?: string | null): StudentHealthIncident['status']
   return 'reported';
 };
 
+interface TodayTrendPoint {
+  time: string;
+  avgTemp: number;
+  avgHumidity: number;
+  avgHeatIndex: number;
+}
+
 const mapIncidentRecord = (incident: IncidentRecord): StudentHealthIncident => ({
   id: incident.id,
   studentName: incident.studentName,
@@ -92,7 +102,7 @@ const mapIncidentRecord = (incident: IncidentRecord): StudentHealthIncident => (
 export const ParentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
-  const [weatherHistory, setWeatherHistory] = useState<WeatherData[]>([]);
+  const [todayTrend, setTodayTrend] = useState<TodayTrendPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [showParentPopup, setShowParentPopup] = useState(false);
   const [showParentChat, setShowParentChat] = useState(false);
@@ -145,11 +155,6 @@ export const ParentDashboard: React.FC = () => {
         const data = await fetchCurrentWeather();
         if (data) {
           setCurrentWeather(data);
-          setWeatherHistory((prev) => {
-            const updated = [...prev, data];
-            // Keep the last 60 points (about 1 hour at 1-minute polling)
-            return updated.slice(-60);
-          });
         }
       } catch (error) {
         console.error('Failed to fetch weather:', error);
@@ -164,6 +169,30 @@ export const ParentDashboard: React.FC = () => {
     // Then poll every 1 minute
     const interval = setInterval(fetchWeather, 1 * 60 * 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadTodayTrend = async () => {
+      try {
+        const { data } = await apiClient.get('/api/heat-index/history', { params: { period: 'daily' } });
+        if (mounted && Array.isArray(data?.data)) {
+          setTodayTrend(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to load today\'s heat index trend:', error);
+      }
+    };
+
+    void loadTodayTrend();
+    // Refresh alongside the live weather poll so the trend catches up as new
+    // hourly readings get logged.
+    const interval = setInterval(loadTodayTrend, 5 * 60 * 1000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -490,13 +519,13 @@ export const ParentDashboard: React.FC = () => {
     }
   };
 
-  // Convert weather history to chart data
-  const chartData = weatherHistory.map((w) => ({
-    time: formatDateTimeCompact(w.timestamp),
-    fullTime: formatDateTimeGlobal(w.timestamp),
-    temperature: w.temperature,
-    humidity: w.humidity,
-    heatIndex: calculateHeatIndex(w.temperature, w.humidity),
+  // Real hourly heat index trend for today, fetched from the backend logs.
+  const chartData = todayTrend.map((point) => ({
+    time: formatDateTimeCompact(point.time),
+    fullTime: formatDateTimeGlobal(point.time),
+    temperature: point.avgTemp,
+    humidity: point.avgHumidity,
+    heatIndex: point.avgHeatIndex,
   }));
 
   const getParentFullTime = (label: string): string => {
@@ -607,6 +636,8 @@ export const ParentDashboard: React.FC = () => {
           </section>
 
           <AdvisoryAlert advisory={advisory} />
+
+          <PredictiveHeatReport role="parent" compact />
 
           <Card title="Heat Index Trend (Today)">
             {chartData.length > 0 && (

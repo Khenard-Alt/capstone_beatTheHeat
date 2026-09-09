@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '../../components/Card';
+import { PredictiveHeatReport } from '../../components/PredictiveHeatReport';
 import { apiClient } from '../../services/api';
 import { fetchIncidents, type IncidentRecord } from '../../services/incidents.service';
 import { fetchHealthAdvisories, type LoggedAdvisory } from '../../services/healthAdvisory.service';
 import { formatDateTimeGlobal } from '../../utils/formatters';
 import '../../styles/AdminDashboard.css';
+import '../../styles/PredictiveHeatReport.css';
 
 type PrincipalStats = {
   activeAdvisories: number;
@@ -82,6 +84,8 @@ const PrincipalReports: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      <PredictiveHeatReport role="principal" />
 
       <div className="admin-dashboard-grid">
         <div className="admin-dashboard-main">

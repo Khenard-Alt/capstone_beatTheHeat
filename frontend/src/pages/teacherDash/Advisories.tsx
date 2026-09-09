@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { MdBolt, MdCheckCircle, MdOutlineThermostat } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { TeacherHeatReminder } from '../../components/TeacherHeatReminder';
+import { PredictiveHeatReport } from '../../components/PredictiveHeatReport';
 import { fetchHealthAdvisories, fetchRealtimeAdvisory, type LoggedAdvisory, type RealtimeAdvisoryResponse } from '../../services/healthAdvisory.service';
 import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
 import { formatDateTimeGlobal } from '../../utils/formatters';
 import '../../styles/TeacherPanel.css';
+import '../../styles/PredictiveHeatReport.css';
 
 const Advisories: React.FC = () => {
   const [realtimeAdvisory, setRealtimeAdvisory] = useState<RealtimeAdvisoryResponse | null>(null);
@@ -123,6 +125,8 @@ const Advisories: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      <PredictiveHeatReport role="teacher" compact />
 
       <div className="teacher-layout">
         <div className="teacher-main">

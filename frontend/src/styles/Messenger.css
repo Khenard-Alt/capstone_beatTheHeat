@@ -152,22 +152,20 @@
 }
 
 .messenger-avatar {
-	flex-shrink: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 40px;
-	height: 40px;
-	border-radius: 14px;
-	background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-	color: #fff;
+	border-radius: 50%;
 	font-size: 13px;
-	font-weight: 800;
 	letter-spacing: 0.04em;
 }
 
-.messenger-message.outgoing .messenger-avatar {
-	background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+.messenger-thread-avatar {
+	border-radius: 50%;
+}
+
+.messenger-thread-identity {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
 }
 
 .messenger-bubble {
