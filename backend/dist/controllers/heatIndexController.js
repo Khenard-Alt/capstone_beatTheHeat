@@ -58,16 +58,28 @@ const getHeatIndexHistory = async (req, res, next) => {
                 .filter((id) => typeof id === 'string');
             let weatherById = new Map();
             if (weatherIds.length > 0) {
-                const { data: weatherRows, error: weatherError } = await client
+                // Chunk the .in() lookup — passing all IDs (up to 500) in a single
+                // query blows past the URL/header size limit and fails silently,
+                // which previously made every avgTemp/avgHumidity come back as 0.
+                const uniqueWeatherIds = Array.from(new Set(weatherIds));
+                const CHUNK_SIZE = 100;
+                const chunks = [];
+                for (let i = 0; i < uniqueWeatherIds.length; i += CHUNK_SIZE) {
+                    chunks.push(uniqueWeatherIds.slice(i, i + CHUNK_SIZE));
+                }
+                const chunkResults = await Promise.all(chunks.map((chunk) => client
                     .from('weather_data')
                     .select('id, temperature_c, humidity_percent')
-                    .in('id', weatherIds);
-                if (weatherError) {
-                    // We log the error but continue as we can fallback to 0/empty values for missing weather
-                    console.error('Weather data fetch error in history:', weatherError);
-                }
-                else {
-                    weatherById = new Map((weatherRows || []).map((row) => [row.id, row]));
+                    .in('id', chunk)));
+                for (const { data: weatherRows, error: weatherError } of chunkResults) {
+                    if (weatherError) {
+                        // We log the error but continue as we can fallback to 0/empty values for missing weather
+                        console.error('Weather data fetch error in history:', weatherError);
+                        continue;
+                    }
+                    for (const row of weatherRows || []) {
+                        weatherById.set(row.id, row);
+                    }
                 }
             }
             // Group data by period
@@ -112,14 +124,11 @@ const getHeatIndexHistory = async (req, res, next) => {
                 // Aggregate grouped data
                 data = Array.from(grouped.entries())
                     .map(([time, records]) => {
-                    const weatherRows = records
-                        .map((r) => weatherById.get(r.weather_data_id))
-                        .filter(Boolean);
                     const temps = records
-                        .map((_r, idx) => weatherRows[idx]?.temperature_c ?? 0)
+                        .map((r) => weatherById.get(r.weather_data_id)?.temperature_c ?? 0)
                         .filter((t) => t > 0);
                     const humidities = records
-                        .map((_r, idx) => weatherRows[idx]?.humidity_percent ?? 0)
+                        .map((r) => weatherById.get(r.weather_data_id)?.humidity_percent ?? 0)
                         .filter((h) => h > 0);
                     const heatIndexes = records.map((r) => Number(r.heat_index_c) || 0);
                     const avgTemp = temps.length > 0

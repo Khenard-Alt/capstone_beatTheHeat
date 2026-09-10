@@ -20,6 +20,7 @@ const notification_routes_1 = __importDefault(require("./routes/notification.rou
 const announcements_routes_1 = __importDefault(require("./routes/announcements.routes"));
 const parentMessages_routes_1 = __importDefault(require("./routes/parentMessages.routes"));
 const incidents_routes_1 = __importDefault(require("./routes/incidents.routes"));
+const campusAlert_routes_1 = __importDefault(require("./routes/campusAlert.routes"));
 const weather_service_1 = require("./services/weather.service");
 const aiAnalysis_service_1 = require("./services/aiAnalysis.service");
 const notification_service_1 = require("./services/notification.service");
@@ -55,6 +56,7 @@ app.use('/api/notifications', notification_routes_1.default);
 app.use('/api/announcements', announcements_routes_1.default);
 app.use('/api/parent-messages', parentMessages_routes_1.default);
 app.use('/api/incidents', incidents_routes_1.default);
+app.use('/api/campus-alert', campusAlert_routes_1.default);
 // app.use('/api/schools', schoolRoutes);
 app.use('/api/health-advisories', healthAdvisory_routes_1.default);
 app.use('/api/admin', admin_routes_1.default);

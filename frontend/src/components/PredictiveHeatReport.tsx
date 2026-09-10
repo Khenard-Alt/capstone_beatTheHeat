@@ -11,6 +11,7 @@ import {
 } from '../utils/constants';
 
 type ReportRole = keyof (typeof ROLE_HEAT_RECOMMENDATIONS)['normal'];
+type ReportSection = 'previous' | 'current' | 'future';
 
 interface PredictiveHeatReportProps {
   role: ReportRole;
@@ -18,6 +19,11 @@ interface PredictiveHeatReportProps {
    *  only current conditions + role actions + a simple upcoming-peak list —
    *  meant for parent/teacher views where the full analytics aren't needed. */
   compact?: boolean;
+  /** Which cards to render. Defaults to previous+current+future (or just
+   *  current+future when compact). Use this to show only one card, e.g. the
+   *  Front Screen only needs "future" since current conditions already show
+   *  in its own Heat Index card above. */
+  sections?: ReportSection[];
 }
 
 interface HistoryPoint {
@@ -59,7 +65,14 @@ const formatShortDateTime = (value: string) => {
   return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 };
 
-export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role, compact = false }) => {
+const DEFAULT_SECTIONS: ReportSection[] = ['previous', 'current', 'future'];
+
+export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role, compact = false, sections }) => {
+  const activeSections = sections ?? (compact ? (['current', 'future'] as ReportSection[]) : DEFAULT_SECTIONS);
+  const showPrevious = !compact && activeSections.includes('previous');
+  const showCurrent = activeSections.includes('current');
+  const showFuture = activeSections.includes('future');
+
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [current, setCurrent] = useState<CurrentSnapshot | null>(null);
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
@@ -72,11 +85,15 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
       try {
         setLoading(true);
         const [historyRes, currentRes, forecastRes] = await Promise.all([
-          compact
-            ? Promise.resolve({ data: { data: [] } })
-            : apiClient.get('/api/heat-index/history', { params: { period: 'weekly' } }),
-          apiClient.get('/api/weather/current'),
-          apiClient.get('/api/weather/forecast', { params: { days: 5 } }),
+          showPrevious
+            ? apiClient.get('/api/heat-index/history', { params: { period: 'weekly' } })
+            : Promise.resolve({ data: { data: [] } }),
+          showCurrent
+            ? apiClient.get('/api/weather/current')
+            : Promise.resolve({ data: { data: null } }),
+          showFuture
+            ? apiClient.get('/api/weather/forecast', { params: { days: 5 } })
+            : Promise.resolve({ data: { data: { days: [] } } }),
         ]);
 
         if (!mounted) return;
@@ -123,16 +140,20 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
   const currentActions = ROLE_HEAT_RECOMMENDATIONS[currentLevel][role];
   const currentGenericTips = DEPED_RECOMMENDATIONS[currentLevel];
 
+  const onlyFuture = showFuture && !showPrevious && !showCurrent;
+  const headerTitle = onlyFuture ? 'Future Heat Outlook' : compact ? 'Heat Safety Outlook' : 'Predictive Heat Report';
+  const headerSubtitle = onlyFuture
+    ? 'Forecasted heat index for the upcoming days.'
+    : compact
+      ? 'Current conditions and what to do, based on the latest school heat data.'
+      : 'Previous patterns, current conditions, and the upcoming forecast for this school.';
+
   return (
     <div className={`predictive-report ${compact ? 'predictive-report-compact' : ''}`}>
       <div className="predictive-report-header">
         <div>
-          <h2>{compact ? 'Heat Safety Outlook' : 'Predictive Heat Report'}</h2>
-          <p>
-            {compact
-              ? 'Current conditions and what to do, based on the latest school heat data.'
-              : 'Previous patterns, current conditions, and the upcoming forecast for this school.'}
-          </p>
+          <h2>{headerTitle}</h2>
+          <p>{headerSubtitle}</p>
         </div>
         <div className="predictive-legend">
           {(Object.keys(HEAT_LABELS) as Array<keyof typeof HEAT_LABELS>).map((level) => (
@@ -144,7 +165,7 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
       </div>
 
       <div className="predictive-report-grid">
-        {!compact && (
+        {showPrevious && (
         <Card title="Previous Analysis" className="predictive-card">
           {loading ? (
             <div className="predictive-loading">Loading historical data…</div>
@@ -176,6 +197,7 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
         </Card>
         )}
 
+        {showCurrent && (
         <Card title="Current Analysis" className="predictive-card">
           {loading || !current ? (
             <div className="predictive-loading">Loading current conditions…</div>
@@ -220,8 +242,10 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
             </>
           )}
         </Card>
+        )}
 
-        <Card title="Future Analysis" className="predictive-card">
+        {showFuture && (
+        <Card title={onlyFuture ? undefined : 'Future Analysis'} className="predictive-card">
           {loading ? (
             <div className="predictive-loading">Loading forecast…</div>
           ) : forecast.length === 0 ? (
@@ -260,6 +284,7 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
             </>
           )}
         </Card>
+        )}
       </div>
     </div>
   );

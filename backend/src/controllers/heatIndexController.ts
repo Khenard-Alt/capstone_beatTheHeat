@@ -72,16 +72,34 @@ export const getHeatIndexHistory = async (
 
 			let weatherById = new Map<string, any>();
 			if (weatherIds.length > 0) {
-				const { data: weatherRows, error: weatherError } = await client
-					.from('weather_data')
-					.select('id, temperature_c, humidity_percent')
-					.in('id', weatherIds);
+				// Chunk the .in() lookup — passing all IDs (up to 500) in a single
+				// query blows past the URL/header size limit and fails silently,
+				// which previously made every avgTemp/avgHumidity come back as 0.
+				const uniqueWeatherIds = Array.from(new Set(weatherIds));
+				const CHUNK_SIZE = 100;
+				const chunks: string[][] = [];
+				for (let i = 0; i < uniqueWeatherIds.length; i += CHUNK_SIZE) {
+					chunks.push(uniqueWeatherIds.slice(i, i + CHUNK_SIZE));
+				}
 
-				if (weatherError) {
-					// We log the error but continue as we can fallback to 0/empty values for missing weather
-					console.error('Weather data fetch error in history:', weatherError);
-				} else {
-					weatherById = new Map((weatherRows || []).map((row: any) => [row.id, row]));
+				const chunkResults = await Promise.all(
+					chunks.map((chunk) =>
+						client
+							.from('weather_data')
+							.select('id, temperature_c, humidity_percent')
+							.in('id', chunk)
+					)
+				);
+
+				for (const { data: weatherRows, error: weatherError } of chunkResults) {
+					if (weatherError) {
+						// We log the error but continue as we can fallback to 0/empty values for missing weather
+						console.error('Weather data fetch error in history:', weatherError);
+						continue;
+					}
+					for (const row of weatherRows || []) {
+						weatherById.set((row as any).id, row);
+					}
 				}
 			}
 
@@ -131,15 +149,11 @@ export const getHeatIndexHistory = async (
 				// Aggregate grouped data
 				data = Array.from(grouped.entries())
 					.map(([time, records]) => {
-						const weatherRows = records
-							.map((r: any) => weatherById.get(r.weather_data_id))
-							.filter(Boolean);
-
 						const temps = records
-							.map((_r: any, idx: number) => weatherRows[idx]?.temperature_c ?? 0)
+							.map((r: any) => weatherById.get(r.weather_data_id)?.temperature_c ?? 0)
 							.filter((t: number) => t > 0);
 						const humidities = records
-							.map((_r: any, idx: number) => weatherRows[idx]?.humidity_percent ?? 0)
+							.map((r: any) => weatherById.get(r.weather_data_id)?.humidity_percent ?? 0)
 							.filter((h: number) => h > 0);
 						const heatIndexes = records.map((r: any) => Number(r.heat_index_c) || 0);
 

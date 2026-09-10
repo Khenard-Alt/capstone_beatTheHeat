@@ -12,6 +12,7 @@ import { AdminDashboard } from './pages/adminDash/AdminDashboard';
 import { ParentDashboard } from './pages/parentDash/ParentDashboard';
 import { Login } from './pages/Login';
 import { AuthCallback } from './pages/AuthCallback';
+import { FrontScreenDisplay } from './pages/FrontScreenDisplay';
 import { HeatIndex } from './pages/HeatIndex';
 import { HealthAdvisory } from './pages/HealthAdvisory';
 import { Notifications } from './pages/Notifications';
@@ -247,6 +248,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/login" element={<LoginLayout><Login /></LoginLayout>} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/register" element={<Navigate to="/login" replace />} />
+      {/* Public kiosk/TV display — no login required, meant to run fullscreen on a lobby screen. */}
+      <Route path="/front-screen" element={<FrontScreenDisplay />} />
 
       <Route path="/" element={<LandingRoute />} />
 

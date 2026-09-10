@@ -1,0 +1,596 @@
+.front-screen {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+.front-screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: clamp(8px, 1.6vh, 16px) 32px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #06b6d4 100%);
+  color: #ffffff;
+}
+
+.front-screen-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.front-screen-logo-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.front-screen-logo {
+  width: clamp(34px, 5vh, 48px);
+  height: clamp(34px, 5vh, 48px);
+  border-radius: 50%;
+  background: #ffffff;
+  padding: 3px;
+  object-fit: contain;
+}
+
+.front-screen-brand-title {
+  display: block;
+  font-size: clamp(16px, 2.2vh, 20px);
+  font-weight: 800;
+}
+
+.front-screen-brand-subtitle {
+  display: block;
+  font-size: clamp(10px, 1.3vh, 12px);
+  opacity: 0.85;
+}
+
+.front-screen-clock {
+  text-align: right;
+}
+
+.front-screen-time {
+  display: block;
+  font-size: clamp(18px, 2.6vh, 26px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.front-screen-date {
+  display: block;
+  font-size: clamp(10px, 1.3vh, 12px);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.front-screen-ticker {
+  flex: 0 0 auto;
+  overflow: hidden;
+  padding: 4px;
+  background: #0f172a;
+  border-bottom: 2px solid #2563eb;
+}
+
+.front-screen-ticker-track {
+  display: flex;
+  width: max-content;
+  animation-name: front-screen-ticker-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  /* animation-duration and --ticker-loop-x are set inline per render, based
+     on how much content there is. */
+}
+
+.front-screen-ticker-item {
+  flex-shrink: 0;
+  padding: 4px 32px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.front-screen-ticker-item::after {
+  content: '•';
+  margin-left: 32px;
+  color: #38bdf8;
+}
+
+@keyframes front-screen-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--ticker-loop-x, -50%)); }
+}
+
+.front-screen-suspension-banner {
+  animation: front-screen-suspension-flash 1.6s ease-in-out infinite;
+  align-items: center;
+  text-align: center;
+}
+
+.front-screen-suspension-banner .front-screen-advisory-eyebrow {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.front-screen-suspension-banner h1 {
+  font-size: clamp(32px, 6vw, 64px);
+}
+
+.front-screen-suspension-banner p {
+  font-size: clamp(16px, 2vw, 22px);
+  max-width: 70ch;
+}
+
+@keyframes front-screen-suspension-flash {
+  0%, 100% { box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18); }
+  50% { box-shadow: 0 20px 60px rgba(220, 38, 38, 0.55); }
+}
+
+/* Everything between the ticker and the footer shares the remaining
+   viewport height — no scrolling, sized to always fit one screen. */
+.front-screen-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 16px);
+  padding: clamp(8px, 1.4vh, 16px) 32px;
+  overflow: hidden;
+}
+
+.front-screen-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: clamp(10px, 1.6vw, 24px);
+}
+
+.front-screen-advisory-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 16px);
+  min-width: 0;
+  min-height: 0;
+}
+
+.front-screen-advisory-banner {
+  position: relative;
+  border-radius: 20px;
+  padding: clamp(14px, 2.6vh, 30px);
+  color: #ffffff;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  align-items: center;
+}
+
+/* Background photo carousel — crossfades behind the advisory text so the
+   banner still reads as "school life" instead of a flat color block, while
+   the scrim keeps the message legible on top of any photo. */
+.front-screen-advisory-carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.front-screen-advisory-carousel-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+}
+
+.front-screen-advisory-carousel-img.is-active {
+  opacity: 0.32;
+}
+
+.front-screen-advisory-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.front-screen-advisory-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.front-screen-advisory-icon {
+  width: clamp(32px, 5vh, 52px);
+  height: clamp(32px, 5vh, 52px);
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+}
+
+.front-screen-advisory-eyebrow {
+  display: inline-block;
+  width: fit-content;
+  padding: 3px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
+.front-screen-advisory-banner h1 {
+  margin: 0 0 8px;
+  font-size: clamp(22px, 3.4vw, 38px);
+  line-height: 1.15;
+}
+
+.front-screen-advisory-banner p {
+  margin: 0;
+  font-size: clamp(13px, 1.4vw, 17px);
+  max-width: 60ch;
+  opacity: 0.95;
+}
+
+.front-screen-announcements {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  padding: clamp(10px, 1.8vh, 20px) 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  flex: 0 1 auto;
+  max-height: 46%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.front-screen-announcements h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.front-screen-announcements ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.front-screen-announcements li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.front-screen-announcements li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.front-screen-announcements strong {
+  display: block;
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.front-screen-announcements p {
+  margin: 4px 0 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.front-screen-announcement-badge {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.front-screen-announcement-badge.priority-critical,
+.front-screen-announcement-badge.priority-urgent {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.front-screen-announcement-badge.priority-warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.front-screen-empty {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.front-screen-weather-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.front-screen-location {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  flex: 0 0 auto;
+}
+
+/* Shared white-card look — same palette as HeatIndexCard/WeatherWidget
+   elsewhere in the app (white bg, #e2e8f0 border, soft shadow), so the
+   Front Screen visually matches the rest of the system. */
+.front-screen-metric-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: clamp(10px, 2vh, 20px) 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.front-screen-metric-card.level-caution { border-left: 6px solid #f59e0b; }
+.front-screen-metric-card.level-extreme-caution { border-left: 6px solid #f97316; }
+.front-screen-metric-card.level-danger { border-left: 6px solid #ef4444; }
+.front-screen-metric-card.level-extreme-danger { border-left: 6px solid #dc2626; }
+.front-screen-metric-card.level-normal { border-left: 6px solid #64748b; }
+
+.front-screen-metric-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.front-screen-metric-header h2 {
+  margin: 0;
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.front-screen-weather-icon {
+  width: clamp(32px, 6vh, 56px);
+  height: clamp(32px, 6vh, 56px);
+  margin: 4px 0;
+}
+
+.front-screen-metric-value {
+  font-size: clamp(28px, 5vh, 44px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.front-screen-metric-value-blue {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #2563eb;
+  line-height: 1.2;
+}
+
+.front-screen-weather-subrow {
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.front-screen-weather-icon-small {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.front-screen-metric-label {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.front-screen-weather-grid {
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.front-screen-weather-grid > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.front-screen-weather-label {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.front-screen-weather-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.front-screen-weather-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.front-screen-future {
+  flex: 1 1 45%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: clamp(10px, 1.8vh, 16px) 20px;
+  gap: 8px;
+}
+
+.front-screen-future h2 {
+  margin: 0;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.front-screen-future-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.front-screen-future-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.front-screen-future-chip-inline {
+  padding: 2px 8px;
+}
+
+.front-screen-future-chart {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.front-screen-future-chart .chart-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.front-screen-future-chart .recharts-responsive-container {
+  margin: auto 0;
+}
+
+/* Single-series bar chart — the legend just repeats what the axis and the
+   surrounding copy already say, and it was overlapping the peak-heat list
+   right below it in this tight slot. */
+.front-screen-future-chart .recharts-legend-wrapper {
+  display: none;
+}
+
+.front-screen-future-peaks {
+  flex-shrink: 0;
+}
+
+.front-screen-future-peaks-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.front-screen-future-peaks ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.front-screen-insight {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.front-screen-footer {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 32px;
+  background: #0f172a;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.front-screen-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.front-screen-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: front-screen-pulse 2s ease-in-out infinite;
+}
+
+@keyframes front-screen-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (max-width: 900px) {
+  .front-screen-main {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,19 +1,18 @@
 {
-  "generated_at": "2026-09-06T19:12:32.204685+00:00",
+  "generated_at": "2026-09-10T00:29:32.775050+00:00",
   "status": "needs-review",
   "promotion": {
     "blocked": true,
     "reasons": [
-      "Holdout missing class: extreme-danger",
-      "Perfect f1 for safe with low support (4)"
+      "Holdout missing class: extreme-danger"
     ]
   },
   "data": {
     "rows": null,
-    "min_class_count": 0,
+    "min_class_count": 50,
     "class_counts": {
-      "safe": 1139,
-      "caution": 15100,
+      "safe": 2935,
+      "caution": 16613,
       "extreme-caution": 59948,
       "danger": 32304,
       "extreme-danger": 115
@@ -27,9 +26,9 @@
     }
   },
   "metrics": {
-    "final_accuracy": 0.9999488491048594,
-    "holdout_accuracy": 0.9979742173112339,
-    "stratified_accuracy": 0.9999488491048594
+    "final_accuracy": 1.0,
+    "holdout_accuracy": 0.9980341345724243,
+    "stratified_accuracy": 1.0
   },
   "artifacts": {
     "model": "heat_advisory_model.joblib",
