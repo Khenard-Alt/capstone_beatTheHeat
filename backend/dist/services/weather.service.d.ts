@@ -20,6 +20,8 @@ export interface WeatherForecastResult {
 }
 declare class WeatherService {
     private readonly schoolLocationName;
+    private currentWeatherCache;
+    private forecastCache;
     collectScheduledSnapshot(lat?: number, lon?: number): Promise<WeatherSnapshot>;
     backfillRecentDays(days: number, lat?: number, lon?: number, intervalHours?: number): Promise<WeatherBackfillResult>;
     getCurrentWeather(lat?: number, lon?: number): Promise<WeatherSnapshot>;

@@ -7,9 +7,18 @@ exports.weatherService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const environment_1 = require("../config/environment");
 const auditLog_service_1 = require("./auditLog.service");
+// OpenWeather's free tier caps out at 60 calls/minute and 1,000,000/month.
+// Every dashboard tab, the Front Screen kiosk, and the schedulers all read
+// current-weather/forecast independently with no shared store, so without a
+// cache each one hits OpenWeather directly — this keeps that fan-out from
+// ever reaching the API more than once per cache window.
+const CURRENT_WEATHER_CACHE_MS = 45 * 1000;
+const FORECAST_CACHE_MS = 15 * 60 * 1000;
 class WeatherService {
     constructor() {
         this.schoolLocationName = environment_1.env.schoolLocationName;
+        this.currentWeatherCache = null;
+        this.forecastCache = null;
     }
     async collectScheduledSnapshot(lat = environment_1.env.schoolLat, lon = environment_1.env.schoolLon) {
         return this.getCurrentWeather(lat, lon);
@@ -63,9 +72,14 @@ class WeatherService {
         };
     }
     async getCurrentWeather(lat = environment_1.env.schoolLat, lon = environment_1.env.schoolLon) {
+        const cacheKey = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+        if (this.currentWeatherCache && this.currentWeatherCache.key === cacheKey && this.currentWeatherCache.expiresAt > Date.now()) {
+            return this.currentWeatherCache.snapshot;
+        }
         if (!(0, environment_1.hasWeatherApiKey)()) {
             const snapshot = this.getFallbackWeather();
             await this.persistSnapshot(snapshot);
+            this.currentWeatherCache = { key: cacheKey, expiresAt: Date.now() + CURRENT_WEATHER_CACHE_MS, snapshot };
             return snapshot;
         }
         try {
@@ -80,17 +94,23 @@ class WeatherService {
             });
             const snapshot = this.toSnapshot(data);
             await this.persistSnapshot(snapshot);
+            this.currentWeatherCache = { key: cacheKey, expiresAt: Date.now() + CURRENT_WEATHER_CACHE_MS, snapshot };
             return snapshot;
         }
         catch (error) {
             console.error('OpenWeatherMap fetch failed, using fallback:', error);
             const snapshot = this.getFallbackWeather();
             await this.persistSnapshot(snapshot);
+            this.currentWeatherCache = { key: cacheKey, expiresAt: Date.now() + CURRENT_WEATHER_CACHE_MS, snapshot };
             return snapshot;
         }
     }
     async getForecastOutlook(days = 7, lat = environment_1.env.schoolLat, lon = environment_1.env.schoolLon) {
         const requestedDays = Math.min(7, Math.max(1, Math.floor(days)));
+        const cacheKey = `${requestedDays},${lat.toFixed(3)},${lon.toFixed(3)}`;
+        if (this.forecastCache && this.forecastCache.key === cacheKey && this.forecastCache.expiresAt > Date.now()) {
+            return this.forecastCache.result;
+        }
         if (!(0, environment_1.hasWeatherApiKey)()) {
             const fallback = this.getFallbackWeather();
             return {
@@ -116,9 +136,11 @@ class WeatherService {
         }
         const oneCallResult = await this.tryFetchOneCallForecast(requestedDays, lat, lon);
         if (oneCallResult) {
+            this.forecastCache = { key: cacheKey, expiresAt: Date.now() + FORECAST_CACHE_MS, result: oneCallResult };
             return oneCallResult;
         }
         const fiveDayResult = await this.fetchFiveDayForecast(requestedDays, lat, lon);
+        this.forecastCache = { key: cacheKey, expiresAt: Date.now() + FORECAST_CACHE_MS, result: fiveDayResult };
         return fiveDayResult;
     }
     async fetchHistoricalSnapshots(lat, lon, unixTime, intervalHours) {

@@ -5,24 +5,33 @@
   flex-direction: column;
   background: #f1f5f9;
   color: #0f172a;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'Quicksand', 'Inter', 'Segoe UI', sans-serif;
   overflow: hidden;
 }
 
 .front-screen-header {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   flex: 0 0 auto;
-  padding: clamp(8px, 1.6vh, 16px) 32px;
   background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #06b6d4 100%);
   color: #ffffff;
+  padding: 30px;
 }
 
 .front-screen-brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
+}
+
+.front-screen-clock {
+  position: absolute;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .front-screen-logo-group {
@@ -32,8 +41,8 @@
 }
 
 .front-screen-logo {
-  width: clamp(34px, 5vh, 48px);
-  height: clamp(34px, 5vh, 48px);
+  width: clamp(50px, 18vh, 87px);
+  height: clamp(50px, 18vh, 87px);
   border-radius: 50%;
   background: #ffffff;
   padding: 3px;
@@ -76,6 +85,7 @@
   padding: 4px;
   background: #0f172a;
   border-bottom: 2px solid #2563eb;
+  padding: 15px;
 }
 
 .front-screen-ticker-track {
@@ -270,20 +280,27 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
 }
 
 .front-screen-announcements li {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eef2f7;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: transparent;
 }
 
-.front-screen-announcements li:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+/* Subtle tint only — priority is already communicated by the badge, this
+   just lets a critical/warning item register at a glance without shouting. */
+.front-screen-announcements li.priority-critical,
+.front-screen-announcements li.priority-urgent {
+  background: #fef2f2;
+}
+
+.front-screen-announcements li.priority-warning {
+  background: #fffbeb;
 }
 
 .front-screen-announcements strong {

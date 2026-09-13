@@ -300,7 +300,7 @@ export const FrontScreenDisplay: React.FC = () => {
             ) : (
               <ul>
                 {announcements.map((item) => (
-                  <li key={item.id}>
+                  <li key={item.id} className={`priority-${item.priority ?? 'info'}`}>
                     <span className={`front-screen-announcement-badge priority-${item.priority ?? 'info'}`}>
                       {(item.priority ?? 'info').toUpperCase()}
                     </span>
