@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { getStudents, searchStudents, getStudentById, createStudent, deleteStudent } from '../controllers/studentController';
+import { getStudents, searchStudents, getStudentById, createStudent, updateStudent, deleteStudent } from '../controllers/studentController';
 
 const router: Router = express.Router();
 
@@ -26,6 +26,12 @@ router.get('/search', searchStudents);
  * Get student by ID
  */
 router.get('/:id', getStudentById);
+
+/**
+ * PUT /api/students/:id
+ * Update a student record (e.g. assign an advisory teacher)
+ */
+router.put('/:id', updateStudent);
 
 /**
  * DELETE /api/students/:id

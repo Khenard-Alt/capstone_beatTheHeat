@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { MdOutlineChat, MdSend, MdSmartToy } from 'react-icons/md';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { MdOutlineChat, MdSend, MdSmartToy, MdKeyboardArrowDown } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { TeacherHeatReminder } from '../../components/TeacherHeatReminder';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
@@ -41,6 +41,25 @@ const Chatbot: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const el = messagesContainerRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isThinking]);
+
+  const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollToBottom(distanceFromBottom > 120);
+  };
 
   const scopePills = useMemo(() => ([
     'Class safety',
@@ -104,27 +123,40 @@ const Chatbot: React.FC = () => {
             </div>
           </div>
 
-          <div className="teacher-chat-messages">
-            {messages.map((message) => (
-              <div key={message.id} className={`teacher-chat-message ${message.role}`}>
-                <div className="teacher-chat-avatar">
-                  {message.role === 'assistant' ? <MdSmartToy /> : <MdOutlineChat />}
+          <div className="teacher-chat-messages-wrap">
+            <div className="teacher-chat-messages" ref={messagesContainerRef} onScroll={handleMessagesScroll}>
+              {messages.map((message) => (
+                <div key={message.id} className={`teacher-chat-message ${message.role}`}>
+                  <div className="teacher-chat-avatar">
+                    {message.role === 'assistant' ? <MdSmartToy /> : <MdOutlineChat />}
+                  </div>
+                  <div className="teacher-chat-bubble">
+                    {message.meta && <span className="teacher-chat-meta">{message.meta}</span>}
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{message.text}</p>
+                  </div>
                 </div>
-                <div className="teacher-chat-bubble">
-                  {message.meta && <span className="teacher-chat-meta">{message.meta}</span>}
-                  <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{message.text}</p>
-                </div>
-              </div>
-            ))}
+              ))}
 
-            {isThinking && (
-              <div className="teacher-chat-message assistant">
-                <div className="teacher-chat-avatar"><MdSmartToy /></div>
-                <div className="teacher-chat-bubble">
-                  <span className="teacher-chat-meta">Thinking</span>
-                  <p style={{ margin: 0 }}>Iniisip ang current heat context...</p>
+              {isThinking && (
+                <div className="teacher-chat-message assistant">
+                  <div className="teacher-chat-avatar"><MdSmartToy /></div>
+                  <div className="teacher-chat-bubble">
+                    <span className="teacher-chat-meta">Thinking</span>
+                    <p style={{ margin: 0 }}>Iniisip ang current heat context...</p>
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
+
+            {showScrollToBottom && (
+              <button
+                type="button"
+                className="teacher-chat-scroll-to-bottom"
+                onClick={() => scrollToBottom()}
+                aria-label="Scroll to newest message"
+              >
+                <MdKeyboardArrowDown />
+              </button>
             )}
           </div>
 

@@ -62,6 +62,11 @@ export declare const updateUser: (req: Request, res: Response, next: NextFunctio
  */
 export declare const uploadAvatar: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 /**
+ * Change (or, for Google-linked accounts, set) a user's password.
+ * PUT /api/users/:id/password
+ */
+export declare const changePassword: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+/**
  * Get children/students linked to a parent user
  * GET /api/users/:id/children
  */

@@ -141,6 +141,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
         ],
       },
       { path: '/teacher/incident-reports', icon: <MdCampaign />, label: 'Incident Reports', roles: ['teacher'], badge: null },
+      { path: '/teacher/staff-messages', icon: <MdForum />, label: 'Staff Messages', roles: ['teacher'], badge: null },
       {
         path: '/teacher/advisories',
         icon: <MdCampaign />,
@@ -526,13 +527,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
 
         <div className="sidebar-user-wrap">
           <NavLink className="sidebar-user" to={profilePath} title="Open profile settings">
-            <Avatar
-              src={user?.avatarUrl}
-              firstName={user?.firstName}
-              lastName={user?.lastName}
-              size={44}
-              className="sidebar-user-avatar"
-            />
+            <span className="sidebar-avatar-preview-wrap">
+              <Avatar
+                src={user?.avatarUrl}
+                firstName={user?.firstName}
+                lastName={user?.lastName}
+                size={44}
+                className="sidebar-user-avatar"
+              />
+              {user?.avatarUrl && (
+                <span className="sidebar-avatar-preview-popup">
+                  <img src={user.avatarUrl} alt={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`} />
+                </span>
+              )}
+            </span>
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.firstName} {user?.lastName}</div>
               <div className="sidebar-user-role">{user?.role}</div>

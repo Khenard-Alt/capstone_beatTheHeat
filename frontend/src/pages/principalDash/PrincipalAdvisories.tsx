@@ -6,17 +6,34 @@ import { DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { apiClient } from '../../services/api';
 import '../../styles/HealthAdvisory.css';
 
+const formatHeatLevelLabel = (value: string): string =>
+  value
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+const formatDateTime = (value?: string): string => {
+  if (!value) return 'N/A';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleString();
+};
+
+const ACTIVE_ADVISORIES_PAGE_SIZE = 10;
+
 const PrincipalAdvisories: React.FC = () => {
   const [advisories, setAdvisories] = useState<HealthAdvisoryType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewingAdvisory, setViewingAdvisory] = useState<HealthAdvisoryType | null>(null);
+  const [activePage, setActivePage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
 
   useEffect(() => {
     const fetchAdvisories = async () => {
       try {
         setLoading(true);
         const response = await apiClient.get('/api/health-advisories', {
-          params: { limit: 20, offset: 0 },
+          params: { limit: 100, offset: 0 },
         });
 
         if (response.data.success && response.data.data) {
@@ -61,6 +78,30 @@ const PrincipalAdvisories: React.FC = () => {
   const historyAdvisories = advisories.filter((advisory) => advisory.heatLevel === 'normal' || advisory.riskLevel === 'low');
   const latestEvidence = advisories[0];
 
+  const activeTotalPages = Math.max(1, Math.ceil(activeAdvisories.length / ACTIVE_ADVISORIES_PAGE_SIZE));
+  const pagedActiveAdvisories = activeAdvisories.slice(
+    (activePage - 1) * ACTIVE_ADVISORIES_PAGE_SIZE,
+    activePage * ACTIVE_ADVISORIES_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    if (activePage > activeTotalPages) {
+      setActivePage(activeTotalPages);
+    }
+  }, [activePage, activeTotalPages]);
+
+  const historyTotalPages = Math.max(1, Math.ceil(historyAdvisories.length / ACTIVE_ADVISORIES_PAGE_SIZE));
+  const pagedHistoryAdvisories = historyAdvisories.slice(
+    (historyPage - 1) * ACTIVE_ADVISORIES_PAGE_SIZE,
+    historyPage * ACTIVE_ADVISORIES_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    if (historyPage > historyTotalPages) {
+      setHistoryPage(historyTotalPages);
+    }
+  }, [historyPage, historyTotalPages]);
+
   const toPercent = (value?: number): number => {
     if (typeof value !== 'number' || Number.isNaN(value)) {
       return 0;
@@ -74,7 +115,7 @@ const PrincipalAdvisories: React.FC = () => {
       <div className="admin-dashboard-header" style={{ marginBottom: 16 }}>
         <div>
           <h1>Advisories</h1>
-          <p>Parent-style AI advisories and heat safety guidance inside the announcement section.</p>
+          <p>View the latest heat safety advisories and AI-generated evidence for your school.</p>
         </div>
       </div>
 
@@ -85,10 +126,116 @@ const PrincipalAdvisories: React.FC = () => {
       {!loading && activeAdvisories.length > 0 && (
         <div className="advisory-section">
           <h2>Active Advisories</h2>
-          <div className="advisory-list">
-            {activeAdvisories.map((advisory) => (
-              <AdvisoryAlert key={advisory.id} advisory={advisory} />
-            ))}
+          <div className="advisory-table-wrap table-wrap">
+            <table className="advisory-table app-table">
+              <thead>
+                <tr>
+                  <th scope="col">Issued</th>
+                  <th scope="col">Heat Level</th>
+                  <th scope="col">Risk</th>
+                  <th scope="col">Summary</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedActiveAdvisories.map((advisory) => (
+                  <tr
+                    key={advisory.id}
+                    onClick={() => setViewingAdvisory(advisory)}
+                    style={{ cursor: 'pointer' }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setViewingAdvisory(advisory);
+                      }
+                    }}
+                  >
+                    <td>{formatDateTime(advisory.createdAt)}</td>
+                    <td>
+                      <span className={`advisory-level badge-${advisory.heatLevel}`}>
+                        {formatHeatLevelLabel(advisory.heatLevel)}
+                      </span>
+                    </td>
+                    <td className={`advisory-risk risk-${advisory.riskLevel}`}>
+                      {formatHeatLevelLabel(advisory.riskLevel)}
+                    </td>
+                    <td style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {advisory.advisoryText}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+              marginTop: 12,
+            }}
+          >
+            <span style={{ fontSize: 13, color: '#64748b' }}>
+              Showing {(activePage - 1) * ACTIVE_ADVISORIES_PAGE_SIZE + 1}–
+              {Math.min(activePage * ACTIVE_ADVISORIES_PAGE_SIZE, activeAdvisories.length)} of {activeAdvisories.length}
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                type="button"
+                onClick={() => setActivePage((page) => Math.max(1, page - 1))}
+                disabled={activePage === 1}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  background: '#fff',
+                  color: activePage === 1 ? '#94a3b8' : '#1e293b',
+                  cursor: activePage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: 13,
+                }}
+              >
+                Prev
+              </button>
+              {Array.from({ length: activeTotalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setActivePage(page)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    border: page === activePage ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                    background: page === activePage ? '#2563eb' : '#fff',
+                    color: page === activePage ? '#fff' : '#1e293b',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    fontWeight: page === activePage ? 700 : 500,
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setActivePage((page) => Math.min(activeTotalPages, page + 1))}
+                disabled={activePage === activeTotalPages}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  background: '#fff',
+                  color: activePage === activeTotalPages ? '#94a3b8' : '#1e293b',
+                  cursor: activePage === activeTotalPages ? 'not-allowed' : 'pointer',
+                  fontSize: 13,
+                }}
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -140,14 +287,123 @@ const PrincipalAdvisories: React.FC = () => {
 
       <div className="advisory-section">
         <h2>Recent Advisories {!loading && `(${historyAdvisories.length})`}</h2>
-        <div className="advisory-list">
-          {historyAdvisories.map((advisory) => (
-            <AdvisoryAlert key={advisory.id} advisory={advisory} />
-          ))}
-          {!loading && historyAdvisories.length === 0 && (
-            <p className="empty-state-text">No recent advisories</p>
-          )}
-        </div>
+        {!loading && historyAdvisories.length === 0 ? (
+          <p className="empty-state-text">No recent advisories</p>
+        ) : (
+          <>
+            <div className="advisory-table-wrap table-wrap">
+              <table className="advisory-table app-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Issued</th>
+                    <th scope="col">Heat Level</th>
+                    <th scope="col">Risk</th>
+                    <th scope="col">Summary</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedHistoryAdvisories.map((advisory) => (
+                    <tr
+                      key={advisory.id}
+                      onClick={() => setViewingAdvisory(advisory)}
+                      style={{ cursor: 'pointer' }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setViewingAdvisory(advisory);
+                        }
+                      }}
+                    >
+                      <td>{formatDateTime(advisory.createdAt)}</td>
+                      <td>
+                        <span className={`advisory-level badge-${advisory.heatLevel}`}>
+                          {formatHeatLevelLabel(advisory.heatLevel)}
+                        </span>
+                      </td>
+                      <td className={`advisory-risk risk-${advisory.riskLevel}`}>
+                        {formatHeatLevelLabel(advisory.riskLevel)}
+                      </td>
+                      <td style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {advisory.advisoryText}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12,
+                marginTop: 12,
+              }}
+            >
+              <span style={{ fontSize: 13, color: '#64748b' }}>
+                Showing {(historyPage - 1) * ACTIVE_ADVISORIES_PAGE_SIZE + 1}–
+                {Math.min(historyPage * ACTIVE_ADVISORIES_PAGE_SIZE, historyAdvisories.length)} of {historyAdvisories.length}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => setHistoryPage((page) => Math.max(1, page - 1))}
+                  disabled={historyPage === 1}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #cbd5e1',
+                    background: '#fff',
+                    color: historyPage === 1 ? '#94a3b8' : '#1e293b',
+                    cursor: historyPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: 13,
+                  }}
+                >
+                  Prev
+                </button>
+                {Array.from({ length: historyTotalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setHistoryPage(page)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 8,
+                      border: page === historyPage ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                      background: page === historyPage ? '#2563eb' : '#fff',
+                      color: page === historyPage ? '#fff' : '#1e293b',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                      fontWeight: page === historyPage ? 700 : 500,
+                    }}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setHistoryPage((page) => Math.min(historyTotalPages, page + 1))}
+                  disabled={historyPage === historyTotalPages}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #cbd5e1',
+                    background: '#fff',
+                    color: historyPage === historyTotalPages ? '#94a3b8' : '#1e293b',
+                    cursor: historyPage === historyTotalPages ? 'not-allowed' : 'pointer',
+                    fontSize: 13,
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <Card title="DepEd Heat Index Guidelines">
@@ -197,6 +453,38 @@ const PrincipalAdvisories: React.FC = () => {
           </div>
         </div>
       </Card>
+
+      {viewingAdvisory && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setViewingAdvisory(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 16,
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: 'min(640px, 100%)',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              background: '#ffffff',
+              borderRadius: 22,
+              boxShadow: '0 24px 80px rgba(15, 23, 42, 0.35)',
+            }}
+          >
+            <AdvisoryAlert advisory={viewingAdvisory} onDismiss={() => setViewingAdvisory(null)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

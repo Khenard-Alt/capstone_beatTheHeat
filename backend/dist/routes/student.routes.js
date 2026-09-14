@@ -27,6 +27,11 @@ router.get('/search', studentController_1.searchStudents);
  */
 router.get('/:id', studentController_1.getStudentById);
 /**
+ * PUT /api/students/:id
+ * Update a student record (e.g. assign an advisory teacher)
+ */
+router.put('/:id', studentController_1.updateStudent);
+/**
  * DELETE /api/students/:id
  * Delete a student by ID
  */

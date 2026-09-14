@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserChildren = exports.uploadAvatar = exports.updateUser = exports.deleteUser = exports.getOTPStatus = exports.verifyOTPCode = exports.sendOTP = exports.getUserProfile = exports.listUsers = exports.authenticateAdminTools = exports.syncOAuthUser = exports.loginUser = exports.registerUser = exports.avatarUpload = void 0;
+exports.getUserChildren = exports.changePassword = exports.uploadAvatar = exports.updateUser = exports.deleteUser = exports.getOTPStatus = exports.verifyOTPCode = exports.sendOTP = exports.getUserProfile = exports.listUsers = exports.authenticateAdminTools = exports.syncOAuthUser = exports.loginUser = exports.registerUser = exports.avatarUpload = void 0;
 const multer_1 = __importDefault(require("multer"));
 const supabase_1 = require("../config/supabase");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -74,6 +74,10 @@ const inferFallbackRole = (email) => {
     }
     return null;
 };
+const isGoogleAccountMetadata = (metadata) => Boolean(metadata && typeof metadata === 'object' && metadata.auth_provider === 'google');
+const notificationPreferencesFromMetadata = (metadata) => metadata && typeof metadata === 'object' && metadata.notificationPreferences
+    ? metadata.notificationPreferences
+    : null;
 const sanitizeUserRow = (user) => ({
     id: user.id,
     email: user.email,
@@ -82,6 +86,8 @@ const sanitizeUserRow = (user) => ({
     lastName: user.last_name,
     schoolId: user.school_id,
     avatarUrl: user.avatar_url ?? null,
+    isGoogleAccount: isGoogleAccountMetadata(user.metadata),
+    notificationPreferences: notificationPreferencesFromMetadata(user.metadata),
     createdAt: user.created_at,
     updatedAt: user.updated_at,
 });
@@ -94,6 +100,8 @@ const mapUserRow = (user) => ({
     phone: user.phone,
     schoolId: user.school_id,
     avatarUrl: user.avatar_url ?? null,
+    isGoogleAccount: isGoogleAccountMetadata(user.metadata),
+    notificationPreferences: notificationPreferencesFromMetadata(user.metadata),
     createdAt: user.created_at,
     updatedAt: user.updated_at,
 });
@@ -190,7 +198,8 @@ const registerUser = async (req, res, next) => {
                 metadata: {
                     child_id: role === 'parent' ? childId : undefined,
                     id_proof_url: role === 'teacher' ? idProofUrl : undefined,
-                    registration_verified: role === 'parent' ? false : true // Parents might need manual verification or OTP
+                    registration_verified: role === 'parent' ? false : true, // Parents might need manual verification or OTP
+                    auth_provider: isGoogleRegistration ? 'google' : undefined,
                 },
             },
         ])
@@ -273,7 +282,7 @@ const loginUser = async (req, res, next) => {
             // Supabase PostgrestBuilder isn't typed as a Promise; cast to Promise to satisfy raceWithTimeout
             (client
                 .from('users')
-                .select('id, email, role, first_name, last_name, school_id, avatar_url, created_at, updated_at, password_hash')
+                .select('id, email, role, first_name, last_name, school_id, avatar_url, metadata, created_at, updated_at, password_hash')
                 .eq('email', email)
                 .single()), loginTimeoutMs);
             user = result?.data;
@@ -375,7 +384,7 @@ const syncOAuthUser = async (req, res, next) => {
         const email = authUser.email.trim().toLowerCase();
         const { data: existingUser, error: lookupError } = await client
             .from('users')
-            .select('id, email, role, first_name, last_name, school_id, avatar_url, created_at, updated_at')
+            .select('id, email, role, first_name, last_name, school_id, avatar_url, metadata, created_at, updated_at')
             .eq('email', email)
             .maybeSingle();
         if (lookupError)
@@ -399,7 +408,7 @@ const syncOAuthUser = async (req, res, next) => {
                 school_id: 'school-1',
                 metadata: { auth_provider: 'google', supabase_user_id: authUser.id },
             })
-                .select('id, email, role, first_name, last_name, school_id, avatar_url, created_at, updated_at')
+                .select('id, email, role, first_name, last_name, school_id, avatar_url, metadata, created_at, updated_at')
                 .single();
             if (createError || !createdUser)
                 throw createError ?? new Error('Could not create OAuth user');
@@ -511,7 +520,7 @@ const listUsers = async (req, res, next) => {
         }
         let query = client
             .from('users')
-            .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, created_at, updated_at')
+            .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, metadata, created_at, updated_at')
             .order('created_at', { ascending: false });
         if (role) {
             query = query.eq('role', role);
@@ -551,23 +560,14 @@ const getUserProfile = async (req, res, next) => {
         }
         const { data: user, error } = await client
             .from('users')
-            .select('id, email, role, first_name, last_name, school_id, avatar_url, created_at, updated_at')
+            .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, metadata, created_at, updated_at')
             .eq('id', id)
             .single();
         if (error) {
             res.status(404).json({ success: false, message: 'User not found' });
             return;
         }
-        const safeUser = {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            schoolId: user.school_id,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at,
-        };
+        const safeUser = mapUserRow(user);
         res.status(200).json({ success: true, user: safeUser });
     }
     catch (error) {
@@ -734,31 +734,30 @@ const updateUser = async (req, res, next) => {
             updatePayload.email = newEmail.trim();
         }
         if (preferences && typeof preferences === 'object') {
-            updatePayload.metadata = preferences;
+            // metadata also carries system fields (auth_provider, child_id, etc.) —
+            // overwriting the whole column would silently wipe those out, so fetch
+            // the existing value and merge the preferences in under their own key.
+            const { data: existing } = await client
+                .from('users')
+                .select('metadata')
+                .eq('id', id)
+                .single();
+            updatePayload.metadata = {
+                ...(existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {}),
+                notificationPreferences: preferences,
+            };
         }
         const { data, error } = await client
             .from('users')
             .update(updatePayload)
             .eq('id', id)
-            .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, created_at, updated_at')
+            .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, metadata, created_at, updated_at')
             .single();
         if (error) {
             res.status(500).json({ success: false, message: 'Failed to update user', error: error.message });
             return;
         }
-        const safeUser = {
-            id: data.id,
-            email: data.email,
-            role: data.role,
-            firstName: data.first_name,
-            lastName: data.last_name,
-            phone: data.phone,
-            schoolId: data.school_id,
-            avatarUrl: data.avatar_url ?? null,
-            createdAt: data.created_at,
-            updatedAt: data.updated_at,
-        };
-        res.status(200).json({ success: true, message: 'User updated', user: safeUser });
+        res.status(200).json({ success: true, message: 'User updated', user: mapUserRow(data) });
     }
     catch (error) {
         console.error('Update user error:', error);
@@ -806,7 +805,7 @@ const uploadAvatar = async (req, res, next) => {
             .from('users')
             .update({ avatar_url: avatarUrl })
             .eq('id', id)
-            .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, created_at, updated_at')
+            .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, metadata, created_at, updated_at')
             .single();
         if (error) {
             res.status(500).json({ success: false, message: 'Picture uploaded but failed to save on profile', error: error.message });
@@ -820,6 +819,64 @@ const uploadAvatar = async (req, res, next) => {
     }
 };
 exports.uploadAvatar = uploadAvatar;
+/**
+ * Change (or, for Google-linked accounts, set) a user's password.
+ * PUT /api/users/:id/password
+ */
+const changePassword = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { currentPassword, newPassword } = req.body;
+        if (typeof newPassword !== 'string' || newPassword.length < 8) {
+            res.status(400).json({ success: false, message: 'New password must be at least 8 characters.' });
+            return;
+        }
+        const client = (0, supabase_1.getSupabaseAdminClient)();
+        if (!client) {
+            res.status(503).json({ success: false, message: 'Password change requires database configuration.' });
+            return;
+        }
+        const { data: user, error } = await client
+            .from('users')
+            .select('id, password_hash, metadata')
+            .eq('id', id)
+            .single();
+        if (error || !user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+        // Google-linked accounts were created with a random, never-shared password,
+        // so there is nothing meaningful for the user to type as "current password" —
+        // skip straight to setting a new one instead of asking them to verify it.
+        const isGoogleAccount = isGoogleAccountMetadata(user.metadata);
+        if (!isGoogleAccount) {
+            if (typeof currentPassword !== 'string' || !currentPassword) {
+                res.status(400).json({ success: false, message: 'Current password is required.' });
+                return;
+            }
+            const matches = await bcryptjs_1.default.compare(currentPassword, user.password_hash);
+            if (!matches) {
+                res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+                return;
+            }
+        }
+        const newHash = await bcryptjs_1.default.hash(newPassword, 10);
+        const { error: updateError } = await client
+            .from('users')
+            .update({ password_hash: newHash })
+            .eq('id', id);
+        if (updateError) {
+            res.status(500).json({ success: false, message: 'Failed to update password', error: updateError.message });
+            return;
+        }
+        res.status(200).json({ success: true, message: isGoogleAccount ? 'Password set successfully.' : 'Password changed successfully.' });
+    }
+    catch (error) {
+        console.error('Change password error:', error);
+        next(error);
+    }
+};
+exports.changePassword = changePassword;
 /**
  * Get children/students linked to a parent user
  * GET /api/users/:id/children

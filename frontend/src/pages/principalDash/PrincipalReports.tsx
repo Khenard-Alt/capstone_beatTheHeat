@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import ExcelJS from 'exceljs';
 import { Card } from '../../components/Card';
 import { PredictiveHeatReport } from '../../components/PredictiveHeatReport';
 import { apiClient } from '../../services/api';
 import { fetchIncidents, type IncidentRecord } from '../../services/incidents.service';
 import { fetchHealthAdvisories, type LoggedAdvisory } from '../../services/healthAdvisory.service';
 import { formatDateTimeGlobal } from '../../utils/formatters';
+import { SCHOOL_INFO } from '../../utils/constants';
 import '../../styles/AdminDashboard.css';
 import '../../styles/PredictiveHeatReport.css';
 
@@ -65,14 +67,114 @@ const PrincipalReports: React.FC = () => {
     { label: 'Report Rows', value: (stats?.activeAdvisories ?? advisories.length) + (stats?.incidents ?? incidents.length) },
   ];
 
+  const HEADER_FILL: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+  const HEADER_FONT: Partial<ExcelJS.Font> = { bold: true, color: { argb: 'FFFFFFFF' } };
+  const SECTION_FONT: Partial<ExcelJS.Font> = { bold: true, size: 13, color: { argb: 'FF1D4ED8' } };
+  const THIN_BORDER: Partial<ExcelJS.Borders> = {
+    top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+    bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+    left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+    right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+  };
+
+  const addSectionTitle = (sheet: ExcelJS.Worksheet, title: string) => {
+    const row = sheet.addRow([title]);
+    row.font = SECTION_FONT;
+    sheet.addRow([]);
+  };
+
+  const addHeaderRow = (sheet: ExcelJS.Worksheet, headers: string[]) => {
+    const row = sheet.addRow(headers);
+    row.eachCell((cell) => {
+      cell.fill = HEADER_FILL;
+      cell.font = HEADER_FONT;
+      cell.border = THIN_BORDER;
+      cell.alignment = { vertical: 'middle' };
+    });
+  };
+
+  const addDataRow = (sheet: ExcelJS.Worksheet, values: (string | number)[]) => {
+    const row = sheet.addRow(values);
+    row.eachCell((cell) => {
+      cell.border = THIN_BORDER;
+      cell.alignment = { vertical: 'top', wrapText: true };
+    });
+  };
+
+  const downloadExcelReport = async () => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = SCHOOL_INFO.NAME;
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet('Overall Report');
+    sheet.columns = [
+      { width: 22 },
+      { width: 50 },
+      { width: 22 },
+      { width: 22 },
+      { width: 16 },
+    ];
+
+    const titleRow = sheet.addRow([SCHOOL_INFO.NAME]);
+    titleRow.font = { bold: true, size: 16, color: { argb: 'FF0F172A' } };
+    const subtitleRow = sheet.addRow([`Overall Reports - Generated on ${formatDateTimeGlobal(new Date().toISOString())}`]);
+    subtitleRow.font = { italic: true, color: { argb: 'FF64748B' } };
+    sheet.addRow([]);
+
+    addSectionTitle(sheet, 'Overview');
+    addHeaderRow(sheet, ['Metric', 'Value']);
+    overviewCards.forEach((card) => addDataRow(sheet, [card.label, card.value]));
+    sheet.addRow([]);
+
+    addSectionTitle(sheet, 'Advisories');
+    addHeaderRow(sheet, ['Heat Level', 'Summary', 'Date Issued']);
+    advisories.forEach((advisory) => addDataRow(sheet, [
+      advisory.decision_basis?.heatLevel || 'N/A',
+      advisory.response || '',
+      advisory.created_at ? formatDateTimeGlobal(advisory.created_at) : '',
+    ]));
+    sheet.addRow([]);
+
+    addSectionTitle(sheet, 'Incidents');
+    addHeaderRow(sheet, ['Student', 'Incident Type', 'Description', 'Action Taken', 'Status', 'Date']);
+    incidents.forEach((incident) => addDataRow(sheet, [
+      incident.studentName || 'Unknown student',
+      incident.incidentType || '',
+      incident.description || '',
+      incident.actionTaken || '',
+      incident.status || '',
+      incident.timestamp ? formatDateTimeGlobal(incident.timestamp) : '',
+    ]));
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `principal-report-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <div className="admin-dashboard">
       <div className="admin-dashboard-header">
         <div>
+          <p style={{ margin: '0 0 4px', fontWeight: 700, color: '#1e293b' }}>{SCHOOL_INFO.NAME}</p>
           <h1>Overall Reports</h1>
           <p>Monthly school report overview for principals, including advisories, incidents, and generated summaries.</p>
+          <p style={{ margin: '8px 0 0', fontSize: 12, color: '#64748b' }}>Generated on {formatDateTimeGlobal(new Date().toISOString())}</p>
         </div>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => void downloadExcelReport()}
+        >
+          Download Report (Excel)
+        </button>
       </div>
 
       <div className="admin-dashboard-stats">

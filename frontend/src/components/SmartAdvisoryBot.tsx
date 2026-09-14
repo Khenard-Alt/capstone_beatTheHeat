@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { MdChat, MdClose } from 'react-icons/md';
+import { MdChat, MdClose, MdInfoOutline } from 'react-icons/md';
 import { useAuth } from '../hooks/useAuth';
 import { fetchCurrentWeather } from '../services/weather.service';
 import { generateScopedAdvisory, fetchRealtimeAdvisory } from '../services/healthAdvisory.service';
@@ -41,6 +41,7 @@ export const SmartAdvisoryBot: React.FC = () => {
   const [messages, setMessages] = useState<Array<{ id: number; text: string; sender: 'user' | 'ai' }>>([]);
   const [tickerMessage, setTickerMessage] = useState('Fetching the latest heat advisory...');
   const [isAttention, setIsAttention] = useState(true);
+  const [showScopeNotice, setShowScopeNotice] = useState(false);
 
   const roleLabel = useMemo(() => user?.role ?? 'user', [user?.role]);
   const chatPath = useMemo(() => (user?.role === 'parent' ? '/parent/chatbot' : '/health-advisory'), [user?.role]);
@@ -110,6 +111,30 @@ export const SmartAdvisoryBot: React.FC = () => {
     return () => window.clearInterval(interval);
   }, [refreshNudge]);
 
+  // Lets other parts of the app (e.g. the parent dashboard's heat alert
+  // popup) open this single, real bot instead of building a second chat UI.
+  useEffect(() => {
+    const openBot = () => setIsOpen(true);
+    window.addEventListener('bth:open-advisory-bot', openBot);
+    return () => window.removeEventListener('bth:open-advisory-bot', openBot);
+  }, []);
+
+  // Show the scope disclaimer automatically the first time this browser
+  // opens the chat, so people know upfront it only answers heat-safety
+  // questions — not general chit-chat. The (?) button lets them bring it
+  // back up any time after that.
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      if (!localStorage.getItem('bth_advisory_scope_seen')) {
+        setShowScopeNotice(true);
+        localStorage.setItem('bth_advisory_scope_seen', '1');
+      }
+    } catch {
+      setShowScopeNotice(true);
+    }
+  }, [isOpen]);
+
   const handleAsk = async () => {
     const trimmed = question.trim();
     if (!trimmed || isThinking) return;
@@ -160,10 +185,40 @@ export const SmartAdvisoryBot: React.FC = () => {
                 </span>
               </div>
             </div>
-            <button className="global-advisory-close" onClick={() => setIsOpen(false)}>
-              <MdClose />
-            </button>
+            <div className="global-advisory-header-actions">
+              <button
+                className="global-advisory-scope-btn"
+                onClick={() => setShowScopeNotice(true)}
+                title="What can I ask this AI?"
+                aria-label="What can I ask this AI?"
+              >
+                <MdInfoOutline />
+              </button>
+              <button className="global-advisory-close" onClick={() => setIsOpen(false)}>
+                <MdClose />
+              </button>
+            </div>
           </div>
+
+          {showScopeNotice && (
+            <div className="global-advisory-scope-overlay" role="dialog" aria-label="AI scope notice">
+              <div className="global-advisory-scope-card">
+                <h4>Ano ang pwedeng itanong?</h4>
+                <p>
+                  Ang Smart AI Advisory Bot ay para lang sa <strong>heat index, weather, at school heat-safety
+                  advisories</strong> — hal. current heat level, kung ligtas ba ang outdoor activities, mga
+                  precaution para sa mag-aaral, at heat-related na tanong tungkol sa paaralan.
+                </p>
+                <p>
+                  Hindi ito sasagot sa mga tanong na wala sa saklaw nito (general chit-chat, ibang paksa, atbp.) —
+                  heat-safety at ang platform na ito lang ang tinatalakay nito.
+                </p>
+                <button className="global-advisory-scope-ok" onClick={() => setShowScopeNotice(false)}>
+                  Got it
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="global-advisory-panel-body">
             <div className="global-advisory-messages">

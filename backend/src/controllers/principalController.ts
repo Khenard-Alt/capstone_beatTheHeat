@@ -115,7 +115,10 @@ export const getPrincipalStats = async (
       client.from('health_incidents').select('*', { count: 'exact', head: true }).gte('timestamp', startDate.toISOString()),
     ]);
 
-    const { count: activeUsersCount } = await client.from('users').select('*', { count: 'exact', head: true }).eq('is_active', true);
+    // `users` has no is_active/last_login column to determine real-time
+    // presence, so this counts total registered accounts instead of
+    // silently failing on a non-existent column filter.
+    const { count: activeUsersCount } = await client.from('users').select('*', { count: 'exact', head: true });
 
     let trend: Array<{ timestamp: string; count: number }> = [];
     if (period === 'today') {

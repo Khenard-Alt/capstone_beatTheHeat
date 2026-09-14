@@ -31,6 +31,7 @@ export const Login: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const [showAdminAuth, setShowAdminAuth] = useState(false);
@@ -43,6 +44,17 @@ export const Login: React.FC = () => {
   useEffect(() => {
     if (searchParams.get('oauth') === 'google') setIsRegisterOpen(true);
   }, [searchParams]);
+
+  // Defensive redirect: if the session is already valid (e.g. the browser
+  // forward/back button landed back on /login, or the URL was typed
+  // directly) don't show the login form again — send them straight to
+  // their dashboard instead of making it look like they got logged out.
+  useEffect(() => {
+    if (!auth.isLoading && auth.isAuthenticated && auth.user) {
+      navigate(getLandingPath(auth.user.role), { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.isLoading, auth.isAuthenticated, auth.user]);
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'a') {
@@ -112,7 +124,11 @@ export const Login: React.FC = () => {
     setIsLoading(true);
     try {
       const signedInUser = await login(formData.email, formData.password);
-      navigate(getLandingPath(signedInUser.role));
+      // replace: true drops /login from history — otherwise it stays as the
+      // entry right before the dashboard, so pressing the browser back
+      // button lands back on the login screen even though the session is
+      // still valid, which reads as an unexpected logout.
+      navigate(getLandingPath(signedInUser.role), { replace: true });
     } catch {
       setErrorMessage('Invalid email or password. Please try again.');
     } finally {
@@ -329,13 +345,20 @@ export const Login: React.FC = () => {
                 <div className="input-wrapper">
                   <MdLock className="input-icon" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
-                    className={`form-input ${errors.password ? 'input-error' : ''}`}
+                    className={`form-input has-password-toggle ${errors.password ? 'input-error' : ''}`}
                   />
+                  <button
+                    type="button"
+                    className="password-toggle-text"
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
                 </div>
                 {errors.password && <span className="field-error">{errors.password}</span>}
               </div>

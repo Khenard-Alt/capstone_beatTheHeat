@@ -28,7 +28,7 @@ interface PrincipalStats {
 }
 
 interface IncidentTrend {
-  date: string;
+  timestamp: string;
   count: number;
 }
 
@@ -39,7 +39,7 @@ export const PrincipalDashboard: React.FC = () => {
 
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [principalStats, setPrincipalStats] = useState<PrincipalStats | null>(null);
-  const [_incidentTrends, setIncidentTrends] = useState<IncidentTrend[]>([]);
+  const [incidentTrends, setIncidentTrends] = useState<IncidentTrend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,9 +63,9 @@ export const PrincipalDashboard: React.FC = () => {
           setPrincipalStats(statsResponse.data.stats);
         }
 
-        // Fetch incident trends
+        // Fetch incident trends (hourly buckets, matching the advisory trend granularity)
         const trendsResponse = await apiClient.get('/api/principal/incident-trends', {
-          params: { period: 'week' },
+          params: { period: 'today' },
         });
 
         if (trendsResponse.data.success) {
@@ -155,11 +155,20 @@ export const PrincipalDashboard: React.FC = () => {
   const systemStats = [
     { label: 'Active Advisories', value: principalStats?.activeAdvisories || '0', note: 'This period' },
     { label: 'Heat Incidents', value: principalStats?.incidents || '0', note: 'This period' },
-    { label: 'Active Users', value: principalStats?.activeUsers || '0', note: 'Connected' },
+    { label: 'Registered Users', value: principalStats?.activeUsers || '0', note: 'Total accounts' },
     { label: 'System Status', value: loading ? 'Loading...' : 'Healthy', note: 'All systems' },
   ];
 
-  // Convert trend data for charts
+  // Convert trend data for charts — merge in the real per-hour incident
+  // counts from /api/principal/incident-trends instead of estimating them.
+  const incidentCountByHour = useMemo(() => {
+    const map = new Map<string, number>();
+    incidentTrends.forEach((entry) => {
+      if (entry?.timestamp) map.set(entry.timestamp, entry.count || 0);
+    });
+    return map;
+  }, [incidentTrends]);
+
   const advisoryTrend = (principalStats?.trend || [])
     .filter((t: Trend) => t && t.timestamp && t.count >= 0)
     .slice(0, 7)
@@ -167,7 +176,7 @@ export const PrincipalDashboard: React.FC = () => {
       timestamp: formatDateTimeCompact(t.timestamp),
       fullTimestamp: formatDateTimeGlobal(t.timestamp),
       advisories: t.count || 0,
-      incidents: Math.round((t.count || 0) * 1.5),
+      incidents: incidentCountByHour.get(t.timestamp) || 0,
     }));
 
   const getTrendFullTime = (label: string): string => {
@@ -272,10 +281,18 @@ export const PrincipalDashboard: React.FC = () => {
 
           <Card title="Quick Actions">
             <div className="principal-actions">
-              <button className="btn btn-primary" style={{width: '100%', marginBottom: '8px'}}>
+              <button
+                className="btn btn-primary"
+                style={{width: '100%', marginBottom: '8px'}}
+                onClick={() => navigate('/principal/announcements/heat-data')}
+              >
                 Review Incident Trends
               </button>
-              <button className="btn btn-secondary" style={{width: '100%'}}>
+              <button
+                className="btn btn-secondary"
+                style={{width: '100%'}}
+                onClick={() => navigate('/principal/reports')}
+              >
                 Generate Report
               </button>
             </div>

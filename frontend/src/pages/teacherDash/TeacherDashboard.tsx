@@ -121,8 +121,7 @@ export const TeacherDashboard: React.FC = () => {
   }, []);
 
   const quickActions = [
-    { label: 'Submit Conduct Form', action: () => navigate('/teacher/conduct-form') },
-    { label: 'Review Incident Reports', action: () => navigate('/teacher/incident-reports') },
+    { label: 'Report an Incident', action: () => navigate('/teacher/incident-reports') },
     { label: 'Open Advisories', action: () => navigate('/teacher/advisories') },
   ];
 

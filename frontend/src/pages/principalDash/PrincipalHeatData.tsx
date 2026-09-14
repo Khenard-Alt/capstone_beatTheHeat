@@ -72,7 +72,7 @@ const PrincipalHeatData: React.FC = () => {
     });
 
     const points = Object.keys(buckets)
-      .map((k) => ({ timestamp: k, fullTimestamp: buckets[k].fullTimestamp, advisories: buckets[k].count, notifications: Math.round(buckets[k].count * 2.5) }))
+      .map((k) => ({ timestamp: k, fullTimestamp: buckets[k].fullTimestamp, advisories: buckets[k].count }))
       .sort((a, b) => new Date(a.fullTimestamp).getTime() - new Date(b.fullTimestamp).getTime())
       .slice(-5);
 
@@ -146,14 +146,13 @@ const PrincipalHeatData: React.FC = () => {
         )}
 
         {advisoryTrend.length > 0 && (
-          <Card title="Advisory and Notification Volume">
+          <Card title="Advisory Volume">
             <div>
               <Chart
                 data={advisoryTrend}
                 type="bar"
                 dataKeys={[
                   { key: 'advisories', name: 'Advisories', color: CHART_COLORS.heatIndex },
-                  { key: 'notifications', name: 'Notifications', color: CHART_COLORS.temperature },
                 ]}
                 xAxisKey="timestamp"
                 xAxisAngle={-12}

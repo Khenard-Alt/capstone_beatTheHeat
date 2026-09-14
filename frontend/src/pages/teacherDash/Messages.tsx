@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { MdAdd } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../hooks/useAuth';
@@ -32,12 +33,15 @@ const TeacherMessages: React.FC = () => {
 	const [body, setBody] = useState('');
 	const [loading, setLoading] = useState(true);
 	const [sending, setSending] = useState(false);
+	const [showNewMessage, setShowNewMessage] = useState(false);
+	const [newMessageSearch, setNewMessageSearch] = useState('');
 
 	const currentTeacherId = user?.id ?? 'teacher-1';
+	const hasLoadedOnce = useRef(false);
 
 	const loadMessages = async () => {
 		try {
-			setLoading(true);
+			if (!hasLoadedOnce.current) setLoading(true);
 			const [messageData, parentData] = await Promise.all([
 				fetchParentMessages({ limit: 100, offset: 0, teacherId: currentTeacherId }),
 				fetchUsersByRole('parent'),
@@ -64,6 +68,7 @@ const TeacherMessages: React.FC = () => {
 			setActiveParentId('');
 		} finally {
 			setLoading(false);
+			hasLoadedOnce.current = true;
 		}
 	};
 
@@ -97,6 +102,20 @@ const TeacherMessages: React.FC = () => {
 			};
 		});
 	}, [messages, parents]);
+
+	const recentThreads = useMemo(
+		() =>
+			parentThreads
+				.filter((thread) => thread.messages.length > 0)
+				.sort((left, right) => new Date(right.updatedAt || 0).getTime() - new Date(left.updatedAt || 0).getTime()),
+		[parentThreads]
+	);
+
+	const newMessageCandidates = useMemo(() => {
+		const query = newMessageSearch.trim().toLowerCase();
+		if (!query) return parents;
+		return parents.filter((parent) => getDisplayName(parent).toLowerCase().includes(query));
+	}, [parents, newMessageSearch]);
 
 	const activeParent = useMemo(() => parents.find((parent) => parent.id === activeParentId) ?? null, [activeParentId, parents]);
 	const activeThread = useMemo(() => parentThreads.find((thread) => thread.id === activeParentId) ?? null, [activeParentId, parentThreads]);
@@ -145,14 +164,89 @@ const TeacherMessages: React.FC = () => {
 			<section className="messenger-section" id="teacher-messages-top" aria-labelledby="teacher-messages-heading">
 				<div className="messenger-shell">
 					<aside className="messenger-thread-rail">
-						<div>
+						<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
 							<p className="parent-section-eyebrow">Recent Chats</p>
+							<button
+								type="button"
+								className="btn btn-primary"
+								style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 10px', fontSize: 13 }}
+								onClick={() => {
+									setShowNewMessage((open) => !open);
+									setNewMessageSearch('');
+								}}
+								aria-label="Start a new message"
+							>
+								<MdAdd /> New Message
+							</button>
+
+							{showNewMessage && (
+								<div
+									style={{
+										position: 'absolute',
+										top: '100%',
+										right: 0,
+										width: 260,
+										zIndex: 30,
+										background: '#fff',
+										border: '1px solid #e2e8f0',
+										borderRadius: 10,
+										boxShadow: '0 12px 32px rgba(15, 23, 42, 0.15)',
+										marginTop: 6,
+										overflow: 'hidden',
+									}}
+								>
+									<div style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>
+										<input
+											autoFocus
+											value={newMessageSearch}
+											onChange={(event) => setNewMessageSearch(event.target.value)}
+											placeholder="Search parent by name"
+											style={{ width: '100%' }}
+										/>
+									</div>
+									<div style={{ maxHeight: 240, overflowY: 'auto' }}>
+										{newMessageCandidates.length === 0 ? (
+											<div style={{ padding: '10px 12px', color: '#64748b', fontSize: 13 }}>No matching parents.</div>
+										) : (
+											newMessageCandidates.map((parent) => (
+												<button
+													type="button"
+													key={parent.id}
+													onClick={() => {
+														setActiveParentId(parent.id);
+														setShowNewMessage(false);
+														setNewMessageSearch('');
+													}}
+													style={{
+														display: 'flex',
+														alignItems: 'center',
+														gap: 8,
+														width: '100%',
+														textAlign: 'left',
+														padding: '8px 12px',
+														border: 'none',
+														background: 'transparent',
+														cursor: 'pointer',
+														fontSize: 13,
+														color: '#1e293b',
+													}}
+												>
+													<Avatar size={24} src={parent.avatarUrl} firstName={parent.firstName} lastName={parent.lastName} />
+													{getDisplayName(parent)}
+												</button>
+											))
+										)}
+									</div>
+								</div>
+							)}
 						</div>
 
 						<div className="messenger-thread-list">
 							{loading && <div className="messenger-empty">Loading parent chats...</div>}
-							{!loading && parentThreads.length === 0 && <div className="messenger-empty">No parent chats yet.</div>}
-							{parentThreads.map((thread) => (
+							{!loading && recentThreads.length === 0 && (
+								<div className="messenger-empty">No parent chats yet. Tap "New Message" to start one.</div>
+							)}
+							{recentThreads.map((thread) => (
 								<button
 									key={thread.id}
 									type="button"

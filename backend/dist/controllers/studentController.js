@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteStudent = exports.createStudent = exports.getStudentById = exports.searchStudents = exports.getStudents = void 0;
+exports.deleteStudent = exports.updateStudent = exports.createStudent = exports.getStudentById = exports.searchStudents = exports.getStudents = void 0;
 const supabase_1 = require("../config/supabase");
 const fallbackStudents = [
     { id: 's1', name: 'Juan Dela Cruz', grade: 'Grade 3', section: 'Rose', schoolId: 'school-1' },
@@ -13,6 +13,8 @@ const mapStudentRow = (student) => ({
     grade: student.grade_level ?? undefined,
     section: student.section ?? undefined,
     schoolId: student.school_id,
+    parentUserId: student.parent_user_id ?? null,
+    advisoryTeacherId: student.advisory_teacher_id ?? null,
 });
 const fallbackStudentRecord = (input) => ({
     id: input.id ?? `student-${Date.now()}`,
@@ -49,16 +51,20 @@ const getStudents = async (req, res, _next) => {
         }
         let query = client
             .from('students')
-            .select('id, first_name, last_name, grade_level, section, school_id, parent_user_id, status')
+            .select('id, first_name, last_name, grade_level, section, school_id, parent_user_id, advisory_teacher_id, status')
             .eq('status', 'active')
             .order('last_name', { ascending: true })
             .order('first_name', { ascending: true });
         const parentId = typeof req.query.parentId === 'string' ? req.query.parentId : undefined;
+        const advisoryTeacherId = typeof req.query.advisoryTeacherId === 'string' ? req.query.advisoryTeacherId : undefined;
         if (unassignedOnly) {
             query = query.is('parent_user_id', null);
         }
         if (parentId) {
             query = query.eq('parent_user_id', parentId);
+        }
+        if (advisoryTeacherId) {
+            query = query.eq('advisory_teacher_id', advisoryTeacherId);
         }
         const { data, error } = await query;
         if (error) {
@@ -187,7 +193,7 @@ exports.getStudentById = getStudentById;
  */
 const createStudent = async (req, res, next) => {
     try {
-        const { id, studentNumber, firstName, lastName, gradeLevel, section, parentUserId } = req.body;
+        const { id, studentNumber, firstName, lastName, gradeLevel, section, parentUserId, advisoryTeacherId } = req.body;
         if (!firstName || !lastName) {
             res.status(400).json({ success: false, message: 'First name and last name are required' });
             return;
@@ -222,11 +228,12 @@ const createStudent = async (req, res, next) => {
                 grade_level: gradeLevel || null,
                 section: section || null,
                 parent_user_id: parentUserId || null,
+                advisory_teacher_id: advisoryTeacherId || null,
                 school_id: 'school-1',
                 status: 'active',
             },
         ])
-            .select('id, first_name, last_name, grade_level, school_id')
+            .select('id, first_name, last_name, grade_level, section, school_id, parent_user_id, advisory_teacher_id')
             .single();
         if (error || !data) {
             res.status(500).json({ success: false, message: 'Failed to create student', error: error?.message });
@@ -244,6 +251,64 @@ const createStudent = async (req, res, next) => {
     }
 };
 exports.createStudent = createStudent;
+/**
+ * Update a student record (e.g. assign an advisory teacher)
+ * PUT /api/students/:id
+ */
+const updateStudent = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { studentNumber, firstName, lastName, gradeLevel, section, parentUserId, advisoryTeacherId } = req.body;
+        if (!id) {
+            res.status(400).json({ success: false, message: 'Student ID is required' });
+            return;
+        }
+        const client = (0, supabase_1.getSupabaseAdminClient)();
+        if (!client) {
+            res.status(200).json({ success: true, message: 'Student updated (fallback mode)' });
+            return;
+        }
+        const updates = {};
+        if (typeof studentNumber === 'string')
+            updates.student_number = studentNumber || null;
+        if (typeof firstName === 'string' && firstName.trim())
+            updates.first_name = firstName.trim();
+        if (typeof lastName === 'string' && lastName.trim())
+            updates.last_name = lastName.trim();
+        if (typeof gradeLevel === 'string')
+            updates.grade_level = gradeLevel || null;
+        if (typeof section === 'string')
+            updates.section = section || null;
+        if (typeof parentUserId !== 'undefined')
+            updates.parent_user_id = parentUserId || null;
+        if (typeof advisoryTeacherId !== 'undefined')
+            updates.advisory_teacher_id = advisoryTeacherId || null;
+        if (Object.keys(updates).length === 0) {
+            res.status(400).json({ success: false, message: 'No student fields provided to update' });
+            return;
+        }
+        const { data, error } = await client
+            .from('students')
+            .update(updates)
+            .eq('id', id)
+            .select('id, first_name, last_name, grade_level, section, school_id, parent_user_id, advisory_teacher_id')
+            .single();
+        if (error || !data) {
+            res.status(500).json({ success: false, message: 'Failed to update student', error: error?.message });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            message: 'Student updated successfully',
+            student: mapStudentRow(data),
+        });
+    }
+    catch (error) {
+        console.error('Update student error:', error);
+        next(error);
+    }
+};
+exports.updateStudent = updateStudent;
 /**
  * Delete a student by ID
  * DELETE /api/students/:id

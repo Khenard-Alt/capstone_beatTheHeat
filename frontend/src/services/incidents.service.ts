@@ -25,11 +25,12 @@ export interface IncidentRecord {
   aiSuggestion?: string | null;
   reportedBy?: string | null;
   status: StudentHealthIncident['status'] | string;
+  resolvedAt?: string | null;
 }
 
-export const fetchIncidents = async (limit = 20, offset = 0): Promise<IncidentRecord[]> => {
+export const fetchIncidents = async (limit = 20, offset = 0, parentId?: string): Promise<IncidentRecord[]> => {
   const { data } = await apiClient.get<ApiEnvelope<IncidentRecord[]>>('/api/incidents', {
-    params: { limit, offset },
+    params: { limit, offset, parentId },
   });
   return data.data ?? [];
 };

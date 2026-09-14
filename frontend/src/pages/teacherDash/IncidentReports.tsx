@@ -1,29 +1,55 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { MdInfoOutline, MdOutlineAssignment } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { TeacherHeatReminder } from '../../components/TeacherHeatReminder';
 import { fetchIncidents, createIncident, type IncidentRecord } from '../../services/incidents.service';
 import { useAuth } from '../../hooks/useAuth';
+import { apiClient } from '../../services/api';
 import '../../styles/TeacherPanel.css';
 
 const statusOrder = ['pending', 'monitoring', 'treated', 'resolved'];
+const LOG_PAGE_SIZE = 10;
+
+interface StudentOption {
+  id: string;
+  name: string;
+  grade?: string;
+  section?: string;
+}
 
 const IncidentReports: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<'all' | IncidentRecord['status']>('all');
+  const [logSearch, setLogSearch] = useState('');
+  const [logPage, setLogPage] = useState(1);
   const [selectedIncident, setSelectedIncident] = useState<IncidentRecord | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
-  const [studentName, setStudentName] = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [students, setStudents] = useState<StudentOption[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentDropdownOpen, setStudentDropdownOpen] = useState(false);
   const [incidentType, setIncidentType] = useState('heat-exhaustion');
+  const [otherTypeDetail, setOtherTypeDetail] = useState('');
   const [description, setDescription] = useState('');
   const [actionTaken, setActionTaken] = useState('Moved student to shaded area, gave water, and informed the clinic.');
   const [heatIndex, setHeatIndex] = useState('');
+
+  const selectedStudent = useMemo(
+    () => students.find((student) => student.id === selectedStudentId) || null,
+    [students, selectedStudentId]
+  );
+
+  const filteredStudents = useMemo(() => {
+    const query = studentSearch.trim().toLowerCase();
+    if (!query) return students;
+    return students.filter((student) => {
+      const haystack = [student.name, student.grade, student.section].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [students, studentSearch]);
 
   const loadIncidents = async () => {
     try {
@@ -46,6 +72,15 @@ const IncidentReports: React.FC = () => {
       if (!mounted) {
         return;
       }
+
+      try {
+        const { data } = await apiClient.get('/api/students');
+        if (mounted) {
+          setStudents(data.students ?? []);
+        }
+      } catch (error) {
+        console.error('Failed to load class roster:', error);
+      }
     };
 
     void load();
@@ -57,8 +92,16 @@ const IncidentReports: React.FC = () => {
 
   const handleCreateIncident = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!selectedStudentId) {
+      setSubmitMessage('Please select a student before submitting.');
+      return;
+    }
     if (!description.trim()) {
       setSubmitMessage('Please provide incident details before submitting.');
+      return;
+    }
+    if (incidentType === 'other' && !otherTypeDetail.trim()) {
+      setSubmitMessage('Please specify the incident type.');
       return;
     }
 
@@ -69,19 +112,21 @@ const IncidentReports: React.FC = () => {
       await createIncident({
         schoolId: user?.schoolId || 'school-1',
         reporterId: user?.id,
-        studentId: studentId.trim() || undefined,
+        studentId: selectedStudentId,
         type: incidentType,
         description: [
-          `Student: ${studentName.trim() || 'Unknown student'}`,
+          `Student: ${selectedStudent?.name || 'Unknown student'}`,
+          incidentType === 'other' ? `Type specified: ${otherTypeDetail.trim()}` : '',
           description.trim(),
         ].filter(Boolean).join(' | '),
         actionTaken: actionTaken.trim() || undefined,
         heatIndex: heatIndex.trim() ? Number(heatIndex) : undefined,
       });
 
-      setStudentName('');
-      setStudentId('');
+      setSelectedStudentId('');
+      setStudentSearch('');
       setIncidentType('heat-exhaustion');
+      setOtherTypeDetail('');
       setDescription('');
       setActionTaken('Moved student to shaded area, gave water, and informed the clinic.');
       setHeatIndex('');
@@ -96,12 +141,42 @@ const IncidentReports: React.FC = () => {
   };
 
   const filteredIncidents = useMemo(() => {
-    if (selectedStatus === 'all') {
-      return incidents;
-    }
+    const query = logSearch.trim().toLowerCase();
 
-    return incidents.filter((incident) => String(incident.status).toLowerCase() === selectedStatus);
-  }, [incidents, selectedStatus]);
+    return incidents.filter((incident) => {
+      const statusMatch = selectedStatus === 'all' || String(incident.status).toLowerCase() === selectedStatus;
+      if (!statusMatch) return false;
+      if (!query) return true;
+
+      const haystack = [
+        incident.studentName,
+        incident.gradeLevel,
+        incident.section,
+        incident.incidentType,
+        incident.description,
+        incident.status,
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [incidents, selectedStatus, logSearch]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredIncidents.length / LOG_PAGE_SIZE));
+
+  const pagedIncidents = useMemo(() => {
+    const start = (logPage - 1) * LOG_PAGE_SIZE;
+    return filteredIncidents.slice(start, start + LOG_PAGE_SIZE);
+  }, [filteredIncidents, logPage]);
+
+  useEffect(() => {
+    setLogPage(1);
+  }, [logSearch, selectedStatus]);
+
+  useEffect(() => {
+    if (logPage > totalPages) {
+      setLogPage(totalPages);
+    }
+  }, [logPage, totalPages]);
 
   const stats = useMemo(() => ({
     total: incidents.length,
@@ -145,22 +220,92 @@ const IncidentReports: React.FC = () => {
         <div className="teacher-main">
           <Card title="Create Incident Report" className="teacher-panel-card tone-alert">
             <form onSubmit={handleCreateIncident} className="teacher-form-grid">
-              <div className="teacher-form-field">
-                <label htmlFor="incidentStudentName">Student name</label>
+              <div className="teacher-form-field" style={{ position: 'relative' }}>
+                <label htmlFor="incidentStudentSearch">Student</label>
                 <input
-                  id="incidentStudentName"
-                  value={studentName}
-                  onChange={(event) => setStudentName(event.target.value)}
-                  placeholder="Enter student name"
+                  id="incidentStudentSearch"
+                  value={selectedStudent ? `${selectedStudent.name}${selectedStudent.grade ? ` — ${selectedStudent.grade}${selectedStudent.section ? ` ${selectedStudent.section}` : ''}` : ''}` : studentSearch}
+                  onChange={(event) => {
+                    setSelectedStudentId('');
+                    setStudentSearch(event.target.value);
+                    setStudentDropdownOpen(true);
+                  }}
+                  onFocus={() => {
+                    if (selectedStudentId) {
+                      setSelectedStudentId('');
+                      setStudentSearch('');
+                    }
+                    setStudentDropdownOpen(true);
+                  }}
+                  onBlur={() => setTimeout(() => setStudentDropdownOpen(false), 150)}
+                  placeholder="Search student by name, grade, or section"
+                  autoComplete="off"
                 />
+                {studentDropdownOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 20,
+                      maxHeight: 220,
+                      overflowY: 'auto',
+                      background: '#fff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: 10,
+                      boxShadow: '0 12px 32px rgba(15, 23, 42, 0.15)',
+                      marginTop: 4,
+                      color: '#1e293b',
+                    }}
+                  >
+                    {filteredStudents.length === 0 ? (
+                      <div style={{ padding: '10px 12px', color: '#64748b', fontSize: 13 }}>No matching students.</div>
+                    ) : (
+                      filteredStudents.map((student) => (
+                        <button
+                          type="button"
+                          key={student.id}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            setSelectedStudentId(student.id);
+                            setStudentSearch('');
+                            setStudentDropdownOpen(false);
+                          }}
+                          style={{
+                            display: 'block',
+                            width: '100%',
+                            textAlign: 'left',
+                            padding: '8px 12px',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            color: '#1e293b',
+                          }}
+                        >
+                          <strong>{student.name}</strong>
+                          {student.grade ? (
+                            <span style={{ color: '#64748b' }}> — {student.grade}{student.section ? ` ${student.section}` : ''}</span>
+                          ) : null}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
               <div className="teacher-form-field">
-                <label htmlFor="incidentStudentId">Student ID (optional)</label>
+                <label htmlFor="incidentGradeSection">Grade &amp; section</label>
                 <input
-                  id="incidentStudentId"
-                  value={studentId}
-                  onChange={(event) => setStudentId(event.target.value)}
-                  placeholder="Student reference ID"
+                  id="incidentGradeSection"
+                  value={
+                    selectedStudent
+                      ? [selectedStudent.grade, selectedStudent.section].filter(Boolean).join(' - ') || 'Not on record'
+                      : ''
+                  }
+                  placeholder="Auto-filled from selected student"
+                  readOnly
+                  disabled
                 />
               </div>
               <div className="teacher-form-field">
@@ -175,6 +320,17 @@ const IncidentReports: React.FC = () => {
                   <option value="other">Other</option>
                 </select>
               </div>
+              {incidentType === 'other' && (
+                <div className="teacher-form-field">
+                  <label htmlFor="incidentOtherDetail">Please specify</label>
+                  <input
+                    id="incidentOtherDetail"
+                    value={otherTypeDetail}
+                    onChange={(event) => setOtherTypeDetail(event.target.value)}
+                    placeholder="Describe the incident type"
+                  />
+                </div>
+              )}
               <div className="teacher-form-field">
                 <label htmlFor="incidentHeatIndex">Heat index at time</label>
                 <input
@@ -231,55 +387,109 @@ const IncidentReports: React.FC = () => {
               ))}
             </div>
 
+            <div className="teacher-form-field" style={{ marginBottom: 16 }}>
+              <input
+                value={logSearch}
+                onChange={(event) => setLogSearch(event.target.value)}
+                placeholder="Search by student, grade, section, type, or description"
+                aria-label="Search incident log"
+              />
+            </div>
+
             {loading ? (
               <div className="teacher-info-copy">Loading incident records...</div>
             ) : filteredIncidents.length === 0 ? (
               <div className="teacher-info-copy">
-                No incident reports found for this filter. Use the conduct form to add a class report when symptoms are observed.
+                No incident reports found for this filter. Use the form above to add a class report when symptoms are observed.
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="teacher-dashboard-table app-table">
-                  <thead>
-                    <tr>
-                      <th>Student</th>
-                      <th>Type</th>
-                      <th>Description</th>
-                      <th>Action</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Info</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredIncidents.map((incident) => (
-                      <tr key={incident.id}>
-                        <td>
-                          <strong>{incident.studentName}</strong>
-                          <div className="teacher-info-copy" style={{ marginTop: 4, fontSize: 12 }}>
-                            {incident.gradeLevel || 'N/A'} {incident.section ? `• ${incident.section}` : ''}
-                          </div>
-                        </td>
-                        <td>{incident.incidentType}</td>
-                        <td style={{ maxWidth: 320 }}>{incident.description || '—'}</td>
-                        <td style={{ maxWidth: 300 }}>{incident.actionTaken || '—'}</td>
-                        <td><span className={`teacher-status ${String(incident.status).toLowerCase()}`}>{incident.status}</span></td>
-                        <td>{incident.timestamp ? new Date(incident.timestamp).toLocaleString() : '—'}</td>
-                        <td>
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={() => setSelectedIncident(incident)}
-                            aria-label={`Show info for ${incident.studentName}`}
-                          >
-                            <MdInfoOutline />
-                          </button>
-                        </td>
+              <>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="teacher-dashboard-table app-table">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Info</th>
                       </tr>
+                    </thead>
+                    <tbody>
+                      {pagedIncidents.map((incident) => (
+                        <tr key={incident.id}>
+                          <td>
+                            <strong>{incident.studentName}</strong>
+                            <div className="teacher-info-copy" style={{ marginTop: 4, fontSize: 12 }}>
+                              {incident.gradeLevel || 'N/A'} {incident.section ? `• ${incident.section}` : ''}
+                            </div>
+                          </td>
+                          <td>{incident.incidentType}</td>
+                          <td style={{ maxWidth: 320 }}>{incident.description || '—'}</td>
+                          <td style={{ maxWidth: 300 }}>{incident.actionTaken || '—'}</td>
+                          <td><span className={`teacher-status ${String(incident.status).toLowerCase()}`}>{incident.status}</span></td>
+                          <td>{incident.timestamp ? new Date(incident.timestamp).toLocaleString() : '—'}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => setSelectedIncident(incident)}
+                              aria-label={`Show info for ${incident.studentName}`}
+                            >
+                              <MdInfoOutline />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 12,
+                    marginTop: 16,
+                  }}
+                >
+                  <span className="teacher-info-copy" style={{ fontSize: 13 }}>
+                    Showing {(logPage - 1) * LOG_PAGE_SIZE + 1}–{Math.min(logPage * LOG_PAGE_SIZE, filteredIncidents.length)} of {filteredIncidents.length}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setLogPage((page) => Math.max(1, page - 1))}
+                      disabled={logPage === 1}
+                    >
+                      Prev
+                    </button>
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        className={`teacher-pill ${logPage === page ? 'accent' : ''}`}
+                        onClick={() => setLogPage(page)}
+                      >
+                        {page}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setLogPage((page) => Math.min(totalPages, page + 1))}
+                      disabled={logPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </Card>
 
@@ -297,11 +507,8 @@ const IncidentReports: React.FC = () => {
 
           <Card title="Response steps" className="teacher-panel-card tone-success">
             <p className="teacher-info-copy">
-              Full observe/move/document guidance lives on the{' '}
-              <button type="button" className="teacher-link-btn" onClick={() => navigate('/teacher/conduct-form')}>
-                Conduct Form
-              </button>{' '}
-              page.
+              Move the student to shade, give water, and inform the clinic — then log the details above so the head
+              teacher and adviser can follow up quickly.
             </p>
           </Card>
 

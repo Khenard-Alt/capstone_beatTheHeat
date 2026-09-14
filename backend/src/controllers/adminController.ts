@@ -58,6 +58,10 @@ export const getAdminStats = async (
 			.select('*', { count: 'exact', head: true })
 			.gte('created_at', startDate.toISOString());
 
+		// `users` has no is_active/last_login column to determine real-time
+		// presence, so this counts total registered accounts.
+		const { count: activeUsersCount } = await client.from('users').select('*', { count: 'exact', head: true });
+
 		// Fetch trend data (advisories per hour for today or per day for week/month)
 		let trendData: any[] = [];
 		if (period === 'today') {
@@ -107,7 +111,7 @@ export const getAdminStats = async (
 			stats: {
 				activeAdvisories: advisoryCount || 0,
 				incidents: incidentCount || 0,
-				activeUsers: 1, // Placeholder - would need user table
+				activeUsers: activeUsersCount || 0,
 				trend: trendData,
 			},
 			metadata: {

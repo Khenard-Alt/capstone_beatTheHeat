@@ -97,7 +97,10 @@ const getPrincipalStats = async (req, res, next) => {
             client.from('incidents').select('*', { count: 'exact', head: true }).gte('created_at', startDate.toISOString()),
             client.from('health_incidents').select('*', { count: 'exact', head: true }).gte('timestamp', startDate.toISOString()),
         ]);
-        const { count: activeUsersCount } = await client.from('users').select('*', { count: 'exact', head: true }).eq('is_active', true);
+        // `users` has no is_active/last_login column to determine real-time
+        // presence, so this counts total registered accounts instead of
+        // silently failing on a non-existent column filter.
+        const { count: activeUsersCount } = await client.from('users').select('*', { count: 'exact', head: true });
         let trend = [];
         if (period === 'today') {
             const { data } = await client.from('ai_analysis_logs').select('created_at').gte('created_at', startDate.toISOString()).order('created_at', { ascending: true });

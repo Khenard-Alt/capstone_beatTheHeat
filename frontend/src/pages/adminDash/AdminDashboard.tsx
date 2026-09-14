@@ -165,7 +165,7 @@ export const AdminDashboard: React.FC = () => {
   const systemStats = [
     { label: 'Active Advisories', value: adminStats?.activeAdvisories || '0', note: 'This period' },
     { label: 'Heat Incidents', value: adminStats?.incidents || '0', note: 'This period' },
-    { label: 'Active Users', value: adminStats?.activeUsers || '0', note: 'Connected' },
+    { label: 'Registered Users', value: adminStats?.activeUsers || '0', note: 'Total accounts' },
     { label: 'System Status', value: loading ? 'Loading...' : 'Healthy', note: 'All systems' },
   ];
 

@@ -1,22 +1,14 @@
 import React, { useState } from 'react';
-import { MdNotifications, MdOutlineThermostat, MdPerson, MdSave } from 'react-icons/md';
+import { MdNotifications, MdOutlineThermostat, MdPerson } from 'react-icons/md';
 import { Card } from '../../components/Card';
-import { AvatarUpload } from '../../components/AvatarUpload';
+import { ProfileInformationCard } from '../../components/ProfileInformationCard';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/TeacherPanel.css';
 
 const ProfileSettings: React.FC = () => {
   const { user } = useAuth();
-  const [displayName, setDisplayName] = useState(`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim());
-  const [email, setEmail] = useState(user?.email ?? '');
   const [receiveEmails, setReceiveEmails] = useState(true);
   const [receiveSms, setReceiveSms] = useState(true);
-  const [statusMessage, setStatusMessage] = useState('');
-
-  const handleSave = (event: React.FormEvent) => {
-    event.preventDefault();
-    setStatusMessage('Profile settings updated locally. Connect this form to persistence when ready.');
-  };
 
   return (
     <div className="teacher-page-shell">
@@ -26,42 +18,11 @@ const ProfileSettings: React.FC = () => {
           <h1>Profile / Settings</h1>
           <p>Manage your profile details and notification preferences while keeping the school safety palette consistent.</p>
         </div>
-        <div className="teacher-hero-card">
-          <AvatarUpload size={44} />
-          <div>
-            <strong>{user?.role || 'head-teacher'}</strong>
-            <p>{user?.schoolId || 'school-1'}</p>
-          </div>
-        </div>
       </div>
 
       <div className="teacher-layout">
         <div className="teacher-main">
-          <Card title="Profile" className="teacher-panel-card">
-            <form onSubmit={handleSave} className="teacher-form-grid">
-              <div className="teacher-form-field">
-                <label htmlFor="displayName">Display name</label>
-                <input id="displayName" value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
-              </div>
-
-              <div className="teacher-form-field">
-                <label htmlFor="email">Email</label>
-                <input id="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-              </div>
-
-              <div className="teacher-form-actions" style={{ gridColumn: '1 / -1' }}>
-                <button type="submit" className="btn btn-primary">
-                  <MdSave /> Save settings
-                </button>
-              </div>
-
-              {statusMessage && (
-                <div className="teacher-sidebar-note" style={{ gridColumn: '1 / -1' }}>
-                  {statusMessage}
-                </div>
-              )}
-            </form>
-          </Card>
+          <ProfileInformationCard className="teacher-panel-card" />
 
           <Card title="Notification Preferences" className="teacher-panel-card tone-success">
             <div className="teacher-section-grid">

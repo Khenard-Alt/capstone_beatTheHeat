@@ -511,6 +511,27 @@
   color: #1e293b;
 }
 
+.form-input.has-password-toggle {
+  padding-right: 56px;
+}
+
+.password-toggle-text {
+  position: absolute;
+  right: 14px;
+  border: none;
+  background: none;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.password-toggle-text:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
 .form-input::placeholder {
   color: #94a3b8;
 }

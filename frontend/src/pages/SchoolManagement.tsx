@@ -40,6 +40,13 @@ type StudentRecord = {
   studentNumber?: string;
   section?: string;
   parentUserId?: string | null;
+  advisoryTeacherId?: string | null;
+};
+
+type TeacherUser = {
+  id: string;
+  firstName: string;
+  lastName: string;
 };
 
 const ADMIN_AUTH_STORAGE_KEY = 'school_management_admin_unlocked';
@@ -61,6 +68,7 @@ const emptyStudentForm = {
   gradeLevel: '',
   section: '',
   parentUserId: '',
+  advisoryTeacherId: '',
 };
 
 export const SchoolManagement: React.FC = () => {
@@ -79,6 +87,7 @@ export const SchoolManagement: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [parents, setParents] = useState<ParentUser[]>([]);
   const [students, setStudents] = useState<StudentRecord[]>([]);
+  const [teachers, setTeachers] = useState<TeacherUser[]>([]);
   const [parentForm, setParentForm] = useState(emptyParentForm);
   const [studentForm, setStudentForm] = useState(emptyStudentForm);
 
@@ -136,13 +145,15 @@ export const SchoolManagement: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const [parentResponse, studentResponse] = await Promise.all([
+      const [parentResponse, studentResponse, teacherResponse] = await Promise.all([
         apiClient.get('/api/users', { params: { role: 'parent' } }),
         apiClient.get('/api/students'),
+        apiClient.get('/api/users', { params: { role: 'teacher' } }),
       ]);
 
       setParents(parentResponse.data.users || []);
       setStudents(studentResponse.data.students || []);
+      setTeachers(teacherResponse.data.users || []);
       setSuccess('User lists refreshed.');
     } catch (refreshError) {
       console.error('Failed to refresh management data:', refreshError);
@@ -218,6 +229,7 @@ export const SchoolManagement: React.FC = () => {
       await apiClient.post('/api/students', {
         ...studentForm,
         parentUserId: studentForm.parentUserId || null,
+        advisoryTeacherId: studentForm.advisoryTeacherId || null,
       });
 
       setStudentForm(emptyStudentForm);
@@ -226,6 +238,21 @@ export const SchoolManagement: React.FC = () => {
     } catch (studentError) {
       console.error('Failed to create student:', studentError);
       setError(studentError instanceof Error ? studentError.message : 'Failed to create student.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const assignAdvisoryTeacher = async (studentId: string, advisoryTeacherId: string) => {
+    setLoading(true);
+    setError('');
+    try {
+      await apiClient.put(`/api/students/${studentId}`, { advisoryTeacherId: advisoryTeacherId || null });
+      setSuccess('Advisory teacher updated.');
+      await refreshData();
+    } catch (assignError) {
+      console.error('Failed to assign advisory teacher:', assignError);
+      setError(assignError instanceof Error ? assignError.message : 'Failed to assign advisory teacher.');
     } finally {
       setLoading(false);
     }
@@ -433,6 +460,18 @@ export const SchoolManagement: React.FC = () => {
                   </select>
                 </label>
 
+                <label className="select-group">
+                  <span className="select-label">Advisory Teacher (optional)</span>
+                  <select className="select-field" value={studentForm.advisoryTeacherId} onChange={(event) => handleStudentFormChange('advisoryTeacherId', event.target.value)}>
+                    <option value="">Select advisory teacher</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {teacher.firstName} {teacher.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
                 <div className="management-form-actions">
                   <Button variant="primary" type="submit" loading={loading} disabled={!adminUnlocked}>
                     Add Student
@@ -496,6 +535,22 @@ export const SchoolManagement: React.FC = () => {
                       <div className="row-meta">
                         {student.grade && <span>{student.grade}</span>}
                         {student.section && <span>Section {student.section}</span>}
+                        {adminUnlocked && (
+                          <select
+                            className="select-field"
+                            style={{ maxWidth: 180 }}
+                            value={student.advisoryTeacherId || ''}
+                            onChange={(event) => void assignAdvisoryTeacher(student.id, event.target.value)}
+                            title="Assign advisory teacher"
+                          >
+                            <option value="">No advisory teacher</option>
+                            {teachers.map((teacher) => (
+                              <option key={teacher.id} value={teacher.id}>
+                                {teacher.firstName} {teacher.lastName}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                         {adminUnlocked && (
                           <button
                             type="button"

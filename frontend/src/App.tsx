@@ -38,10 +38,10 @@ import IncidentReports from './pages/headTeacherDash/IncidentReports';
 import Chatbot from './pages/headTeacherDash/Chatbot';
 import ProfileSettings from './pages/headTeacherDash/ProfileSettings';
 import { TeacherDashboard } from './pages/teacherDash/TeacherDashboard';
-import TeacherConductForm from './pages/teacherDash/ConductForm';
 import TeacherIncidentReports from './pages/teacherDash/IncidentReports';
 import TeacherAdvisories from './pages/teacherDash/Advisories';
 import TeacherMessages from './pages/teacherDash/Messages';
+import TeacherStaffMessages from './pages/teacherDash/StaffMessages';
 import TeacherChatbot from './pages/teacherDash/Chatbot';
 import TeacherProfileSettings from './pages/teacherDash/ProfileSettings';
 import './App.css';
@@ -180,7 +180,23 @@ const HomeRoute: React.FC = () => {
   return <Dashboard />;
 };
 
-  const LandingRoute: React.FC = () => <Navigate to="/login" replace />;
+  // Was an unconditional redirect to /login regardless of auth state — so
+  // landing on "/" from browser back/forward (or an old link) always bounced
+  // an already-logged-in user back to the login screen instead of their
+  // dashboard, which read as an unexpected logout.
+  const LandingRoute: React.FC = () => {
+    const { isAuthenticated, isLoading } = useAuth();
+
+    if (isLoading) {
+      return <Loading fullScreen text="Loading..." />;
+    }
+
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+
+    return <HomeRoute />;
+  };
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
@@ -507,16 +523,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      <Route
-        path="/teacher/conduct-form"
-        element={
-          <TeacherRoute>
-            <AppLayout>
-              <TeacherConductForm />
-            </AppLayout>
-          </TeacherRoute>
-        }
-      />
+      <Route path="/teacher/conduct-form" element={<Navigate to="/teacher/incident-reports" replace />} />
 
       <Route
         path="/teacher/incident-reports"
@@ -546,6 +553,17 @@ const AppRoutes: React.FC = () => {
           <TeacherRoute>
             <AppLayout>
               <TeacherMessages />
+            </AppLayout>
+          </TeacherRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/staff-messages"
+        element={
+          <TeacherRoute>
+            <AppLayout>
+              <TeacherStaffMessages />
             </AppLayout>
           </TeacherRoute>
         }

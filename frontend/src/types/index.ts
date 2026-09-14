@@ -7,6 +7,8 @@ export interface User {
   lastName: string;
   schoolId: string;
   avatarUrl?: string | null;
+  isGoogleAccount?: boolean;
+  notificationPreferences?: Record<string, boolean> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -169,6 +171,7 @@ export interface StudentHealthIncident {
   aiSuggestion?: string;
   reportedBy: string;
   status: 'reported' | 'treated' | 'monitoring' | 'resolved';
+  resolvedAt?: string | null;
 }
 
 export interface StudentHealthStats {

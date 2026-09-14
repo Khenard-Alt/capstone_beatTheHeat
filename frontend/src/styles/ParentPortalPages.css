@@ -242,6 +242,27 @@
   min-width: 420px;
 }
 
+/* Information stays on the left as one tall card; Change Password,
+   Notification Settings, and Guidance Notes stack together on the right so
+   neither column is left with a lot of empty leftover space. */
+.parent-portal-sections-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
+  align-items: start;
+}
+
+.parent-portal-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .parent-portal-sections-split {
+    grid-template-columns: 1fr;
+  }
+}
+
 .parent-student-item {
   padding: 14px 16px;
   border-radius: 12px;
@@ -562,6 +583,30 @@
   font-weight: 600;
 }
 
+/* Avatar + name/email grouped inside the same "Information" card as the
+   editable fields below, instead of floating in a separate hero card — the
+   whole identity block now reads as one section. */
+.parent-profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.parent-profile-identity strong {
+  display: block;
+  font-size: 17px;
+  color: #0f172a;
+}
+
+.parent-profile-identity p {
+  margin: 2px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
 .parent-profile-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -589,6 +634,28 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  min-width: 0;
+}
+
+.parent-password-inline {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e6eefc;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.parent-password-google-note {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .parent-email-row .parent-info-input {

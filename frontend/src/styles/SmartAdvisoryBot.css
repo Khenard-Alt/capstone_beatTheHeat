@@ -10,6 +10,7 @@
 }
 
 .global-advisory-panel {
+  position: relative;
   width: 420px;
   height: 560px;
   background: #ffffff;
@@ -19,6 +20,76 @@
   flex-direction: column;
   overflow: hidden;
   animation: globalAdvisorySlideUp 0.35s ease-out;
+}
+
+.global-advisory-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.global-advisory-scope-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.global-advisory-scope-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.global-advisory-scope-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.global-advisory-scope-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.3);
+  max-width: 340px;
+}
+
+.global-advisory-scope-card h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.global-advisory-scope-card p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.global-advisory-scope-ok {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.global-advisory-scope-ok:hover {
+  background: #1d4ed8;
 }
 
 @keyframes globalAdvisorySlideUp {

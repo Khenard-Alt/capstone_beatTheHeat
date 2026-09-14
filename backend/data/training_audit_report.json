@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-09-06T19:11:17.763Z",
-  "inputPath": "logs/audit-events.jsonl",
-  "aiAnalysisCount": 82,
-  "dedupedCount": 67,
-  "duplicateCount": 15,
+  "generatedAt": "2026-09-14T15:23:51.708Z",
+  "inputPath": "E:\\Code Files\\github\\CAPSTONE\\contents\\playground\\beatTheHeat\\backend\\logs\\audit-events.jsonl",
+  "aiAnalysisCount": 183,
+  "dedupedCount": 167,
+  "duplicateCount": 16,
   "duplicateExamples": [
     "29c6fc40-4e16-4db5-a9d2-00127b01aaa7",
     "49120290-fd99-4bce-83fc-a1935bace0f4",
@@ -13,24 +13,26 @@
   ],
   "parseFailures": [],
   "sources": {
-    "fallback": 50,
-    "gemini": 17
+    "fallback": 89,
+    "gemini": 17,
+    "ensemble": 10,
+    "python": 51
   },
   "labelCounts": {
-    "safe": 54,
-    "caution": 2,
-    "extreme-caution": 1,
-    "danger": 6,
+    "safe": 100,
+    "caution": 48,
+    "extreme-caution": 8,
+    "danger": 7,
     "extreme-danger": 0
   },
   "weatherLabelCounts": {
-    "safe": 58,
-    "caution": 2,
-    "extreme-caution": 1,
-    "danger": 6,
+    "safe": 83,
+    "caution": 69,
+    "extreme-caution": 8,
+    "danger": 7,
     "extreme-danger": 0
   },
-  "labelAgreementRate": 0.8955223880597015,
+  "labelAgreementRate": 0.6706586826347305,
   "mismatches": [
     {
       "id": "3a0990b6-bd6d-4ab1-8099-07842e807f9a",
@@ -73,37 +75,117 @@
       "responseRisk": "caution",
       "expectedRisk": "safe",
       "heatIndexC": 28.1
+    },
+    {
+      "id": "4b407199-4eb6-4aab-b5c3-46413428a172",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 28.1
+    },
+    {
+      "id": "1332472a-9ef0-4cfd-bb35-bc3591082ddd",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 28.3
+    },
+    {
+      "id": "d49bd297-2e85-408f-a379-3a43092f339e",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 28.3
+    },
+    {
+      "id": "f8d8509f-6770-48a1-afa4-c8405adb37c5",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 28.4
+    },
+    {
+      "id": "c8b0dc21-b75e-4041-a5d3-78407cacaf98",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 28.4
+    },
+    {
+      "id": "738c0866-ab72-4423-ad43-c90e9743d520",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.3
+    },
+    {
+      "id": "028012f0-c423-44e5-b690-2c4221b63218",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.3
+    },
+    {
+      "id": "da7a3c90-4fc7-4dbd-9e2a-e20d98f10f46",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.3
+    },
+    {
+      "id": "734aaf29-a5d7-43f9-ba63-e15d53cd1c99",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.3
+    },
+    {
+      "id": "d3939ca3-6bcb-4956-b0df-1d6a0f0fe6c4",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.3
+    },
+    {
+      "id": "80a721aa-8f21-4397-a0fe-e52447227fca",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.3
+    },
+    {
+      "id": "a82af81b-3856-4dcd-854b-ae29010c3091",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.3
+    },
+    {
+      "id": "cf36c63d-a266-4774-aa51-ca0bf34aca2e",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29
+    },
+    {
+      "id": "c52ee523-c2b8-400a-9037-a68162a9b842",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 28.8
+    },
+    {
+      "id": "2cbc89fe-cbe9-4ed6-a8b9-b8109f658732",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.5
+    },
+    {
+      "id": "9ffe5f4f-c31c-4a4c-a4d0-58868a4586f3",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29.5
+    },
+    {
+      "id": "30b427da-6b2f-49d7-ba0e-f808e4604dc8",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 30.3
+    },
+    {
+      "id": "3893ffee-503f-4268-80cf-dec16e641836",
+      "responseRisk": "caution",
+      "expectedRisk": "safe",
+      "heatIndexC": 29
     }
   ],
   "alerts": [
-    "Label distribution drift detected (0.657 > 0.2).",
-    "Found 7 label-quality mismatches against heat-index rules."
-  ],
-  "comparison": {
-    "compareReportPath": "components/AIModel/python/model/training_report.json",
-    "baselineCounts": {
-      "safe": 25,
-      "caution": 25,
-      "extreme-caution": 25,
-      "danger": 25,
-      "extreme-danger": 25
-    },
-    "currentDistribution": {
-      "safe": 0.8571428571428571,
-      "caution": 0.031746031746031744,
-      "extreme-caution": 0.015873015873015872,
-      "danger": 0.09523809523809523,
-      "extreme-danger": 0
-    },
-    "baselineDistribution": {
-      "safe": 0.2,
-      "caution": 0.2,
-      "extreme-caution": 0.2,
-      "danger": 0.2,
-      "extreme-danger": 0.2
-    },
-    "distributionShift": 0.6571428571428571,
-    "driftThreshold": 0.2,
-    "driftDetected": true
-  }
+    "Found 55 label-quality mismatches against heat-index rules."
+  ]
 }

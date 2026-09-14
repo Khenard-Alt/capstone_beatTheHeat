@@ -52,6 +52,7 @@ interface ForecastDay {
 }
 
 const MIN_HISTORY_POINTS = 5;
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 const formatShortDate = (value: string) => {
   const date = new Date(value);
@@ -80,10 +81,11 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
 
   useEffect(() => {
     let mounted = true;
+    let isFirstLoad = true;
 
     const load = async () => {
       try {
-        setLoading(true);
+        if (isFirstLoad) setLoading(true);
         const [historyRes, currentRes, forecastRes] = await Promise.all([
           showPrevious
             ? apiClient.get('/api/heat-index/history', { params: { period: 'weekly' } })
@@ -116,12 +118,18 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
         console.error('Failed to load predictive heat report:', error);
       } finally {
         if (mounted) setLoading(false);
+        isFirstLoad = false;
       }
     };
 
     void load();
+    const intervalId = setInterval(() => {
+      void load();
+    }, REFRESH_INTERVAL_MS);
+
     return () => {
       mounted = false;
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -169,10 +177,10 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
         <Card title="Previous Analysis" className="predictive-card">
           {loading ? (
             <div className="predictive-loading">Loading historical data…</div>
-          ) : history.length < MIN_HISTORY_POINTS ? (
+          ) : history.length === 0 ? (
             <div className="predictive-empty-state">
-              Limited historical data available yet — the system is still collecting heat index readings.
-              Check back once more readings have been logged for a fuller peak-pattern analysis.
+              No historical data available yet — the system is still collecting heat index readings.
+              Check back once readings have been logged for a peak-pattern analysis.
             </div>
           ) : (
             <>
@@ -190,6 +198,12 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
                   Recurring peak: heat index reached{' '}
                   <strong>{peakHistoryPoint.maxHeatIndex.toFixed(1)}°C</strong> around{' '}
                   {formatShortDateTime(peakHistoryPoint.time)}.
+                </p>
+              )}
+              {history.length < MIN_HISTORY_POINTS && (
+                <p className="predictive-insight predictive-insight-muted">
+                  Based on {history.length} of {MIN_HISTORY_POINTS} days collected so far — the peak-pattern
+                  analysis will get more reliable as more readings come in.
                 </p>
               )}
             </>

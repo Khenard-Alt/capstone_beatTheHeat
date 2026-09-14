@@ -33,6 +33,98 @@
   height: 100%;
 }
 
+/* Click the picture itself to open a full-size view — deliberate, not a
+   hover accident — while the camera button stays the separate action for
+   changing it. */
+.avatar-view-trigger {
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-view-trigger:disabled {
+  cursor: default;
+}
+
+.avatar-view-modal {
+  position: fixed;
+  inset: 0;
+  /* Must beat the sidebar's z-index: 1000 (and its 1100 mobile variant) and
+     any toast/notification overlays, or it visually renders "under" them —
+     the backdrop only appeared to dim the cards it could stack above. */
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.78);
+  padding: 24px;
+}
+
+.avatar-view-modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  cursor: default;
+}
+
+.avatar-view-modal-content img {
+  max-width: min(90vw, 480px);
+  max-height: 70vh;
+  border-radius: 16px;
+  border: 4px solid #ffffff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-view-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.avatar-view-modal-change-btn,
+.avatar-view-modal-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.avatar-view-modal-change-btn {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.avatar-view-modal-change-btn:hover {
+  background: #1d4ed8;
+}
+
+.avatar-view-modal-change-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.avatar-view-modal-cancel-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.avatar-view-modal-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
 .avatar-upload-btn {
   position: absolute;
   right: -2px;

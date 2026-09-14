@@ -345,13 +345,13 @@ class AIAnalysisService {
 		}
 
 		if (pythonAdvisory && !geminiAdvisory) {
-			const result = this.applySafetyRules(pythonAdvisory, input.weather);
+			const result = this.applySafetyRules(pythonAdvisory, input.weather, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, result, 'python', 'ensemble-python-only');
 			return result;
 		}
 
 		if (!pythonAdvisory && geminiAdvisory) {
-			const result = this.applySafetyRules(geminiAdvisory, input.weather);
+			const result = this.applySafetyRules(geminiAdvisory, input.weather, languageStyle);
 			await this.logAdvisoryAudit(input, scopedQuery, result, 'gemini', 'ensemble-gemini-only');
 			return result;
 		}
@@ -362,7 +362,7 @@ class AIAnalysisService {
 			input,
 			preferredProvider
 		);
-		const finalMerged = this.applySafetyRules(merged, input.weather);
+		const finalMerged = this.applySafetyRules(merged, input.weather, languageStyle);
 		await this.logAdvisoryAudit(input, scopedQuery, finalMerged, 'ensemble', `ensemble:${preferredProvider}+${preferredProvider === 'python' ? 'gemini' : 'python'}`);
 		return finalMerged;
 	}
@@ -628,7 +628,7 @@ class AIAnalysisService {
 			const variedResult = this.applyVariation(adjustedResult, variationSeed, languageStyle);
 
 			// Apply server-side safety rules to ensure high heat-index forces higher risk levels.
-			const finalResult = this.applyAudienceGuidance(this.applySafetyRules(variedResult, input.weather), input.audienceRole);
+			const finalResult = this.applyAudienceGuidance(this.applySafetyRules(variedResult, input.weather, languageStyle), input.audienceRole);
 			finalResult.modelProfile.audienceRole = input.audienceRole;
 
 			if (!skipAudit) {
@@ -871,16 +871,24 @@ class AIAnalysisService {
 		return suffixes[Math.abs(seed) % suffixes.length];
 	}
 
-	private applySafetyRules(result: AdvisoryResult, weather: AdvisoryInput['weather']): AdvisoryResult {
+	private applySafetyRules(
+		result: AdvisoryResult,
+		weather: AdvisoryInput['weather'],
+		languageStyle: LanguageStyle = 'english'
+	): AdvisoryResult {
 		const hi = Number(weather?.heatIndexC ?? 0);
+		// Must mirror weatherService.getHeatLevel() exactly (27/32/41/54 °C
+		// bands) — this used to use a different set of cutoffs (31/37/40/50),
+		// so the AI advisory could disagree with the Heat Index card shown
+		// right next to it on the same dashboard for the same reading.
 		let threshold: AdvisoryResult['riskLevel'] = 'safe';
-		if (hi >= 50) {
+		if (hi >= 54) {
 			threshold = 'extreme-danger';
-		} else if (hi >= 40) {
+		} else if (hi >= 41) {
 			threshold = 'danger';
-		} else if (hi >= 37) {
+		} else if (hi >= 32) {
 			threshold = 'extreme-caution';
-		} else if (hi >= 31) {
+		} else if (hi >= 27) {
 			threshold = 'caution';
 		}
 
@@ -888,21 +896,29 @@ class AIAnalysisService {
 		const currentIdx = order.indexOf(result.riskLevel || 'safe');
 		const thIdx = order.indexOf(threshold);
 		if (thIdx > currentIdx) {
-			// Promote to threshold; annotate rationale and modelProfile
-			const newResult = { ...result };
-			newResult.riskLevel = threshold;
-			newResult.decisionBasis = {
-				...newResult.decisionBasis,
-				rationale: newResult.decisionBasis?.rationale ? [...newResult.decisionBasis.rationale] : [],
+			// The model's own summary/actions/decisionBasis were written for its
+			// (too-lenient) predicted level — bumping only `riskLevel` left the
+			// badge saying "Caution" while the text and decisionBasis.heatLevel
+			// still read "safe". Regenerate the whole advisory body for the
+			// corrected level so everything the user sees agrees with it.
+			const reason = `Rule override: model predicted "${result.riskLevel}" but heatIndexC=${hi} requires "${threshold}" per official thresholds.`;
+			const redirected = this.safeScopeRedirect(threshold, languageStyle);
+			return {
+				...redirected,
+				riskLevel: threshold,
+				summary: this.getLocalizedSummary(hi, threshold, languageStyle),
+				confidenceScore: result.confidenceScore,
+				healthDetails: result.healthDetails,
+				decisionBasis: {
+					heatIndexC: weather?.heatIndexC ?? hi,
+					temperatureC: weather?.temperatureC ?? 0,
+					humidityPercent: weather?.humidityPercent ?? 0,
+					heatLevel: threshold,
+					dataSource: weather?.source ?? 'system',
+					rationale: [reason, ...(result.decisionBasis?.rationale ?? [])].slice(0, 5),
+				},
+				modelProfile: { ...result.modelProfile, ruleOverride: true } as any,
 			};
-			const reason = `Rule override: heatIndexC=${hi} => ${threshold}`;
-			if (Array.isArray(newResult.decisionBasis.rationale)) {
-				newResult.decisionBasis.rationale.unshift(reason);
-			} else {
-				newResult.decisionBasis.rationale = [reason];
-			}
-			newResult.modelProfile = { ...newResult.modelProfile, ruleOverride: true } as any;
-			return newResult;
 		}
 
 		return result;

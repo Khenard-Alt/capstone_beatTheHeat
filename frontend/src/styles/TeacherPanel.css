@@ -371,6 +371,10 @@
   color: #64748b;
 }
 
+.teacher-chat-messages-wrap {
+  position: relative;
+}
+
 .teacher-chat-messages {
   display: flex;
   flex-direction: column;
@@ -378,6 +382,36 @@
   padding: 20px;
   max-height: 52vh;
   overflow-y: auto;
+}
+
+.teacher-chat-scroll-to-bottom {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid #dbeafe;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.16);
+  cursor: pointer;
+  z-index: 5;
+  animation: teacherScrollBtnPop 0.15s ease;
+}
+
+.teacher-chat-scroll-to-bottom:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+@keyframes teacherScrollBtnPop {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .teacher-chat-message {

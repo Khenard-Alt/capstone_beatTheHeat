@@ -38,3 +38,18 @@ export const uploadUserAvatar = async (userId: string, file: File): Promise<AppU
 
 	return data.user;
 };
+
+export const changeUserPassword = async (
+	userId: string,
+	newPassword: string,
+	currentPassword?: string
+): Promise<void> => {
+	const { data } = await apiClient.put<{ success: boolean; message?: string }>(
+		`/api/users/${userId}/password`,
+		{ currentPassword, newPassword }
+	);
+
+	if (!data.success) {
+		throw new Error(data.message || 'Failed to update password.');
+	}
+};

@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchParentMessages, sendParentMessage, type ParentMessage } from '../../services/parentMessages.service';
 import { fetchUsersByRole, type AppUser } from '../../services/users.service';
+import { apiClient } from '../../services/api';
 import { ParentSectionPage } from './ParentSectionPage';
 import '../../styles/ParentQuestionsConcerns.css';
 import '../../styles/Messenger.css';
@@ -13,6 +14,7 @@ type TeacherThread = {
   messages: ParentMessage[];
   preview: string;
   updatedAt: string | null;
+  isAdvisor: boolean;
 };
 
 const formatTime = (value?: string | null) => {
@@ -31,19 +33,29 @@ export const ParentQuestionsConcerns: React.FC = () => {
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [advisoryTeacherIds, setAdvisoryTeacherIds] = useState<Set<string>>(new Set());
 
   const currentParentId = user?.id ?? 'parent-1';
+  const hasLoadedOnce = useRef(false);
 
   const loadMessages = async () => {
     try {
-      setLoading(true);
-      const [messageData, teacherData] = await Promise.all([
+      if (!hasLoadedOnce.current) setLoading(true);
+      const [messageData, teacherData, studentsRes] = await Promise.all([
         fetchParentMessages({ limit: 100, offset: 0, parentId: currentParentId }),
         fetchUsersByRole('teacher'),
+        apiClient.get('/api/students', { params: { parentId: currentParentId } }),
       ]);
+
+      const advisoryIds = new Set<string>(
+        (studentsRes.data.students || [])
+          .map((student: { advisoryTeacherId?: string | null }) => student.advisoryTeacherId)
+          .filter((id: string | null | undefined): id is string => Boolean(id))
+      );
 
       setMessages(messageData);
       setTeachers(teacherData);
+      setAdvisoryTeacherIds(advisoryIds);
 
       setActiveTeacherId((current) => {
         if (current && teacherData.some((teacher) => teacher.id === current)) {
@@ -54,7 +66,11 @@ export const ParentQuestionsConcerns: React.FC = () => {
           messageData.some((message) => message.teacher_id === teacher.id)
         );
 
-        return threadWithHistory?.id || teacherData[0]?.id || '';
+        const advisoryTeacher = teacherData.find((teacher) => advisoryIds.has(teacher.id));
+        if (threadWithHistory) return threadWithHistory.id;
+        if (advisoryTeacher) return advisoryTeacher.id;
+
+        return teacherData[0]?.id || '';
       });
     } catch (error) {
       console.error('Failed to load parent messages:', error);
@@ -63,6 +79,7 @@ export const ParentQuestionsConcerns: React.FC = () => {
       setActiveTeacherId('');
     } finally {
       setLoading(false);
+      hasLoadedOnce.current = true;
     }
   };
 
@@ -93,9 +110,13 @@ export const ParentQuestionsConcerns: React.FC = () => {
         messages: threadMessages,
         preview: latestMessage?.body || 'Start a new conversation with this teacher.',
         updatedAt: latestMessage?.created_at || null,
+        isAdvisor: advisoryTeacherIds.has(teacher.id),
       };
+    }).sort((left, right) => {
+      if (left.isAdvisor !== right.isAdvisor) return left.isAdvisor ? -1 : 1;
+      return new Date(right.updatedAt || 0).getTime() - new Date(left.updatedAt || 0).getTime();
     });
-  }, [messages, teachers]);
+  }, [messages, teachers, advisoryTeacherIds]);
 
   const activeTeacher = useMemo(() => teachers.find((teacher) => teacher.id === activeTeacherId) ?? null, [activeTeacherId, teachers]);
   const activeThread = useMemo(() => teacherThreads.find((thread) => thread.id === activeTeacherId) ?? null, [activeTeacherId, teacherThreads]);
@@ -183,7 +204,7 @@ export const ParentQuestionsConcerns: React.FC = () => {
           <aside className="messenger-thread-rail">
             <div>
               <p className="parent-section-eyebrow">Recent Threads</p>
-              <p className="messenger-hint">Chats are grouped per teacher. Pick one thread, then send your follow-up below.</p>
+              <p className="messenger-hint">Chats are grouped per teacher. Your child's advisory teacher is pinned at the top.</p>
             </div>
 
             <div className="messenger-thread-list">
@@ -207,7 +228,7 @@ export const ParentQuestionsConcerns: React.FC = () => {
                       />
                       <div>
                         <div className="messenger-thread-title">{getDisplayName(thread.teacher)}</div>
-                        <div className="messenger-thread-subtitle">Teacher adviser</div>
+                        <div className="messenger-thread-subtitle">{thread.isAdvisor ? "Your child's advisory teacher" : 'Subject teacher'}</div>
                       </div>
                     </div>
                     <div className="messenger-thread-subtitle">{thread.messages.length} msgs</div>

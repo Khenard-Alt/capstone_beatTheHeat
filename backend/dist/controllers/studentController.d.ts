@@ -20,6 +20,11 @@ export declare const getStudentById: (req: Request, res: Response, _next: NextFu
  */
 export declare const createStudent: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 /**
+ * Update a student record (e.g. assign an advisory teacher)
+ * PUT /api/students/:id
+ */
+export declare const updateStudent: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+/**
  * Delete a student by ID
  * DELETE /api/students/:id
  */

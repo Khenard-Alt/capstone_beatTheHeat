@@ -164,6 +164,7 @@ const mapIncidentRow = (
     actionTaken: row.action_taken || null,
     reportedBy: reporterName || row.reporter_id || null,
     status: row.status || null,
+    resolvedAt: row.resolved_at || null,
     aiSuggestion: buildIncidentSuggestion({
       incidentType: row.type,
       description: row.description,
@@ -195,10 +196,13 @@ export const incidentsController = {
         return;
       }
 
+      // Intentionally school-wide, not filtered to the caller's own child —
+      // parents use this list to see whether *any* student had an incident,
+      // not just their own kid.
       // Read from the canonical `incidents` table and enrich with student info
       const { data: incidents, error: incidentsError, count } = await supabase
         .from('incidents')
-        .select('id, school_id, reporter_id, student_id, type, description, action_taken, heat_index_at_time, status, created_at', { count: 'exact' })
+        .select('id, school_id, reporter_id, student_id, type, description, action_taken, heat_index_at_time, status, created_at, resolved_at', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -270,6 +274,7 @@ export const incidentsController = {
             actionTaken: row.action_taken,
             reportedBy: row.reported_by,
             status: row.status,
+            resolvedAt: null,
             schoolId: row.school_id || null,
             reporterId: row.reporter_id || null,
             reporterName: row.reported_by || null,
@@ -401,7 +406,7 @@ export const incidentsController = {
 
       const { data, error } = await supabase
         .from('incidents')
-        .select('id, school_id, reporter_id, student_id, type, description, action_taken, heat_index_at_time, status, created_at')
+        .select('id, school_id, reporter_id, student_id, type, description, action_taken, heat_index_at_time, status, created_at, resolved_at')
         .eq('id', id)
         .single();
 
@@ -464,7 +469,10 @@ export const incidentsController = {
         const parsedHeatIndex = heatIndex === null || heatIndex === '' ? null : Number(heatIndex);
         updates.heat_index_at_time = Number.isFinite(parsedHeatIndex as number) ? parsedHeatIndex : null;
       }
-      if (typeof status === 'string' && status.trim()) updates.status = status.trim();
+      if (typeof status === 'string' && status.trim()) {
+        updates.status = status.trim();
+        updates.resolved_at = updates.status === 'resolved' ? new Date().toISOString() : null;
+      }
 
       if (Object.keys(updates).length === 0) {
         res.status(400).json({ success: false, message: 'No incident fields provided to update' });

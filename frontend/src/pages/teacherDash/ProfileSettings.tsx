@@ -1,23 +1,14 @@
 import React, { useState } from 'react';
-import { MdNotifications, MdPerson, MdSave } from 'react-icons/md';
+import { MdNotifications, MdPerson } from 'react-icons/md';
 import { Card } from '../../components/Card';
-import { AvatarUpload } from '../../components/AvatarUpload';
+import { ProfileInformationCard } from '../../components/ProfileInformationCard';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/TeacherPanel.css';
 
 const ProfileSettings: React.FC = () => {
   const { user } = useAuth();
-  const [displayName, setDisplayName] = useState(`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim());
-  const [email, setEmail] = useState(user?.email ?? '');
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [notifySms, setNotifySms] = useState(true);
-  const [defaultBrief, setDefaultBrief] = useState('Send me danger-level heat advisories and incident summaries.');
-  const [statusMessage, setStatusMessage] = useState('');
-
-  const handleSave = (event: React.FormEvent) => {
-    event.preventDefault();
-    setStatusMessage('Teacher settings updated locally. Connect this form to persistence when ready.');
-  };
 
   return (
     <div className="teacher-page-shell">
@@ -26,46 +17,11 @@ const ProfileSettings: React.FC = () => {
           <p className="teacher-eyebrow">Teacher panel</p>
           <h1>Profile / Settings</h1>
         </div>
-        <div className="teacher-hero-card">
-          <AvatarUpload size={44} />
-          <div>
-            <strong>{user?.role ?? 'teacher'}</strong>
-            <p>{user?.schoolId || 'school-1'}</p>
-          </div>
-        </div>
       </div>
 
       <div className="teacher-layout">
         <div className="teacher-main">
-          <Card title="Account details" className="teacher-panel-card">
-            <form onSubmit={handleSave} className="teacher-form-grid">
-              <div className="teacher-form-field">
-                <label htmlFor="displayName">Display name</label>
-                <input id="displayName" value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
-              </div>
-              <div className="teacher-form-field">
-                <label htmlFor="email">Email</label>
-                <input id="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-              </div>
-
-              <div className="teacher-form-field" style={{ gridColumn: '1 / -1' }}>
-                <label htmlFor="defaultBrief">Default safety brief</label>
-                <textarea id="defaultBrief" value={defaultBrief} onChange={(event) => setDefaultBrief(event.target.value)} />
-              </div>
-
-              <div className="teacher-form-actions" style={{ gridColumn: '1 / -1' }}>
-                <button type="submit" className="btn btn-primary">
-                  <MdSave /> Save settings
-                </button>
-              </div>
-
-              {statusMessage && (
-                <div className="teacher-sidebar-note" style={{ gridColumn: '1 / -1' }}>
-                  {statusMessage}
-                </div>
-              )}
-            </form>
-          </Card>
+          <ProfileInformationCard className="teacher-panel-card" />
 
           <Card title="Notification preferences" className="teacher-panel-card tone-success">
             <div className="teacher-section-grid">
@@ -79,10 +35,10 @@ const ProfileSettings: React.FC = () => {
                 <div className="teacher-info-copy">Get urgent danger-level warnings on mobile.</div>
                 <input type="checkbox" checked={notifySms} onChange={(event) => setNotifySms(event.target.checked)} style={{ marginTop: 10 }} />
               </label>
-              <div className="teacher-info-card">
+              {/* <div className="teacher-info-card">
                 <div className="teacher-info-label">Role</div>
                 <div className="teacher-info-value" style={{ fontSize: 16 }}>{user?.role || 'teacher'}</div>
-              </div>
+              </div> */}
             </div>
           </Card>
         </div>

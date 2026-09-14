@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
-import { MdSend, MdSmartToy, MdOutlineChat, MdRefresh, MdOpenInNew } from 'react-icons/md';
+import { MdSend, MdSmartToy, MdOutlineChat, MdRefresh, MdOpenInNew, MdKeyboardArrowDown } from 'react-icons/md';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
 import '../../styles/ParentPortalPages.css';
 
@@ -35,6 +35,25 @@ const Chatbot: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const el = messagesContainerRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isThinking]);
+
+  const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollToBottom(distanceFromBottom > 120);
+  };
 
   const scopePills = useMemo(() => ([
     'Incident triage',
@@ -96,22 +115,35 @@ const Chatbot: React.FC = () => {
             </div>
           </div>
 
-          <div className="parent-chatbot-messages">
-            {messages.map((message) => (
-              <div key={message.id} className={`parent-chatbot-message ${message.role === 'assistant' ? 'assistant' : 'parent'}`}>
-                <div className="parent-chatbot-avatar">{message.role === 'assistant' ? <MdSmartToy /> : <MdOutlineChat />}</div>
-                <div className="parent-chatbot-bubble">
-                  {message.meta && <span className="parent-chatbot-meta">{message.meta}</span>}
-                  <p>{message.text}</p>
+          <div className="parent-chatbot-messages-wrap">
+            <div className="parent-chatbot-messages" ref={messagesContainerRef} onScroll={handleMessagesScroll}>
+              {messages.map((message) => (
+                <div key={message.id} className={`parent-chatbot-message ${message.role === 'assistant' ? 'assistant' : 'parent'}`}>
+                  <div className="parent-chatbot-avatar">{message.role === 'assistant' ? <MdSmartToy /> : <MdOutlineChat />}</div>
+                  <div className="parent-chatbot-bubble">
+                    {message.meta && <span className="parent-chatbot-meta">{message.meta}</span>}
+                    <p>{message.text}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {isThinking && (
-              <div className="parent-chatbot-message assistant">
-                <div className="parent-chatbot-avatar"><MdSmartToy /></div>
-                <div className="parent-chatbot-bubble parent-chatbot-typing"><span>Thinking...</span></div>
-              </div>
+              {isThinking && (
+                <div className="parent-chatbot-message assistant">
+                  <div className="parent-chatbot-avatar"><MdSmartToy /></div>
+                  <div className="parent-chatbot-bubble parent-chatbot-typing"><span>Thinking...</span></div>
+                </div>
+              )}
+            </div>
+
+            {showScrollToBottom && (
+              <button
+                type="button"
+                className="parent-chatbot-scroll-to-bottom"
+                onClick={() => scrollToBottom()}
+                aria-label="Scroll to newest message"
+              >
+                <MdKeyboardArrowDown />
+              </button>
             )}
           </div>
 

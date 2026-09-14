@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { registerUser, loginUser, syncOAuthUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren, uploadAvatar, avatarUpload } from '../controllers/userController';
+import { registerUser, loginUser, syncOAuthUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren, uploadAvatar, avatarUpload, changePassword } from '../controllers/userController';
 
 const router: Router = express.Router();
 
@@ -70,6 +70,12 @@ router.put('/:id', updateUser);
  * Upload/replace a user's profile picture (multipart/form-data, field "avatar")
  */
 router.post('/:id/avatar', avatarUpload.single('avatar'), uploadAvatar);
+
+/**
+ * PUT /api/users/:id/password
+ * Change (or set, for Google-linked accounts) a user's password
+ */
+router.put('/:id/password', changePassword);
 
 /**
  * DELETE /api/users/:id

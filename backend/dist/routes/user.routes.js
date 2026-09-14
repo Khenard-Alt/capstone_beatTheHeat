@@ -63,6 +63,11 @@ router.put('/:id', userController_1.updateUser);
  */
 router.post('/:id/avatar', userController_1.avatarUpload.single('avatar'), userController_1.uploadAvatar);
 /**
+ * PUT /api/users/:id/password
+ * Change (or set, for Google-linked accounts) a user's password
+ */
+router.put('/:id/password', userController_1.changePassword);
+/**
  * DELETE /api/users/:id
  * Delete a user by ID
  */

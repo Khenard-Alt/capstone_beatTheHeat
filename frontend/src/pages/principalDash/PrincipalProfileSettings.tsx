@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { MdOpenInNew, MdTv, MdCampaign, MdSave } from 'react-icons/md';
 import { Card } from '../../components/Card';
-import { AvatarUpload } from '../../components/AvatarUpload';
-import { useAuth } from '../../hooks/useAuth';
+import { ProfileInformationCard } from '../../components/ProfileInformationCard';
 import { apiClient } from '../../services/api';
 import '../../styles/AdminDashboard.css';
 
 const PrincipalProfileSettings: React.FC = () => {
-  const { user } = useAuth();
   const [alertActive, setAlertActive] = useState(false);
   const [alertTitle, setAlertTitle] = useState('CLASS SUSPENSION');
   const [alertMessage, setAlertMessage] = useState('All classes are suspended.');
@@ -77,18 +75,7 @@ const PrincipalProfileSettings: React.FC = () => {
       </div>
 
       <div style={{ padding: 16 }}>
-        <Card title="Account Settings">
-          <div style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
-            <AvatarUpload size={64} />
-            <div>
-              <strong style={{ display: 'block', color: '#0f172a' }}>{user?.firstName} {user?.lastName}</strong>
-              <p style={{ margin: '4px 0 0' }}>{user?.email}</p>
-            </div>
-          </div>
-          <div style={{ padding: '0 12px 12px' }}>
-            <p>Profile editing is handled through the main account settings screen.</p>
-          </div>
-        </Card>
+        <ProfileInformationCard />
 
         <div style={{ marginTop: 16 }}>
           <Card title="Class Suspension Alert (temporary manual override)">

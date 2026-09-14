@@ -10,17 +10,15 @@ import { apiClient } from '../../services/api';
 import { fetchAnnouncements } from '../../services/announcements.service'; import type { Announcement } from '../../services/announcements.service';
 import { fetchIncidents } from '../../services/incidents.service';
 import { fetchCurrentWeather } from '../../services/weather.service';
-import { fetchRealtimeAdvisory, generateScopedAdvisory } from '../../services/healthAdvisory.service';
+import { fetchRealtimeAdvisory } from '../../services/healthAdvisory.service';
 import type { HeatIndexData, WeatherData, HealthAdvisory, StudentHealthIncident } from '../../types';
-import { calculateHeatIndex, getHeatLevel } from '../../utils/helpers';
+import { getHeatLevel } from '../../utils/helpers';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { mapRealtimeAdvisory } from '../../utils/advisory';
 import type { IncidentRecord } from '../../services/incidents.service';
 import {
   MdClose,
-  MdSend,
-  MdChat,
   MdSearch,
   MdThermostat,
   MdWaterDrop,
@@ -33,16 +31,6 @@ import {
 } from 'react-icons/md';
 import '../../styles/ParentDashboard.css';
 import '../../styles/PredictiveHeatReport.css';
-
-interface ParentChatMessage {
-  id: number;
-  sender: 'parent' | 'ai';
-  text: string;
-  intentLabel?: string;
-  confidenceScore?: number;
-}
-
-type SmallTalkIntent = 'greeting' | 'thanks' | 'capability' | null;
 
 const normalizeIncidentType = (value?: string): StudentHealthIncident['incidentType'] => {
   const allowedTypes: StudentHealthIncident['incidentType'][] = [
@@ -97,7 +85,17 @@ const mapIncidentRecord = (incident: IncidentRecord): StudentHealthIncident => (
   actionTaken: incident.actionTaken ?? incident.description ?? 'No action recorded',
   reportedBy: incident.reporterName ?? incident.reportedBy ?? 'Unknown reporter',
   status: normalizeStatus(incident.status),
+  resolvedAt: incident.resolvedAt ?? null,
 });
+
+const RESOLVED_VISIBILITY_MS = 24 * 60 * 60 * 1000;
+
+const isVisibleToParent = (incident: StudentHealthIncident): boolean => {
+  if (incident.status !== 'resolved') return true;
+  const resolvedAt = incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : null;
+  if (!resolvedAt || Number.isNaN(resolvedAt)) return true;
+  return Date.now() - resolvedAt < RESOLVED_VISIBILITY_MS;
+};
 
 export const ParentDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -105,36 +103,10 @@ export const ParentDashboard: React.FC = () => {
   const [todayTrend, setTodayTrend] = useState<TodayTrendPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [showParentPopup, setShowParentPopup] = useState(false);
-  const [showParentChat, setShowParentChat] = useState(false);
   const [hasTriggeredInitialAlert, setHasTriggeredInitialAlert] = useState(false);
   const [incidentSearchTerm, setIncidentSearchTerm] = useState('');
-  const [incidentStatusFilter, setIncidentStatusFilter] = useState<'all' | 'reported' | 'treated' | 'monitoring' | 'resolved' | 'pending'>('all');
-  const [parentQuestion, setParentQuestion] = useState('');
-  const [isAskingAI, setIsAskingAI] = useState(false);
+  const [incidentStatusFilter, setIncidentStatusFilter] = useState<'all' | 'reported' | 'treated' | 'monitoring' | 'resolved'>('all');
   const [lastNotifiedLevel, setLastNotifiedLevel] = useState<string>('normal');
-  const [parentChatMessages, setParentChatMessages] = useState<ParentChatMessage[]>([
-    {
-      id: 1,
-      sender: 'ai',
-      text: 'Hello parent. I can explain heat advisories and suggest practical safety actions based on current school heat conditions.',
-    },
-  ]);
-
-  const quickQuestionChoices = [
-    'What should my child bring for today due to heat?',
-    'Is outdoor activity safe for students this afternoon?',
-    'May class suspension ba if tumaas pa heat index?',
-    'What signs of heat exhaustion should I watch for?',
-    'Tagalog: Ano ang dapat gawin kapag sobrang init?',
-    'Can students still join PE today?',
-    'How often should my child drink water in this weather?',
-    'What should parents do during danger heat level?',
-    'Hi, what can you do for parents?',
-    'Salamat, can I ask one more question?',
-    'My child feels dizzy after outdoor activity. What should we do now?',
-    'Open ba school tomorrow if the heat gets worse?',
-    'Taglish: safe ba mag-recess sa ganitong init?',
-  ];
 
   const ANNOUNCEMENTS_PAGE_SIZE = 10;
 
@@ -266,8 +238,11 @@ export const ParentDashboard: React.FC = () => {
     const load = async () => {
       try {
         setIncidentsLoading(true);
+        // Intentionally school-wide (not scoped to this parent's own
+        // children) — parents use this to see whether any student had an
+        // incident, not just their own kid.
         const data = await fetchIncidents(20, 0);
-        if (mounted) setHealthIncidents(data.map(mapIncidentRecord));
+        if (mounted) setHealthIncidents(data.map(mapIncidentRecord).filter(isVisibleToParent));
       } catch (err) {
         if (mounted) setHealthIncidents([]);
       } finally {
@@ -294,7 +269,11 @@ export const ParentDashboard: React.FC = () => {
       };
     }
 
-    const heatIndex = calculateHeatIndex(currentWeather.temperature, currentWeather.humidity);
+    // Use the server's own heat index (feelsLike) instead of recomputing it
+    // client-side — a local recalculation from raw temp/humidity can drift
+    // from the server's value and disagree with the level it already
+    // classified, which is exactly what the Heat Index card displays.
+    const heatIndex = currentWeather.feelsLike;
     const level = getHeatLevel(heatIndex);
 
     return {
@@ -339,7 +318,7 @@ export const ParentDashboard: React.FC = () => {
   }, [heatIndexData.level, lastNotifiedLevel]);
 
   useEffect(() => {
-    if (hasTriggeredInitialAlert || loading || !currentWeather || showParentChat) {
+    if (hasTriggeredInitialAlert || loading || !currentWeather) {
       return;
     }
 
@@ -349,7 +328,7 @@ export const ParentDashboard: React.FC = () => {
     }, 2000);
 
     return () => window.clearTimeout(timer);
-  }, [hasTriggeredInitialAlert, loading, currentWeather, showParentChat]);
+  }, [hasTriggeredInitialAlert, loading, currentWeather]);
 
   const parentPopupTitle = useMemo(() => {
     if (heatIndexData.level === 'danger' || heatIndexData.level === 'extreme-danger') {
@@ -363,160 +342,13 @@ export const ParentDashboard: React.FC = () => {
     return 'Heat Caution Notice';
   }, [heatIndexData.level]);
 
+  // Routes "Ask AI Now" to the single global Smart AI Advisory Bot (see
+  // App.tsx) instead of a second, separately-built chat — there used to be
+  // two parallel AI chat UIs on this page, and the other one gave less
+  // accurate answers since it duplicated (and drifted from) the real one.
   const openParentChat = (): void => {
     setShowParentPopup(false);
-    setShowParentChat(true);
-  };
-
-  const detectSmallTalkIntent = (text: string): SmallTalkIntent => {
-    const lowered = text.toLowerCase().trim();
-    const compact = lowered.replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
-
-    if (
-      ['hi', 'hello', 'hey', 'yo', 'kumusta', 'kamusta', 'good morning', 'good afternoon', 'good evening']
-        .some((token) => compact === token || compact.startsWith(token + ' '))
-    ) {
-      return 'greeting';
-    }
-
-    if (['thank you', 'thanks', 'salamat', 'ty'].some((token) => compact.includes(token))) {
-      return 'thanks';
-    }
-
-    if (
-      ['ano kaya mo', 'what can you do', 'help', 'scope', 'kaya mo', 'anong pwede itanong']
-        .some((token) => compact.includes(token))
-    ) {
-      return 'capability';
-    }
-
-    return null;
-  };
-
-  const buildSmallTalkResponse = (intent: SmallTalkIntent): string => {
-    if (intent === 'greeting') {
-      return [
-        `Kumusta po. Ang current heat index ay ${heatIndexData.heatIndex.toFixed(1)}°C (${heatIndexData.level}).`,
-        'Maaari akong sumagot sa heat-safety questions para sa anak ninyo at magbigay ng school-safe na hakbang.',
-      ].join(' ');
-    }
-
-    if (intent === 'thanks') {
-      return 'Walang anuman po. Maaari ninyo akong tanungin kahit kailan tungkol sa heat level, class safety, hydration, at parent precautions.';
-    }
-
-    return [
-      'Makakatulong ako sa heat advisories lang: class activity safety, parent precautions, warning signs, hydration, at class suspension guidance base sa heat level.',
-      'Maaari kayong magtanong sa Tagalog, English, o Taglish.',
-    ].join(' ');
-  };
-
-  const detectExplainabilityIntent = (text: string): string => {
-    const lowered = text.toLowerCase();
-
-    if (/(dizzy|nahihilo|heat exhaustion|faint|collapse|hilo|urgent|emergency)/i.test(lowered)) {
-      return 'Urgent Health Guidance';
-    }
-
-    if (/(outdoor|pe|recess|activity|laro|safe|ligtas)/i.test(lowered)) {
-      return 'Outdoor Activity Safety';
-    }
-
-    if (/(suspension|suspend|open ba|open|class|pasok|school status|schedule)/i.test(lowered)) {
-      return 'School Operations';
-    }
-
-    if (/(water|hydration|inom|dehydration|drink)/i.test(lowered)) {
-      return 'Hydration Advice';
-    }
-
-    return 'General Heat Advisory';
-  };
-
-  const toPercentScore = (value?: number): number | undefined => {
-    if (typeof value !== 'number' || Number.isNaN(value)) {
-      return undefined;
-    }
-
-    return Math.round(Math.min(1, Math.max(0, value)) * 100);
-  };
-
-  const getSmallTalkIntentLabel = (intent: SmallTalkIntent): string => {
-    if (intent === 'greeting') {
-      return 'Greeting';
-    }
-
-    if (intent === 'thanks') {
-      return 'Acknowledgement';
-    }
-
-    return 'Capability Check';
-  };
-
-  const askParentAdvisoryAI = async (presetQuestion?: string): Promise<void> => {
-    const text = (presetQuestion ?? parentQuestion).trim();
-    if (!text || isAskingAI) {
-      return;
-    }
-
-    const userMessage: ParentChatMessage = {
-      id: Date.now(),
-      sender: 'parent',
-      text,
-    };
-
-    setParentChatMessages((prev) => [...prev, userMessage]);
-    setParentQuestion('');
-    setIsAskingAI(true);
-
-    const smallTalkIntent = detectSmallTalkIntent(text);
-    if (smallTalkIntent) {
-      const aiSmallTalk: ParentChatMessage = {
-        id: Date.now() + 1,
-        sender: 'ai',
-        text: buildSmallTalkResponse(smallTalkIntent),
-        intentLabel: getSmallTalkIntentLabel(smallTalkIntent),
-        confidenceScore: 98,
-      };
-
-      window.setTimeout(() => {
-        setParentChatMessages((prev) => [...prev, aiSmallTalk]);
-        setIsAskingAI(false);
-      }, 700);
-
-      return;
-    }
-
-    try {
-      const scoped = await generateScopedAdvisory(text);
-      const aiMessage: ParentChatMessage = {
-        id: Date.now() + 1,
-        sender: 'ai',
-        text: [
-          scoped.summary,
-          '',
-          `Antas ng panganib: ${scoped.riskLevel}`,
-          ...scoped.actions.slice(0, 3).map((action) => `- ${action}`),
-          '',
-          scoped.scopeNote,
-        ].join('\n'),
-        intentLabel: detectExplainabilityIntent(text),
-        confidenceScore: toPercentScore(scoped.confidenceScore),
-      };
-      setParentChatMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      console.error('Parent AI advisory request failed:', error);
-      const fallbackMessage: ParentChatMessage = {
-        id: Date.now() + 1,
-        sender: 'ai',
-        text: 'Hindi ako makakonekta sa advisory service ngayon. Paki-check ang latest heat alert at sundin ang school guidance habang nagre-reconnect.',
-        intentLabel: 'Service Fallback',
-        confidenceScore: 64,
-      };
-      setParentChatMessages((prev) => [...prev, fallbackMessage]);
-    } finally {
-      setIsAskingAI(false);
-    }
+    window.dispatchEvent(new CustomEvent('bth:open-advisory-bot'));
   };
 
   // Real hourly heat index trend for today, fetched from the backend logs.
@@ -582,7 +414,6 @@ export const ParentDashboard: React.FC = () => {
                 >
                   <option value="all">All status</option>
                   <option value="reported">Reported</option>
-                  <option value="pending">Pending</option>
                   <option value="monitoring">Monitoring</option>
                   <option value="treated">Treated</option>
                   <option value="resolved">Resolved</option>
@@ -808,91 +639,6 @@ export const ParentDashboard: React.FC = () => {
         </div>
       )}
 
-      {!showParentPopup && !showParentChat && null}
-
-      {showParentChat && (
-        <div className="parent-chat-panel">
-          <div className="parent-chat-header">
-            <div className="parent-chat-title-wrap">
-              <MdChat className="parent-chat-icon" />
-              <div>
-                <h3>Parent Advisory AI</h3>
-                <p>Heat-safety guidance for parents</p>
-              </div>
-            </div>
-            <button
-              className="parent-chat-close"
-              onClick={() => setShowParentChat(false)}
-              title="Close parent advisory chat"
-              aria-label="Close parent advisory chat"
-            >
-              <MdClose />
-            </button>
-          </div>
-
-          <div className="parent-chat-messages">
-            {parentChatMessages.map((message) => (
-              <div key={message.id} className={`parent-chat-message ${message.sender}`}>
-                <div className="parent-chat-bubble">
-                  {message.sender === 'ai' && (message.intentLabel || typeof message.confidenceScore === 'number') && (
-                    <div className="parent-chat-meta-row">
-                      {message.intentLabel && <span className="parent-intent-label">{message.intentLabel}</span>}
-                      {typeof message.confidenceScore === 'number' && (
-                        <span className="parent-confidence-badge">Confidence {message.confidenceScore}%</span>
-                      )}
-                    </div>
-                  )}
-                  {message.text}
-                </div>
-              </div>
-            ))}
-
-            {isAskingAI && (
-              <div className="parent-chat-message ai">
-                <div className="parent-chat-bubble parent-typing-bubble" aria-live="polite" aria-label="AI is typing">
-                  <span className="parent-typing-text">Typing</span>
-                  <span className="parent-typing-dots">
-                    <span className="dot" />
-                    <span className="dot" />
-                    <span className="dot" />
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="parent-chat-quick-actions">
-            {quickQuestionChoices.map((question) => (
-              <button key={question} onClick={() => askParentAdvisoryAI(question)}>
-                {question}
-              </button>
-            ))}
-          </div>
-
-          <div className="parent-chat-input-row">
-            <input
-              type="text"
-              value={parentQuestion}
-              onChange={(event) => setParentQuestion(event.target.value)}
-              placeholder="Ask about your child heat safety..."
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  void askParentAdvisoryAI();
-                }
-              }}
-            />
-            <button
-              className="parent-chat-send"
-              onClick={() => void askParentAdvisoryAI()}
-              disabled={!parentQuestion.trim() || isAskingAI}
-              title="Send question"
-              aria-label="Send question"
-            >
-              <MdSend />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

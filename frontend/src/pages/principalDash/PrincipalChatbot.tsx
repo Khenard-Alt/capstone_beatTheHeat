@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
-import { MdOutlineChat, MdRefresh, MdSend, MdSmartToy } from 'react-icons/md';
+import { MdOutlineChat, MdRefresh, MdSend, MdSmartToy, MdKeyboardArrowDown } from 'react-icons/md';
 import '../../styles/ParentPortalPages.css';
 
 type Message = { id: number; sender: 'principal' | 'assistant'; text: string; meta?: string };
@@ -26,6 +26,26 @@ const PrincipalChatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, sender: 'assistant', text: 'I am the principal heat-safety assistant. I can help with school-wide decisions, staff coordination, official notices, and escalation.', meta: 'Principal decision support' },
   ]);
+
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const el = messagesContainerRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, thinking]);
+
+  const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollToBottom(distanceFromBottom > 120);
+  };
 
   const scope = useMemo(() => ['School-wide controls', 'Staff coordination', 'Official notices', 'Escalation records'], []);
 
@@ -53,7 +73,7 @@ const PrincipalChatbot: React.FC = () => {
         '',
         advisory.scopeNote,
       ].join('\n');
-      setMessages((current) => [...current, { id: Date.now() + 1, sender: 'assistant', text: reply, meta: 'Generated from trained heat-risk context + principal role guidance' }]);
+      setMessages((current) => [...current, { id: Date.now() + 1, sender: 'assistant', text: reply }]);
     } catch (error) {
       console.error('Principal chatbot request failed:', error);
       setMessages((current) => [...current, { id: Date.now() + 1, sender: 'assistant', text: 'The advisory service is unavailable. Review the current heat index, school policy, and latest incident reports before changing operations.', meta: 'Fallback response' }]);
@@ -82,14 +102,27 @@ const PrincipalChatbot: React.FC = () => {
             <div><h2>Leadership conversation</h2><p>Ask for decisions, notices, coordination steps, or incident follow-up.</p></div>
             <Button variant="outline" size="small" icon={<MdRefresh />} onClick={() => setMessages((current) => current.slice(0, 1))}>Reset Chat</Button>
           </div>
-          <div className="parent-chatbot-messages">
-            {messages.map((message) => (
-              <div key={message.id} className={`parent-chatbot-message ${message.sender === 'assistant' ? 'assistant' : 'parent'}`}>
-                <div className="parent-chatbot-avatar">{message.sender === 'assistant' ? <MdSmartToy /> : <MdOutlineChat />}</div>
-                <div className="parent-chatbot-bubble">{message.meta && <span className="parent-chatbot-meta">{message.meta}</span>}<p style={{ whiteSpace: 'pre-wrap' }}>{message.text}</p></div>
-              </div>
-            ))}
-            {thinking && <div className="parent-chatbot-message assistant"><div className="parent-chatbot-avatar"><MdSmartToy /></div><div className="parent-chatbot-bubble parent-chatbot-typing">Reviewing heat and school context...</div></div>}
+          <div className="parent-chatbot-messages-wrap">
+            <div className="parent-chatbot-messages" ref={messagesContainerRef} onScroll={handleMessagesScroll}>
+              {messages.map((message) => (
+                <div key={message.id} className={`parent-chatbot-message ${message.sender === 'assistant' ? 'assistant' : 'parent'}`}>
+                  <div className="parent-chatbot-avatar">{message.sender === 'assistant' ? <MdSmartToy /> : <MdOutlineChat />}</div>
+                  <div className="parent-chatbot-bubble">{message.meta && <span className="parent-chatbot-meta">{message.meta}</span>}<p style={{ whiteSpace: 'pre-wrap' }}>{message.text}</p></div>
+                </div>
+              ))}
+              {thinking && <div className="parent-chatbot-message assistant"><div className="parent-chatbot-avatar"><MdSmartToy /></div><div className="parent-chatbot-bubble parent-chatbot-typing">Reviewing heat and school context...</div></div>}
+            </div>
+
+            {showScrollToBottom && (
+              <button
+                type="button"
+                className="parent-chatbot-scroll-to-bottom"
+                onClick={() => scrollToBottom()}
+                aria-label="Scroll to newest message"
+              >
+                <MdKeyboardArrowDown />
+              </button>
+            )}
           </div>
           <div className="parent-chatbot-prompts">{prompts.map((prompt) => <button key={prompt} type="button" onClick={() => void ask(prompt)}>{prompt}</button>)}</div>
           <div className="parent-chatbot-input-row">
