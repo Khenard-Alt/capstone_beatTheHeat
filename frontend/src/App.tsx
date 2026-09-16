@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { TemperatureUnitProvider } from './context/TemperatureUnitContext';
 import { useAuth } from './hooks/useAuth';
 import { Sidebar } from './components/sidebar/Sidebar';
 import { Footer } from './components/Footer';
@@ -44,6 +45,8 @@ import TeacherMessages from './pages/teacherDash/Messages';
 import TeacherStaffMessages from './pages/teacherDash/StaffMessages';
 import TeacherChatbot from './pages/teacherDash/Chatbot';
 import TeacherProfileSettings from './pages/teacherDash/ProfileSettings';
+import { apiClient } from './services/api';
+import { applyHeatThresholds } from './utils/constants';
 import './App.css';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -200,14 +203,28 @@ const HomeRoute: React.FC = () => {
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth > 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth > 1024);
+
+  // The initial state only reflects the viewport at first mount — if the
+  // window is later resized (or a device is rotated/emulated) down to
+  // mobile width while the sidebar was already open, nothing closed it,
+  // leaving the drawer stuck open and covering the page.
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 1024) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="app-layout">
       <div className="app-container">
         <button
           type="button"
-          className="sidebar-toggle-btn"
+          className={`sidebar-toggle-btn${isSidebarOpen ? ' sidebar-toggle-btn-open' : ''}`}
           onClick={() => setIsSidebarOpen((open) => !open)}
           aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={isSidebarOpen}
@@ -231,7 +248,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           isOpen={isSidebarOpen}
           userRole={user?.role}
           onLogout={logout}
-          onNavigate={() => setIsSidebarOpen(window.innerWidth > 768)}
+          onNavigate={() => setIsSidebarOpen(window.innerWidth > 1024)}
         />
 
         <main className="app-main">
@@ -663,13 +680,30 @@ const AppRoutes: React.FC = () => {
 };
 
 function App() {
+  useEffect(() => {
+    const loadHeatThresholds = async () => {
+      try {
+        const { data } = await apiClient.get('/api/admin/heat-thresholds');
+        if (data?.thresholds) {
+          applyHeatThresholds(data.thresholds);
+        }
+      } catch (err) {
+        console.error('Failed to load heat index thresholds:', err);
+      }
+    };
+
+    void loadHeatThresholds();
+  }, []);
+
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ThemeProvider>
         <AuthProvider>
-          <NotificationProvider>
-            <AppRoutes />
-          </NotificationProvider>
+          <TemperatureUnitProvider>
+            <NotificationProvider>
+              <AppRoutes />
+            </NotificationProvider>
+          </TemperatureUnitProvider>
         </AuthProvider>
       </ThemeProvider>
     </Router>

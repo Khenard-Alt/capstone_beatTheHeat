@@ -24,6 +24,7 @@
   color: #eff6ff;
   background: linear-gradient(135deg, #0f766e 0%, #0f172a 55%, #1d4ed8 100%);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  min-width: 0;
 }
 
 .parent-portal-hero h1,
@@ -239,7 +240,7 @@
 
 .parent-card-large {
   grid-column: span 2;
-  min-width: 420px;
+  min-width: 0;
 }
 
 /* Information stays on the left as one tall card; Change Password,
@@ -258,8 +259,189 @@
 }
 
 @media (max-width: 900px) {
+  .parent-portal-hero,
+  .parent-chatbot-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parent-portal-hero-card,
+  .parent-chatbot-scope-card {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .parent-card-large {
+    grid-column: auto;
+  }
+
   .parent-portal-sections-split {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .parent-portal-page,
+  .parent-chatbot-page,
+  .parent-profile-settings-page {
+    gap: 16px;
+  }
+
+  .parent-portal-hero,
+  .parent-chatbot-hero {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .parent-portal-hero h1,
+  .parent-chatbot-hero h1 {
+    font-size: 28px;
+  }
+
+  .parent-portal-accordion,
+  .parent-portal-sections.parent-portal-accordion,
+  .parent-chatbot-accordion-row {
+    grid-template-columns: 1fr;
+  }
+
+  .parent-portal-accordion-trigger,
+  .parent-portal-accordion-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .parent-portal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parent-profile-identity {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .parent-profile-grid,
+  .parent-password-inline {
+    grid-template-columns: 1fr;
+  }
+
+  .parent-password-inline {
+    padding: 12px;
+  }
+
+  .parent-profile-actions {
+    justify-content: stretch;
+  }
+
+  .parent-profile-actions .btn {
+    width: 100%;
+  }
+
+  /* Messenger-style mobile chat: only the conversation scrolls. */
+  .parent-chatbot-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .parent-chatbot-main {
+    min-width: 0;
+    height: min(72dvh, 680px);
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .parent-chatbot-header {
+    padding: 14px 14px 10px;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .parent-chatbot-header p {
+    display: none;
+  }
+
+  .parent-chatbot-header h2 {
+    margin-bottom: 0;
+    font-size: 18px;
+  }
+
+  .parent-chatbot-messages-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .parent-chatbot-messages {
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+    padding: 14px 12px;
+    gap: 10px;
+  }
+
+  .parent-chatbot-message {
+    gap: 8px;
+  }
+
+  .parent-chatbot-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .parent-chatbot-bubble {
+    max-width: calc(100% - 40px);
+    padding: 11px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .parent-chatbot-prompts {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 10px 12px;
+    gap: 8px;
+    border-top: 1px solid #eef2f7;
+    border-bottom: 1px solid #eef2f7;
+    scrollbar-width: thin;
+    flex-shrink: 0;
+  }
+
+  .parent-chatbot-prompts button {
+    flex: 0 0 auto;
+    max-width: 220px;
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .parent-chatbot-input-row {
+    padding: 10px 12px 12px;
+    gap: 8px;
+    flex-shrink: 0;
+    background: #fff;
+  }
+
+  .parent-chatbot-input-row input {
+    min-width: 0;
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  .parent-chatbot-input-row .btn {
+    flex: 0 0 auto;
+    min-width: 72px;
+    padding-inline: 12px;
+  }
+
+  .parent-chatbot-side {
+    order: 2;
   }
 }
 
@@ -613,6 +795,11 @@
   gap: 16px;
 }
 
+.parent-profile-grid > *,
+.parent-password-inline > * {
+  min-width: 0;
+}
+
 /* Allow grid children inputs to shrink and avoid overflow into adjacent columns */
 .parent-profile-grid input,
 .parent-profile-grid .parent-info-input {
@@ -646,6 +833,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
+}
+
+.parent-password-inline .parent-info-input {
+  width: 100%;
 }
 
 .parent-password-google-note {

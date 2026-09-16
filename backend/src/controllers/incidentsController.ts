@@ -5,6 +5,7 @@ import { aiAnalysisService } from '../services/aiAnalysis.service';
 import { weatherService } from '../services/weather.service';
 import { getSupabaseAdminClient } from '../config/supabase';
 import { sendEmail, buildAnnouncementHtml } from '../services/email.service';
+import { prefersNotificationChannel } from '../utils/notificationPreferences';
 
 const LOCAL_LOG = path.resolve(process.cwd(), 'logs', 'health-incidents.jsonl');
 
@@ -360,19 +361,23 @@ export const incidentsController = {
               const { data: studentRows } = await supabase.from('students').select('parent_user_id').eq('id', payload.student_id).limit(1).single();
               const parentId = studentRows?.parent_user_id;
               if (parentId) {
-                const { data: parent } = await supabase.from('users').select('email').eq('id', parentId).limit(1).single();
-                if (parent?.email) await sendEmail(parent.email, subject, html);
+                const { data: parent } = await supabase.from('users').select('email, metadata').eq('id', parentId).limit(1).single();
+                if (parent?.email && prefersNotificationChannel(parent.metadata, 'email')) await sendEmail(parent.email, subject, html);
               }
             } else {
-              const { data: parents } = await supabase.from('users').select('email').eq('role', 'parent');
-              const parentEmails = (parents || []).map((p: any) => p.email).filter(Boolean);
+              const { data: parents } = await supabase.from('users').select('email, metadata').eq('role', 'parent');
+              const parentEmails = (parents || [])
+                .filter((p: any) => p.email && prefersNotificationChannel(p.metadata, 'email'))
+                .map((p: any) => p.email);
               if (parentEmails.length > 0) await sendEmail(parentEmails, subject, html);
             }
           }
 
           if (notifyTeachers) {
-            const { data: teachers } = await supabase.from('users').select('email').eq('role', 'teacher');
-            const teacherEmails = (teachers || []).map((t: any) => t.email).filter(Boolean);
+            const { data: teachers } = await supabase.from('users').select('email, metadata').eq('role', 'teacher');
+            const teacherEmails = (teachers || [])
+              .filter((t: any) => t.email && prefersNotificationChannel(t.metadata, 'email'))
+              .map((t: any) => t.email);
             if (teacherEmails.length > 0) await sendEmail(teacherEmails, subject, html);
           }
         }
@@ -514,19 +519,23 @@ export const incidentsController = {
               const { data: studentRows } = await supabase.from('students').select('parent_user_id').eq('id', data.student_id).limit(1).single();
               const parentId = studentRows?.parent_user_id;
               if (parentId) {
-                const { data: parent } = await supabase.from('users').select('email').eq('id', parentId).limit(1).single();
-                if (parent?.email) await sendEmail(parent.email, subject, html);
+                const { data: parent } = await supabase.from('users').select('email, metadata').eq('id', parentId).limit(1).single();
+                if (parent?.email && prefersNotificationChannel(parent.metadata, 'email')) await sendEmail(parent.email, subject, html);
               }
             } else {
-              const { data: parents } = await supabase.from('users').select('email').eq('role', 'parent');
-              const parentEmails = (parents || []).map((p: any) => p.email).filter(Boolean);
+              const { data: parents } = await supabase.from('users').select('email, metadata').eq('role', 'parent');
+              const parentEmails = (parents || [])
+                .filter((p: any) => p.email && prefersNotificationChannel(p.metadata, 'email'))
+                .map((p: any) => p.email);
               if (parentEmails.length > 0) await sendEmail(parentEmails, subject, html);
             }
           }
 
           if (notifyTeachers) {
-            const { data: teachers } = await supabase.from('users').select('email').eq('role', 'teacher');
-            const teacherEmails = (teachers || []).map((t: any) => t.email).filter(Boolean);
+            const { data: teachers } = await supabase.from('users').select('email, metadata').eq('role', 'teacher');
+            const teacherEmails = (teachers || [])
+              .filter((t: any) => t.email && prefersNotificationChannel(t.metadata, 'email'))
+              .map((t: any) => t.email);
             if (teacherEmails.length > 0) await sendEmail(teacherEmails, subject, html);
           }
         }

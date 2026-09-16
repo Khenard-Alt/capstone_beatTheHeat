@@ -6,7 +6,7 @@ import { Chart } from '../components/Chart';
 import { Card } from '../components/Card';
 import { useAuth } from '../hooks/useAuth';
 import type { HeatIndexData, WeatherData, HealthAdvisory, StudentHealthIncident } from '../types';
-import { calculateHeatIndex, getHeatLevel, getGreeting } from '../utils/helpers';
+import { calculateHeatIndex, getGreeting } from '../utils/helpers';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../utils/formatters';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../utils/constants';
 import { FaHeartbeat, FaExclamationTriangle, FaCheckCircle, FaClock } from 'react-icons/fa';
@@ -30,6 +30,8 @@ export const Dashboard: React.FC = () => {
     windSpeed: 12.5,
     pressure: 1013,
     timestamp: new Date().toISOString(),
+    heatIndexC: 38,
+    heatLevel: 'extreme-caution',
   });
 
   // Store weather history for real-time charts
@@ -105,16 +107,13 @@ export const Dashboard: React.FC = () => {
 
   // Calculate heat index data
   const heatIndexData = useMemo<HeatIndexData>(() => {
-    const heatIndex = calculateHeatIndex(currentWeather.temperature, currentWeather.humidity);
-    const level = getHeatLevel(heatIndex);
-
     return {
       id: '1',
       schoolId: 'school-1',
       temperature: currentWeather.temperature,
       humidity: currentWeather.humidity,
-      heatIndex,
-      level,
+      heatIndex: currentWeather.heatIndexC,
+      level: currentWeather.heatLevel,
       timestamp: new Date().toISOString(),
     };
   }, [currentWeather]);

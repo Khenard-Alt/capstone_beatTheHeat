@@ -3,16 +3,20 @@
 .sidebar {
   width: 280px;
   height: 100vh;
+  height: 100dvh;
   background: white;
-  position: fixed;
+  position: fixed !important;
   left: 0;
-  top: 0;
+  top: 0 !important;
+  bottom: 0 !important;
+  right: auto;
   display: flex;
   flex-direction: column;
   box-shadow: 4px 0 16px rgba(0, 0, 0, 0.08);
   z-index: 1000;
   transition: transform 0.3s ease;
   border-right: 2px solid #e2e8f0;
+  overflow: hidden;
 }
 
 .sidebar-header {
@@ -540,7 +544,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);
     width: min(280px, 82vw);
@@ -548,6 +552,19 @@
 
   .sidebar-open {
     transform: translateX(0);
+  }
+
+  /* Mobile has no dependable hover state, so keep the account actions visible. */
+  .sidebar-user {
+    transform: translateY(0) translateZ(0);
+  }
+
+  .sidebar-logout-btn,
+  .sidebar-user-wrap .sidebar-logout-btn,
+  .sidebar-user-wrap:hover .sidebar-logout-btn {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
 
   .sidebar-toggle-btn {
@@ -565,6 +582,13 @@
     box-shadow: 0 4px 14px rgba(2, 6, 23, 0.18);
     z-index: 1100;
     cursor: pointer;
+  }
+
+  /* While the drawer is open, the button sits over the sidebar's own logo
+     at top-left — move it to the opposite corner instead of overlapping it. */
+  .sidebar-toggle-btn-open {
+    left: auto;
+    right: 14px;
   }
 
   .sidebar-toggle-bars {

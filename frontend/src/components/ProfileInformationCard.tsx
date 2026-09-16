@@ -5,7 +5,7 @@ import { AvatarUpload } from './AvatarUpload';
 import { useAuth } from '../hooks/useAuth';
 import { MdPerson, MdLock, MdSave } from 'react-icons/md';
 import { apiClient } from '../services/api';
-import { STORAGE_KEYS } from '../utils/constants';
+import { STORAGE_KEYS, isRealUserId } from '../utils/constants';
 import { changeUserPassword } from '../services/users.service';
 import '../styles/ParentPortalPages.css';
 
@@ -71,6 +71,10 @@ export const ProfileInformationCard: React.FC<{ className?: string; extraFields?
 
   const saveInfo = async () => {
     if (!user) return;
+    if (!isRealUserId(user.id)) {
+      setStatus({ saving: false, success: false, message: 'Signed in via the Admin Auth quick-unlock — profile info cannot be saved for this session.' });
+      return;
+    }
     setStatus({ saving: true });
     try {
       const payload: any = {
@@ -101,6 +105,10 @@ export const ProfileInformationCard: React.FC<{ className?: string; extraFields?
 
   const submitPasswordChange = async () => {
     if (!user) return;
+    if (!isRealUserId(user.id)) {
+      setPasswordStatus({ saving: false, success: false, message: 'Signed in via the Admin Auth quick-unlock — password cannot be changed for this session.' });
+      return;
+    }
 
     if (newPassword.length < 8) {
       setPasswordStatus({ saving: false, success: false, message: 'New password must be at least 8 characters.' });

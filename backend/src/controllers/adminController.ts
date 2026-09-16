@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { getSupabaseAdminClient } from '../config/supabase';
+import { getHeatThresholds, setHeatThresholds, isValidThresholdOrder, HeatThresholds } from '../config/heatThresholds';
 
 const fallbackStats = (period: string) => {
 	const now = new Date();
@@ -238,6 +239,52 @@ export const getParentQuestionInsights = async (
 				endDate: now.toISOString(),
 			},
 		});
+	} catch (error) {
+		next(error);
+	}
+};
+
+export const getHeatThresholdsHandler = async (
+	_req: Request,
+	res: Response,
+	next: NextFunction
+): Promise<void> => {
+	try {
+		res.status(200).json({ success: true, thresholds: getHeatThresholds() });
+	} catch (error) {
+		next(error);
+	}
+};
+
+export const updateHeatThresholdsHandler = async (
+	req: Request,
+	res: Response,
+	next: NextFunction
+): Promise<void> => {
+	try {
+		const { safeMax, cautionMax, extremeCautionMax, dangerMax } = req.body;
+		const parsed: HeatThresholds = {
+			safeMax: Number(safeMax),
+			cautionMax: Number(cautionMax),
+			extremeCautionMax: Number(extremeCautionMax),
+			dangerMax: Number(dangerMax),
+		};
+
+		if (Object.values(parsed).some((value) => !Number.isFinite(value))) {
+			res.status(400).json({ success: false, message: 'All thresholds must be valid numbers.' });
+			return;
+		}
+
+		if (!isValidThresholdOrder(parsed)) {
+			res.status(400).json({
+				success: false,
+				message: 'Thresholds must increase in order: Normal < Caution < Extreme Caution < Danger.',
+			});
+			return;
+		}
+
+		setHeatThresholds(parsed);
+		res.status(200).json({ success: true, thresholds: parsed });
 	} catch (error) {
 		next(error);
 	}

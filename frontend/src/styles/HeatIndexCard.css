@@ -121,7 +121,7 @@
 }
 
 .heat-index-value {
-  font-size: 80px;
+  font-size: clamp(44px, 12vw, 80px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -3px;
@@ -132,7 +132,7 @@
 
 /* Shared utility class to make large metrics consistent across components */
 .heat-index-value.big-metric {
-  font-size: 64px;
+  font-size: clamp(38px, 10vw, 64px);
   line-height: 1;
   letter-spacing: -3px;
 }

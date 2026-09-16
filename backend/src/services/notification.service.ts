@@ -5,6 +5,7 @@ import { sendHeatAlertEmail, sendAdvisoryNotificationEmail } from './email.servi
 import { sendHeatAlertSms } from './sms.service';
 import { aiAnalysisService } from './aiAnalysis.service';
 import { formatScheduledNotificationTitle } from '../utils/notificationFormatting';
+import { prefersNotificationChannel, prefersAlertType } from '../utils/notificationPreferences';
 
 interface AlertRecipient {
 	id: string;
@@ -14,7 +15,14 @@ interface AlertRecipient {
 	phone: string | null;
 	role: string;
 	school_id: string;
+	metadata?: Record<string, unknown> | null;
 }
+
+const prefersChannel = (recipient: AlertRecipient, channel: 'email' | 'sms'): boolean =>
+	prefersNotificationChannel(recipient.metadata, channel);
+
+const prefersAlert = (recipient: AlertRecipient, alertType: 'heat' | 'advisory' | 'system'): boolean =>
+	prefersAlertType(recipient.metadata, alertType);
 
 class NotificationService {
 	private readonly lastDispatchBySchool = new Map<string, number>();
@@ -41,7 +49,7 @@ class NotificationService {
 
 		const { data, error } = await client
 			.from('users')
-			.select('id, email, first_name, last_name, phone, role, school_id')
+			.select('id, email, first_name, last_name, phone, role, school_id, metadata')
 			.eq('school_id', schoolId)
 			.in('role', ['parent', 'principal', 'teacher', 'head-teacher']);
 
@@ -90,7 +98,12 @@ class NotificationService {
 			return;
 		}
 
-		const recipients = await this.fetchRecipients(schoolId);
+		const allRecipients = await this.fetchRecipients(schoolId);
+		if (allRecipients.length === 0) {
+			return;
+		}
+
+		const recipients = allRecipients.filter((recipient) => prefersAlert(recipient, 'heat'));
 		if (recipients.length === 0) {
 			return;
 		}
@@ -104,7 +117,7 @@ class NotificationService {
 		if (env.heatAlertEmailEnabled) {
 			await Promise.all(
 				recipients
-					.filter((recipient) => !!recipient.email)
+					.filter((recipient) => !!recipient.email && prefersChannel(recipient, 'email'))
 					.map((recipient) =>
 						sendHeatAlertEmail(
 							String(recipient.email),
@@ -124,7 +137,7 @@ class NotificationService {
 		if (env.heatAlertSmsEnabled) {
 			await Promise.all(
 				recipients
-					.filter((recipient) => !!recipient.phone)
+					.filter((recipient) => !!recipient.phone && prefersChannel(recipient, 'sms'))
 					.map((recipient) =>
 						sendHeatAlertSms(
 							String(recipient.phone),
@@ -159,7 +172,10 @@ class NotificationService {
 			return;
 		}
 
-		const recipients = await this.fetchRecipients('school-1');
+		const allRecipients = await this.fetchRecipients('school-1');
+		if (allRecipients.length === 0) return;
+
+		const recipients = allRecipients.filter((recipient) => prefersAlert(recipient, 'advisory'));
 		if (recipients.length === 0) return;
 
 		const title = `Health Advisory: ${advisoryResult.riskLevel?.toUpperCase() || 'Advisory'}`;
@@ -171,7 +187,7 @@ class NotificationService {
 		if (env.heatAlertEmailEnabled) {
 			await Promise.all(
 				recipients
-					.filter((r) => !!r.email)
+					.filter((r) => !!r.email && prefersChannel(r, 'email'))
 					.map((r) =>
 						sendAdvisoryNotificationEmail(
 							String(r.email),

@@ -13,6 +13,7 @@
   color: #eff6ff;
   background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #0891b2 100%);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  min-width: 0;
 }
 
 .teacher-hero h1 {
@@ -57,6 +58,7 @@
   min-width: 280px;
   max-width: 620px;
   width: 100%;
+  min-width: 0;
 }
 
 .teacher-hero-card strong {
@@ -140,18 +142,21 @@
   grid-template-columns: 1fr 360px;
   gap: 24px;
   align-items: start;
+  min-width: 0;
 }
 
 .teacher-main {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
 .teacher-side {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
 .teacher-section-grid {
@@ -554,7 +559,10 @@
     max-width: 100%;
   }
 
-  .teacher-stats-grid,
+  .teacher-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .teacher-grid-two,
   .teacher-form-grid {
     grid-template-columns: 1fr;
@@ -562,5 +570,124 @@
 
   .teacher-chat-input-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .teacher-page-shell {
+    gap: 16px;
+  }
+
+  .teacher-hero {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .teacher-hero h1 {
+    font-size: 28px;
+  }
+
+  .teacher-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-weather-card {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-chat-header,
+  .teacher-chat-input-row {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Keep teacher chat usable like a messenger thread on small screens. */
+  .teacher-chatbot-shell {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .teacher-chatboard {
+    height: min(72dvh, 680px);
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .teacher-chat-header {
+    padding: 14px 14px 10px;
+    flex-shrink: 0;
+  }
+
+  .teacher-chat-header p {
+    display: none;
+  }
+
+  .teacher-chat-messages-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .teacher-chat-messages {
+    height: 100%;
+    max-height: none;
+    padding: 14px 12px;
+    gap: 10px;
+  }
+
+  .teacher-chat-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .teacher-chat-bubble {
+    max-width: calc(100% - 40px);
+    padding: 11px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .teacher-chat-prompts {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 10px 12px;
+    gap: 8px;
+    border-top: 1px solid #eef2f7;
+    border-bottom: 1px solid #eef2f7;
+    scrollbar-width: thin;
+    flex-shrink: 0;
+  }
+
+  .teacher-chat-prompts button {
+    flex: 0 0 auto;
+    max-width: 220px;
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .teacher-chat-input-row {
+    padding: 10px 12px 12px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .teacher-chat-input-row input {
+    min-width: 0;
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  .teacher-chat-input-row button {
+    flex: 0 0 auto;
+    min-width: 72px;
+    padding-inline: 12px;
   }
 }

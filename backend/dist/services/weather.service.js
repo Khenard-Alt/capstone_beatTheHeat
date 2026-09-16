@@ -7,6 +7,7 @@ exports.weatherService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const environment_1 = require("../config/environment");
 const auditLog_service_1 = require("./auditLog.service");
+const heatThresholds_1 = require("../config/heatThresholds");
 // OpenWeather's free tier caps out at 60 calls/minute and 1,000,000/month.
 // Every dashboard tab, the Front Screen kiosk, and the schedulers all read
 // current-weather/forecast independently with no shared store, so without a
@@ -347,13 +348,14 @@ class WeatherService {
         return Number.isFinite(hiC) ? Math.max(hiC, tempC) : tempC;
     }
     getHeatLevel(heatIndexC) {
-        if (heatIndexC < 27)
+        const thresholds = (0, heatThresholds_1.getHeatThresholds)();
+        if (heatIndexC < thresholds.safeMax)
             return 'safe';
-        if (heatIndexC < 32)
+        if (heatIndexC < thresholds.cautionMax)
             return 'caution';
-        if (heatIndexC < 41)
+        if (heatIndexC < thresholds.extremeCautionMax)
             return 'extreme-caution';
-        if (heatIndexC < 54)
+        if (heatIndexC < thresholds.dangerMax)
             return 'danger';
         return 'extreme-danger';
     }

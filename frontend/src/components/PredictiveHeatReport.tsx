@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Card } from './Card';
 import { Chart } from './Chart';
 import { apiClient } from '../services/api';
+import { useTemperatureUnit } from '../context/TemperatureUnitContext';
 import {
   HEAT_COLORS,
   HEAT_LABELS,
@@ -78,6 +79,8 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
   const [current, setCurrent] = useState<CurrentSnapshot | null>(null);
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
   const [loading, setLoading] = useState(true);
+  const { unit, convert, format } = useTemperatureUnit();
+  const unitSuffix = unit === 'fahrenheit' ? '°F' : '°C';
 
   useEffect(() => {
     let mounted = true;
@@ -138,6 +141,18 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
     return history.reduce((peak, point) => (point.maxHeatIndex > peak.maxHeatIndex ? point : peak), history[0]);
   }, [history]);
 
+  // Convert the raw °C series into the user's preferred unit before handing
+  // it to the chart — the chart just renders whatever numbers it's given.
+  const displayHistory = useMemo(
+    () => history.map((point) => ({ ...point, maxHeatIndex: convert(point.maxHeatIndex) })),
+    [history, convert]
+  );
+
+  const displayForecast = useMemo(
+    () => forecast.map((day) => ({ ...day, heatIndexC: convert(day.heatIndexC) })),
+    [forecast, convert]
+  );
+
   const upcomingPeakDays = useMemo(
     () => forecast.filter((day) => normalizeHeatLevel(day.heatLevel) !== 'normal'),
     [forecast]
@@ -185,9 +200,9 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
           ) : (
             <>
               <Chart
-                data={history}
+                data={displayHistory}
                 type="area"
-                dataKeys={[{ key: 'maxHeatIndex', name: 'Peak Heat Index (°C)', color: HEAT_COLORS.danger }]}
+                dataKeys={[{ key: 'maxHeatIndex', name: `Peak Heat Index (${unitSuffix})`, color: HEAT_COLORS.danger }]}
                 xAxisKey="time"
                 height={220}
                 xAxisTickFormatter={formatShortDateTime}
@@ -196,7 +211,7 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
               {peakHistoryPoint && (
                 <p className="predictive-insight">
                   Recurring peak: heat index reached{' '}
-                  <strong>{peakHistoryPoint.maxHeatIndex.toFixed(1)}°C</strong> around{' '}
+                  <strong>{format(peakHistoryPoint.maxHeatIndex)}</strong> around{' '}
                   {formatShortDateTime(peakHistoryPoint.time)}.
                 </p>
               )}
@@ -220,7 +235,7 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
               <div className="predictive-current-stats">
                 <div className="predictive-stat">
                   <span className="predictive-stat-label">Temperature</span>
-                  <span className="predictive-stat-value">{current.temperatureC.toFixed(1)}°C</span>
+                  <span className="predictive-stat-value">{format(current.temperatureC)}</span>
                 </div>
                 <div className="predictive-stat">
                   <span className="predictive-stat-label">Humidity</span>
@@ -228,7 +243,7 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
                 </div>
                 <div className="predictive-stat">
                   <span className="predictive-stat-label">Heat Index</span>
-                  <span className="predictive-stat-value">{current.heatIndexC.toFixed(1)}°C</span>
+                  <span className="predictive-stat-value">{format(current.heatIndexC)}</span>
                 </div>
                 <div className="predictive-stat">
                   <span className="predictive-stat-label">Risk Level</span>
@@ -267,9 +282,9 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
           ) : (
             <>
               <Chart
-                data={forecast}
+                data={displayForecast}
                 type="bar"
-                dataKeys={[{ key: 'heatIndexC', name: 'Forecast Heat Index (°C)', color: HEAT_COLORS['extreme-caution'] }]}
+                dataKeys={[{ key: 'heatIndexC', name: `Forecast Heat Index (${unitSuffix})`, color: HEAT_COLORS['extreme-caution'] }]}
                 xAxisKey="date"
                 height={compact ? 180 : 220}
                 xAxisTickFormatter={formatShortDate}
@@ -286,7 +301,7 @@ export const PredictiveHeatReport: React.FC<PredictiveHeatReportProps> = ({ role
                           <span className="predictive-badge predictive-badge-inline" style={{ background: HEAT_COLORS[level] }}>
                             {HEAT_LABELS[level]}
                           </span>{' '}
-                          {formatShortDate(day.date)} — {day.heatIndexC.toFixed(1)}°C expected
+                          {formatShortDate(day.date)} — {format(day.heatIndexC)} expected
                         </li>
                       );
                     })}

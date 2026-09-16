@@ -7,6 +7,9 @@ const email_service_1 = require("./email.service");
 const sms_service_1 = require("./sms.service");
 const aiAnalysis_service_1 = require("./aiAnalysis.service");
 const notificationFormatting_1 = require("../utils/notificationFormatting");
+const notificationPreferences_1 = require("../utils/notificationPreferences");
+const prefersChannel = (recipient, channel) => (0, notificationPreferences_1.prefersNotificationChannel)(recipient.metadata, channel);
+const prefersAlert = (recipient, alertType) => (0, notificationPreferences_1.prefersAlertType)(recipient.metadata, alertType);
 class NotificationService {
     constructor() {
         this.lastDispatchBySchool = new Map();
@@ -30,7 +33,7 @@ class NotificationService {
         }
         const { data, error } = await client
             .from('users')
-            .select('id, email, first_name, last_name, phone, role, school_id')
+            .select('id, email, first_name, last_name, phone, role, school_id, metadata')
             .eq('school_id', schoolId)
             .in('role', ['parent', 'principal', 'teacher', 'head-teacher']);
         if (error || !data) {
@@ -66,7 +69,11 @@ class NotificationService {
         if (this.isWithinCooldown(schoolId)) {
             return;
         }
-        const recipients = await this.fetchRecipients(schoolId);
+        const allRecipients = await this.fetchRecipients(schoolId);
+        if (allRecipients.length === 0) {
+            return;
+        }
+        const recipients = allRecipients.filter((recipient) => prefersAlert(recipient, 'heat'));
         if (recipients.length === 0) {
             return;
         }
@@ -76,7 +83,7 @@ class NotificationService {
         await this.saveInAppNotifications(recipients, title, message, priority);
         if (environment_1.env.heatAlertEmailEnabled) {
             await Promise.all(recipients
-                .filter((recipient) => !!recipient.email)
+                .filter((recipient) => !!recipient.email && prefersChannel(recipient, 'email'))
                 .map((recipient) => (0, email_service_1.sendHeatAlertEmail)(String(recipient.email), recipient.first_name ?? recipient.last_name ?? 'User', snapshot.location, snapshot.heatLevel, snapshot.heatIndexC, [
                 'Reduce outdoor activity and prioritize hydration breaks.',
                 'Monitor students for signs of heat stress and escalate early.',
@@ -84,7 +91,7 @@ class NotificationService {
         }
         if (environment_1.env.heatAlertSmsEnabled) {
             await Promise.all(recipients
-                .filter((recipient) => !!recipient.phone)
+                .filter((recipient) => !!recipient.phone && prefersChannel(recipient, 'sms'))
                 .map((recipient) => (0, sms_service_1.sendHeatAlertSms)(String(recipient.phone), recipient.first_name ?? recipient.last_name ?? 'User', snapshot.heatLevel, snapshot.heatIndexC)));
         }
         this.lastDispatchBySchool.set(schoolId, Date.now());
@@ -109,7 +116,10 @@ class NotificationService {
             console.error('[NOTIFY] AI advisory generation failed:', err);
             return;
         }
-        const recipients = await this.fetchRecipients('school-1');
+        const allRecipients = await this.fetchRecipients('school-1');
+        if (allRecipients.length === 0)
+            return;
+        const recipients = allRecipients.filter((recipient) => prefersAlert(recipient, 'advisory'));
         if (recipients.length === 0)
             return;
         const title = `Health Advisory: ${advisoryResult.riskLevel?.toUpperCase() || 'Advisory'}`;
@@ -118,7 +128,7 @@ class NotificationService {
         await this.saveInAppNotifications(recipients, title, message, priority);
         if (environment_1.env.heatAlertEmailEnabled) {
             await Promise.all(recipients
-                .filter((r) => !!r.email)
+                .filter((r) => !!r.email && prefersChannel(r, 'email'))
                 .map((r) => (0, email_service_1.sendAdvisoryNotificationEmail)(String(r.email), r.first_name ?? r.last_name ?? 'User', snapshot.location, title, message, priority === 'high' ? 'high' : 'medium')));
         }
     }

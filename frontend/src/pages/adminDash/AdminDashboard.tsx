@@ -11,8 +11,8 @@ import { apiClient } from '../../services/api';
 import { fetchRealtimeAdvisory } from '../../services/healthAdvisory.service';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import type { HeatIndexData, WeatherData, HealthAdvisory } from '../../types';
-import { calculateHeatIndex, getHeatLevel, getGreeting } from '../../utils/helpers';
-import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
+import { getGreeting } from '../../utils/helpers';
+import { CHART_COLORS, DEPED_RECOMMENDATIONS, isRealUserId } from '../../utils/constants';
 import { mapRealtimeAdvisory } from '../../utils/advisory';
 import '../../styles/AdminDashboard.css';
 import '../../styles/PredictiveHeatReport.css';
@@ -42,8 +42,6 @@ export const AdminDashboard: React.FC = () => {
 
   const isAdmin = user?.role === 'admin';
 
-  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
-  const [schoolReports, setSchoolReports] = useState<any[]>([]);
 
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
@@ -51,6 +49,32 @@ export const AdminDashboard: React.FC = () => {
   const [aiAdvisory, setAiAdvisory] = useState<HealthAdvisory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshIntervalMs, setRefreshIntervalMs] = useState(60 * 1000);
+
+  // Read the saved "Weather Update Frequency" preference from Settings so
+  // this dashboard's auto-refresh actually honors it instead of a fixed 1m.
+  useEffect(() => {
+    if (!isRealUserId(user?.id)) return;
+    let mounted = true;
+
+    const loadRefreshPreference = async () => {
+      try {
+        const { data } = await apiClient.get(`/api/users/${user.id}`);
+        const maybeUser = data?.user || data;
+        const minutes = Number(maybeUser?.notificationPreferences?.weatherUpdateFrequency);
+        if (mounted && Number.isFinite(minutes) && minutes > 0) {
+          setRefreshIntervalMs(minutes * 60 * 1000);
+        }
+      } catch (err) {
+        console.error('Failed to load weather update frequency preference:', err);
+      }
+    };
+
+    void loadRefreshPreference();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,22 +112,6 @@ export const AdminDashboard: React.FC = () => {
         }
 
         setError(null);
-        // If user is an admin, fetch admin-specific overview data.
-        if (isAdmin) {
-          try {
-            const approvalsRes = await apiClient.get('/api/principal/approvals', { params: { status: 'pending' } });
-            if (approvalsRes.data && approvalsRes.data.success) {
-              setPendingApprovals(approvalsRes.data.data || []);
-            }
-
-            const reportsRes = await apiClient.get('/api/principal/reports', { params: { period: 'month' } });
-            if (reportsRes.data && reportsRes.data.success) {
-              setSchoolReports(reportsRes.data.data || []);
-            }
-          } catch (err) {
-            console.warn('Principal endpoints unavailable or returned error:', err);
-          }
-        }
       } catch (err) {
         console.error('Failed to fetch admin data:', err);
         setError('Failed to load admin data');
@@ -113,10 +121,10 @@ export const AdminDashboard: React.FC = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 60 * 1000); // Refresh every 1 minute
-    
+    const interval = setInterval(fetchData, refreshIntervalMs);
+
     return () => clearInterval(interval);
-  }, [isAdmin]);
+  }, [isAdmin, refreshIntervalMs]);
 
   const heatIndexData = useMemo<HeatIndexData>(() => {
     if (!currentWeather) {
@@ -131,16 +139,13 @@ export const AdminDashboard: React.FC = () => {
       };
     }
 
-    const heatIndex = calculateHeatIndex(currentWeather.temperature, currentWeather.humidity);
-    const level = getHeatLevel(heatIndex);
-
     return {
       id: '1',
       schoolId: 'school-1',
       temperature: currentWeather.temperature,
       humidity: currentWeather.humidity,
-      heatIndex,
-      level,
+      heatIndex: currentWeather.heatIndexC,
+      level: currentWeather.heatLevel,
       timestamp: new Date().toISOString(),
     };
   }, [currentWeather]);
@@ -286,24 +291,6 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="admin-dashboard-side">
-          <Card title="Admin Actions">
-            <div className="principal-actions">
-              <div className="principal-approval-count">
-                <strong>Pending Approvals:</strong> {pendingApprovals.length}
-              </div>
-              <button className="btn btn-primary">Review Approvals</button>
-            </div>
-          </Card>
-
-          <Card title="School Reports">
-            {schoolReports.length === 0 && <div className="empty-state">No reports available</div>}
-            {schoolReports.map((r: any, idx: number) => (
-              <div key={idx} className="report-item">
-                <div className="report-title">{r.title || `Report ${idx + 1}`}</div>
-                <div className="report-meta">{r.summary || r.date || ''}</div>
-              </div>
-            ))}
-          </Card>
           <Card title="Incident Summary (Today)">
             <div className="admin-incident-list">
               {incidentSummary.map((item) => (
@@ -313,15 +300,6 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
-          </Card>
-
-          <Card title="System Notes">
-            <ul className="admin-notes">
-              <li>Weather fetch interval: 1 minute</li>
-              <li>Last advisory generation: 10 minutes ago</li>
-              <li>Email queue: 2 pending</li>
-              <li>SMS queue: 1 pending</li>
-            </ul>
           </Card>
 
           <Card title="Most Asked Parent Questions (Week)">

@@ -376,7 +376,10 @@
 		grid-template-columns: 1fr;
 	}
 
-	.management-stats-grid,
+	.management-stats-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
 	.threshold-settings {
 		grid-template-columns: 1fr;
 	}
@@ -395,8 +398,11 @@
 		flex-direction: column;
 	}
 
-	.form-row,
 	.management-stats-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.form-row {
 		grid-template-columns: 1fr;
 	}
 

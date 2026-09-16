@@ -3,14 +3,36 @@ import { ParentSectionPage } from './ParentSectionPage';
 import type { HealthAdvisory as HealthAdvisoryType } from '../../types';
 import { DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { apiClient } from '../../services/api';
-import { fetchAnnouncements, type Announcement } from '../../services/announcements.service';
+import { fetchAnnouncementsPage, type Announcement } from '../../services/announcements.service';
 import { formatDateTimeGlobal } from '../../utils/formatters';
+import { Pagination } from '../../components/Pagination';
 import '../../styles/HealthAdvisory.css';
 import '../../styles/ParentAnnouncements.css';
+import '../../styles/Notifications.css';
+
+const ANNOUNCEMENTS_PAGE_SIZE = 10;
+const ADVISORIES_PAGE_SIZE = 10;
+
+const announcementPriorityClass = (priority?: string): string => {
+  const normalized = String(priority ?? 'info').toLowerCase();
+  if (normalized === 'critical' || normalized === 'high') return 'notification-priority-high';
+  if (normalized === 'medium') return 'notification-priority-medium';
+  return 'notification-priority-low';
+};
+
+const announcementIcon = (priority?: string): string => {
+  const normalized = String(priority ?? 'info').toLowerCase();
+  return normalized === 'critical' || normalized === 'high' ? '🚨' : '📣';
+};
 
 export const ParentAnnouncements: React.FC = () => {
   const [advisories, setAdvisories] = useState<HealthAdvisoryType[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsTotal, setAnnouncementsTotal] = useState(0);
+  const [announcementsPage, setAnnouncementsPage] = useState(1);
+  const [activeAdvisoriesPage, setActiveAdvisoriesPage] = useState(1);
+  const [historyAdvisoriesPage, setHistoryAdvisoriesPage] = useState(1);
+  const [expandedAnnouncementId, setExpandedAnnouncementId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,8 +107,9 @@ export const ParentAnnouncements: React.FC = () => {
     const loadAnnouncements = async () => {
       try {
         setAnnouncementsLoading(true);
-        const data = await fetchAnnouncements(10, 0);
+        const { data, total } = await fetchAnnouncementsPage(ANNOUNCEMENTS_PAGE_SIZE, (announcementsPage - 1) * ANNOUNCEMENTS_PAGE_SIZE);
         setAnnouncements(data);
+        setAnnouncementsTotal(total);
         setAnnouncementsError(null);
       } catch (err) {
         console.error('Failed to fetch announcements:', err);
@@ -98,7 +121,9 @@ export const ParentAnnouncements: React.FC = () => {
     };
 
     void loadAnnouncements();
-  }, []);
+  }, [announcementsPage]);
+
+  const announcementsTotalPages = Math.max(1, Math.ceil(announcementsTotal / ANNOUNCEMENTS_PAGE_SIZE));
 
   const activeAdvisories = useMemo(
     () => advisories.filter((advisory) => advisory.heatLevel !== 'normal' && advisory.riskLevel !== 'low'),
@@ -109,6 +134,30 @@ export const ParentAnnouncements: React.FC = () => {
     () => advisories.filter((advisory) => advisory.heatLevel === 'normal' || advisory.riskLevel === 'low'),
     [advisories]
   );
+
+  const activeAdvisoriesTotalPages = Math.max(1, Math.ceil(activeAdvisories.length / ADVISORIES_PAGE_SIZE));
+  const pagedActiveAdvisories = activeAdvisories.slice(
+    (activeAdvisoriesPage - 1) * ADVISORIES_PAGE_SIZE,
+    activeAdvisoriesPage * ADVISORIES_PAGE_SIZE
+  );
+
+  const historyAdvisoriesTotalPages = Math.max(1, Math.ceil(historyAdvisories.length / ADVISORIES_PAGE_SIZE));
+  const pagedHistoryAdvisories = historyAdvisories.slice(
+    (historyAdvisoriesPage - 1) * ADVISORIES_PAGE_SIZE,
+    historyAdvisoriesPage * ADVISORIES_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    if (activeAdvisoriesPage > activeAdvisoriesTotalPages) {
+      setActiveAdvisoriesPage(activeAdvisoriesTotalPages);
+    }
+  }, [activeAdvisoriesPage, activeAdvisoriesTotalPages]);
+
+  useEffect(() => {
+    if (historyAdvisoriesPage > historyAdvisoriesTotalPages) {
+      setHistoryAdvisoriesPage(historyAdvisoriesTotalPages);
+    }
+  }, [historyAdvisoriesPage, historyAdvisoriesTotalPages]);
 
   return (
     <ParentSectionPage
@@ -179,31 +228,45 @@ export const ParentAnnouncements: React.FC = () => {
             <p className="empty-state-text">No principal announcements</p>
           )}
           {!announcementsLoading && announcements.length > 0 && (
-            <div className="advisory-table-wrap table-wrap">
-              <table className="advisory-table app-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Issued</th>
-                    <th scope="col">Priority</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Message</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {announcements.map((announcement) => (
-                    <tr key={announcement.id}>
-                      <td>{formatDateTimeGlobal(announcement.created_at ?? new Date().toISOString())}</td>
-                      <td>
-                        <span className={`advisory-level badge-${announcement.priority ?? 'info'}`}>
-                          {(announcement.priority ?? 'info').toUpperCase()}
-                        </span>
-                      </td>
-                      <td>{announcement.title}</td>
-                      <td>{announcement.body}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="notifications-list">
+              {announcements.map((announcement) => {
+                const isExpanded = expandedAnnouncementId === announcement.id;
+                const isLong = announcement.body.length > 140;
+                const bodyPreview = isExpanded || !isLong ? announcement.body : `${announcement.body.slice(0, 140)}...`;
+
+                return (
+                  <div key={announcement.id} className={`notification-item ${announcementPriorityClass(announcement.priority)}`}>
+                    <div className="notification-icon">{announcementIcon(announcement.priority)}</div>
+                    <div className="notification-body">
+                      <div className="notification-header">
+                        <strong>{announcement.title}</strong>
+                        <small className="notification-time">
+                          {formatDateTimeGlobal(announcement.created_at ?? new Date().toISOString())}
+                        </small>
+                      </div>
+                      <div className="notification-message">{bodyPreview}</div>
+                    </div>
+                    {isLong && (
+                      <div className="notification-actions">
+                        <button
+                          type="button"
+                          className="action-view-small"
+                          onClick={() => setExpandedAnnouncementId(isExpanded ? null : announcement.id)}
+                        >
+                          {isExpanded ? 'Hide' : 'View'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <Pagination
+                page={announcementsPage}
+                totalPages={announcementsTotalPages}
+                totalItems={announcementsTotal}
+                pageSize={ANNOUNCEMENTS_PAGE_SIZE}
+                onPageChange={setAnnouncementsPage}
+              />
             </div>
           )}
         </div>
@@ -234,23 +297,30 @@ export const ParentAnnouncements: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {activeAdvisories.map((advisory) => (
+                  {pagedActiveAdvisories.map((advisory) => (
                     <tr key={advisory.id}>
-                      <td>{formatDateTime(advisory.createdAt)}</td>
-                      <td>
+                      <td data-label="Issued">{formatDateTime(advisory.createdAt)}</td>
+                      <td data-label="Heat Level">
                         <span className={`advisory-level badge-${advisory.heatLevel}`}>
                           {formatHeatLevelLabel(advisory.heatLevel)}
                         </span>
                       </td>
-                      <td className={`advisory-risk risk-${advisory.riskLevel}`}>
+                      <td data-label="Risk" className={`advisory-risk risk-${advisory.riskLevel}`}>
                         {formatHeatLevelLabel(advisory.riskLevel)}
                       </td>
-                      <td>{advisory.advisoryText}</td>
+                      <td data-label="Summary">{advisory.advisoryText}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            <Pagination
+              page={activeAdvisoriesPage}
+              totalPages={activeAdvisoriesTotalPages}
+              totalItems={activeAdvisories.length}
+              pageSize={ADVISORIES_PAGE_SIZE}
+              onPageChange={setActiveAdvisoriesPage}
+            />
           </div>
         )}
 
@@ -267,18 +337,18 @@ export const ParentAnnouncements: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {historyAdvisories.map((advisory) => (
+                {pagedHistoryAdvisories.map((advisory) => (
                   <tr key={advisory.id}>
-                    <td>{formatDateTime(advisory.createdAt)}</td>
-                    <td>
+                    <td data-label="Issued">{formatDateTime(advisory.createdAt)}</td>
+                    <td data-label="Heat Level">
                       <span className={`advisory-level badge-${advisory.heatLevel}`}>
                         {formatHeatLevelLabel(advisory.heatLevel)}
                       </span>
                     </td>
-                    <td className={`advisory-risk risk-${advisory.riskLevel}`}>
+                    <td data-label="Risk" className={`advisory-risk risk-${advisory.riskLevel}`}>
                       {formatHeatLevelLabel(advisory.riskLevel)}
                     </td>
-                    <td>{advisory.advisoryText}</td>
+                    <td data-label="Summary">{advisory.advisoryText}</td>
                   </tr>
                 ))}
               </tbody>
@@ -287,6 +357,13 @@ export const ParentAnnouncements: React.FC = () => {
               <p className="empty-state-text">No recent advisories</p>
             )}
           </div>
+          <Pagination
+            page={historyAdvisoriesPage}
+            totalPages={historyAdvisoriesTotalPages}
+            totalItems={historyAdvisories.length}
+            pageSize={ADVISORIES_PAGE_SIZE}
+            onPageChange={setHistoryAdvisoriesPage}
+          />
         </div>
       </div>
     </ParentSectionPage>

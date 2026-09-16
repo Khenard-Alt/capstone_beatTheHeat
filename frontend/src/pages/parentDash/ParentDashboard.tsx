@@ -12,7 +12,6 @@ import { fetchIncidents } from '../../services/incidents.service';
 import { fetchCurrentWeather } from '../../services/weather.service';
 import { fetchRealtimeAdvisory } from '../../services/healthAdvisory.service';
 import type { HeatIndexData, WeatherData, HealthAdvisory, StudentHealthIncident } from '../../types';
-import { getHeatLevel } from '../../utils/helpers';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import { mapRealtimeAdvisory } from '../../utils/advisory';
@@ -269,20 +268,18 @@ export const ParentDashboard: React.FC = () => {
       };
     }
 
-    // Use the server's own heat index (feelsLike) instead of recomputing it
-    // client-side — a local recalculation from raw temp/humidity can drift
-    // from the server's value and disagree with the level it already
-    // classified, which is exactly what the Heat Index card displays.
-    const heatIndex = currentWeather.feelsLike;
-    const level = getHeatLevel(heatIndex);
-
+    // Use the server's own heat index and level instead of recomputing
+    // them client-side — a local recalculation (or reclassification against
+    // possibly-stale frontend thresholds) can drift from the server's
+    // value and disagree with the level it already classified, which is
+    // exactly what the Heat Index card displays.
     return {
       id: '1',
       schoolId: 'school-1',
       temperature: currentWeather.temperature,
       humidity: currentWeather.humidity,
-      heatIndex,
-      level,
+      heatIndex: currentWeather.heatIndexC,
+      level: currentWeather.heatLevel,
       timestamp: new Date().toISOString(),
     };
   }, [currentWeather]);

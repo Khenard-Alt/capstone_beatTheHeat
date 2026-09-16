@@ -1033,7 +1033,7 @@
   }
 
   .parent-priority-metrics {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 
@@ -1084,5 +1084,105 @@
 
   .parent-chat-quick-actions {
     max-height: 120px;
+  }
+}
+
+@media (max-width: 420px) {
+  .parent-dashboard {
+    padding: 8px;
+  }
+
+  .parent-dashboard-header {
+    padding: 14px;
+  }
+
+  .parent-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parent-header-actions > * {
+    width: 100%;
+  }
+
+  .parent-priority-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .parent-dashboard {
+    padding: 12px;
+  }
+
+  .parent-dashboard-header {
+    padding: 16px 18px;
+    border-radius: 14px;
+  }
+
+  .parent-dashboard-header h1 {
+    font-size: 24px;
+  }
+
+  .parent-priority-row {
+    gap: 12px;
+  }
+
+  .parent-priority-metrics {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .parent-priority-metrics .heat-index-header,
+  .parent-priority-metrics .weather-header {
+    padding: 14px 16px 10px;
+    min-height: 0;
+  }
+
+  .parent-priority-metrics .heat-index-body,
+  .parent-priority-metrics .weather-body {
+    padding: 14px;
+  }
+
+  .parent-incidents-toolbar {
+    gap: 8px;
+  }
+
+  .parent-incidents-list {
+    max-height: none;
+  }
+
+  .parent-incident-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .parent-announcement-item {
+    padding: 12px;
+  }
+
+  .parent-announcement-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+
+  .parent-status-row {
+    padding: 10px 12px;
+  }
+
+  .parent-status-value {
+    font-size: 14px;
+  }
+
+  .parent-guidance li {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .parent-guidance-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
   }
 }

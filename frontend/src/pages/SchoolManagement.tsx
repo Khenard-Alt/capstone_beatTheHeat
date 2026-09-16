@@ -1,18 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { useAuth } from '../hooks/useAuth';
 import { apiClient } from '../services/api';
-import { SCHOOL_INFO } from '../utils/constants';
 import {
   MdSchool,
-  MdLocationOn,
-  MdPhone,
-  MdEmail,
-  MdEdit,
-  MdAdminPanelSettings,
   MdGroup,
   MdPersonAdd,
   MdOutlineSupervisorAccount,
@@ -73,7 +66,6 @@ const emptyStudentForm = {
 
 export const SchoolManagement: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [usersTab, setUsersTab] = useState<UsersTab>('parents');
   const [adminUnlocked, setAdminUnlocked] = useState(() => {
     const isUnlocked = localStorage.getItem(ADMIN_AUTH_STORAGE_KEY) === 'true';
@@ -90,6 +82,14 @@ export const SchoolManagement: React.FC = () => {
   const [teachers, setTeachers] = useState<TeacherUser[]>([]);
   const [parentForm, setParentForm] = useState(emptyParentForm);
   const [studentForm, setStudentForm] = useState(emptyStudentForm);
+  const [thresholds, setThresholds] = useState({
+    safeMax: '27',
+    cautionMax: '32',
+    extremeCautionMax: '41',
+    dangerMax: '54',
+  });
+  const [thresholdsSaving, setThresholdsSaving] = useState(false);
+  const [thresholdsMessage, setThresholdsMessage] = useState('');
 
   const parentCount = parents.length;
   const studentCount = students.length;
@@ -154,7 +154,7 @@ export const SchoolManagement: React.FC = () => {
       setParents(parentResponse.data.users || []);
       setStudents(studentResponse.data.students || []);
       setTeachers(teacherResponse.data.users || []);
-      setSuccess('User lists refreshed.');
+      setSuccess('');
     } catch (refreshError) {
       console.error('Failed to refresh management data:', refreshError);
       setError('Failed to refresh user management data.');
@@ -180,6 +180,53 @@ export const SchoolManagement: React.FC = () => {
       }
     }
   }, [refreshData, user?.id, adminUnlocked]);
+
+  useEffect(() => {
+    const loadThresholds = async () => {
+      try {
+        const { data } = await apiClient.get('/api/admin/heat-thresholds');
+        if (data?.thresholds) {
+          setThresholds({
+            safeMax: String(data.thresholds.safeMax),
+            cautionMax: String(data.thresholds.cautionMax),
+            extremeCautionMax: String(data.thresholds.extremeCautionMax),
+            dangerMax: String(data.thresholds.dangerMax),
+          });
+        }
+      } catch (thresholdsError) {
+        console.error('Failed to load heat thresholds:', thresholdsError);
+      }
+    };
+
+    void loadThresholds();
+  }, []);
+
+  const handleThresholdChange = (name: string, value: string) => {
+    setThresholds((current) => ({ ...current, [name]: value }));
+  };
+
+  const submitThresholds = async () => {
+    if (!adminUnlocked) {
+      setThresholdsMessage('Unlock admin auth first.');
+      return;
+    }
+
+    setThresholdsSaving(true);
+    setThresholdsMessage('');
+    try {
+      const { data } = await apiClient.put('/api/admin/heat-thresholds', {
+        safeMax: Number(thresholds.safeMax),
+        cautionMax: Number(thresholds.cautionMax),
+        extremeCautionMax: Number(thresholds.extremeCautionMax),
+        dangerMax: Number(thresholds.dangerMax),
+      });
+      setThresholdsMessage(data?.success ? 'Heat index thresholds updated.' : (data?.message || 'Failed to update thresholds.'));
+    } catch (thresholdsError: any) {
+      setThresholdsMessage(thresholdsError?.response?.data?.message || 'Failed to update thresholds.');
+    } finally {
+      setThresholdsSaving(false);
+    }
+  };
 
   const handleParentFormChange = (name: string, value: string) => {
     setParentForm((current) => ({ ...current, [name]: value }));
@@ -281,79 +328,60 @@ export const SchoolManagement: React.FC = () => {
           <p>Manage school information, parent accounts, and student records</p>
         </div>
         <div className="page-header-actions">
-          <Button
-            variant="outline"
-            type="button"
-            icon={<MdAdminPanelSettings />}
-            onClick={() => navigate('/login')}
-          >
-            Admin Auth (Login)
-          </Button>
           <Button variant="secondary" type="button" icon={<MdRefresh />} onClick={() => void refreshData()} disabled={!adminUnlocked}>
             Refresh Data
           </Button>
         </div>
       </div>
 
-      <div className="management-status-row">
-        <div className={`management-status-pill ${adminUnlocked ? 'success' : 'warning'}`}>
-          {adminUnlocked ? 'Admin tools unlocked' : 'Admin tools locked'}
-        </div>
-        <div className="management-status-pill neutral">Shortcut: Ctrl + Shift + A</div>
-      </div>
-
       {error && <div className="admin-inline-alert error">{error}</div>}
       {success && <div className="admin-inline-alert success">{success}</div>}
 
       <div className="school-grid">
-        <Card
-          title="School Information"
-          actions={<Button variant="outline" type="button" icon={<MdEdit />}>Edit</Button>}
-        >
-          <div className="school-info">
-            <div className="info-item">
-              <label>
-                <MdSchool /> School Name
-              </label>
-              <p>{SCHOOL_INFO.NAME}</p>
-            </div>
-
-            <div className="info-item">
-              <label>
-                <MdLocationOn /> Address
-              </label>
-              <p>{SCHOOL_INFO.ADDRESS}</p>
-            </div>
-
-            <div className="info-item">
-              <label>
-                <MdPhone /> Contact Number
-              </label>
-              <p>{SCHOOL_INFO.CONTACT}</p>
-            </div>
-
-            <div className="info-item">
-              <label>
-                <MdEmail /> Email Address
-              </label>
-              <p>{SCHOOL_INFO.EMAIL}</p>
-            </div>
-          </div>
-        </Card>
-
         <Card title="Heat Index Thresholds">
           <p className="card-description">
             Configure custom heat index thresholds for your school
           </p>
 
           <div className="threshold-settings">
-            <Input label="Normal Threshold (°C)" type="number" value="27" fullWidth />
-            <Input label="Caution Threshold (°C)" type="number" value="32" fullWidth />
-            <Input label="Extreme Caution Threshold (°C)" type="number" value="41" fullWidth />
-            <Input label="Danger Threshold (°C)" type="number" value="54" fullWidth />
+            <Input
+              label="Normal Threshold (°C)"
+              type="number"
+              value={thresholds.safeMax}
+              onChange={(event) => handleThresholdChange('safeMax', event.target.value)}
+              disabled={!adminUnlocked}
+              fullWidth
+            />
+            <Input
+              label="Caution Threshold (°C)"
+              type="number"
+              value={thresholds.cautionMax}
+              onChange={(event) => handleThresholdChange('cautionMax', event.target.value)}
+              disabled={!adminUnlocked}
+              fullWidth
+            />
+            <Input
+              label="Extreme Caution Threshold (°C)"
+              type="number"
+              value={thresholds.extremeCautionMax}
+              onChange={(event) => handleThresholdChange('extremeCautionMax', event.target.value)}
+              disabled={!adminUnlocked}
+              fullWidth
+            />
+            <Input
+              label="Danger Threshold (°C)"
+              type="number"
+              value={thresholds.dangerMax}
+              onChange={(event) => handleThresholdChange('dangerMax', event.target.value)}
+              disabled={!adminUnlocked}
+              fullWidth
+            />
           </div>
 
-          <Button variant="primary" type="button">Update Thresholds</Button>
+          <Button variant="primary" type="button" loading={thresholdsSaving} disabled={!adminUnlocked} onClick={() => void submitThresholds()}>
+            Update Thresholds
+          </Button>
+          {thresholdsMessage && <p className="setting-description">{thresholdsMessage}</p>}
         </Card>
       </div>
 
@@ -571,54 +599,6 @@ export const SchoolManagement: React.FC = () => {
         </div>
       </Card>
 
-      <Card title="System Settings">
-        <div className="system-settings">
-          <div className="setting-item">
-            <label>
-              <strong>Weather API Provider</strong>
-              <select className="select-field">
-                <option>OpenWeatherMap</option>
-                <option>WeatherAPI</option>
-                <option>AccuWeather</option>
-              </select>
-            </label>
-          </div>
-
-          <div className="setting-item">
-            <label>
-              <strong>Data Refresh Interval</strong>
-              <select className="select-field">
-                <option>5 minutes</option>
-                <option>15 minutes</option>
-                <option>30 minutes</option>
-                <option>1 hour</option>
-              </select>
-            </label>
-          </div>
-
-          <div className="setting-item">
-            <label className="checkbox-label">
-              <input type="checkbox" defaultChecked />
-              <div>
-                <strong>Enable Automatic Notifications</strong>
-                <p>Send notifications when heat index thresholds are exceeded</p>
-              </div>
-            </label>
-          </div>
-
-          <div className="setting-item">
-            <label className="checkbox-label">
-              <input type="checkbox" defaultChecked />
-              <div>
-                <strong>AI Advisory Generation</strong>
-                <p>Use AI to generate personalized health advisories</p>
-              </div>
-            </label>
-          </div>
-
-          <Button variant="primary" type="button">Save Settings</Button>
-        </div>
-      </Card>
     </div>
   );
 };

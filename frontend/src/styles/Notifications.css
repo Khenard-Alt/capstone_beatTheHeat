@@ -1,1 +1,160 @@
 /* Notifications Page Styles */
+
+.notifications-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item-unread {
+  background: #eff6ff;
+}
+
+.notification-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.notification-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notification-header strong {
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.notification-time {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.notification-message {
+  margin-top: 4px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notification-priority-high {
+  border-left: 3px solid #dc2626;
+}
+
+.notification-priority-medium {
+  border-left: 3px solid #f59e0b;
+}
+
+.notification-priority-low {
+  border-left: 3px solid #10b981;
+}
+
+.notification-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-view-small {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action-view-small:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.action-mark-read {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.read-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: #94a3b8;
+}
+
+.notifications-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 16px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.notifications-empty h3 {
+  margin: 0;
+  color: #475569;
+}
+
+.notifications-empty p {
+  margin: 0;
+  font-size: 14px;
+}

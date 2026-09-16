@@ -1,21 +1,53 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { MdSave, MdNotifications, MdPalette, MdLanguage } from 'react-icons/md';
+import { MdSave, MdNotifications } from 'react-icons/md';
+import { useAuth } from '../hooks/useAuth';
+import { apiClient } from '../services/api';
+import { useTemperatureUnit } from '../context/TemperatureUnitContext';
+import { isRealUserId } from '../utils/constants';
 import '../styles/Settings.css';
 
+const DEFAULT_PREFERENCES = {
+  emailNotifications: true,
+  smsNotifications: false,
+  heatAlerts: true,
+  advisoryAlerts: true,
+  systemNotifications: false,
+  theme: 'light',
+  language: 'en',
+  temperatureUnit: 'celsius',
+  weatherUpdateFrequency: '1',
+};
+
 export const Settings: React.FC = () => {
-  const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    heatAlerts: true,
-    advisoryAlerts: true,
-    systemNotifications: false,
-    theme: 'light',
-    language: 'en',
-    temperatureUnit: 'celsius',
-    weatherUpdateFrequency: '1',
-  });
+  const { user } = useAuth();
+  const { setUnit } = useTemperatureUnit();
+  const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
+  const [saving, setSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+
+  useEffect(() => {
+    if (!isRealUserId(user?.id)) return;
+    let mounted = true;
+
+    const loadPreferences = async () => {
+      try {
+        const { data } = await apiClient.get(`/api/users/${user.id}`);
+        const maybeUser = data?.user || data;
+        if (mounted && maybeUser?.notificationPreferences) {
+          setPreferences((prev) => ({ ...prev, ...maybeUser.notificationPreferences }));
+        }
+      } catch (err) {
+        console.error('Failed to load settings preferences:', err);
+      }
+    };
+
+    void loadPreferences();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
@@ -27,9 +59,35 @@ export const Settings: React.FC = () => {
     setPreferences((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    console.log('Saving preferences:', preferences);
-    // Save to backend
+  const handleSave = async () => {
+    if (!isRealUserId(user?.id)) {
+      if (preferences.temperatureUnit === 'celsius' || preferences.temperatureUnit === 'fahrenheit') {
+        setUnit(preferences.temperatureUnit);
+      }
+      setStatusMessage('Signed in via the Admin Auth quick-unlock — preferences apply to this session only and are not saved to an account.');
+      return;
+    }
+
+    setSaving(true);
+    setStatusMessage('');
+    try {
+      const { data } = await apiClient.put(`/api/users/${user.id}`, { preferences });
+      if (data?.success) {
+        if (preferences.temperatureUnit === 'celsius' || preferences.temperatureUnit === 'fahrenheit') {
+          setUnit(preferences.temperatureUnit);
+        }
+      }
+      setStatusMessage(data?.success ? 'Preferences saved.' : (data?.message || 'Save failed.'));
+    } catch (err: any) {
+      setStatusMessage(err?.response?.data?.message || 'Save failed.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResetDefaults = () => {
+    setPreferences(DEFAULT_PREFERENCES);
+    setStatusMessage('Reset to defaults — click Save Changes to apply.');
   };
 
   return (
@@ -40,7 +98,8 @@ export const Settings: React.FC = () => {
       </div>
 
       <div className="settings-grid">
-        <Card title="Notification Preferences" icon={<MdNotifications />}>
+        <Card title="Settings" icon={<MdNotifications />}>
+          <div className="settings-sections-grid">
           <div className="settings-section">
             <h3>Notification Channels</h3>
             <div className="setting-item">
@@ -121,26 +180,9 @@ export const Settings: React.FC = () => {
               </label>
             </div>
           </div>
-        </Card>
 
-        <Card title="Appearance" icon={<MdPalette />}>
           <div className="settings-section">
-            <div className="setting-item">
-              <label>
-                <strong>Theme</strong>
-                <select
-                  name="theme"
-                  value={preferences.theme}
-                  onChange={handleSelectChange}
-                  className="select-field"
-                >
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                  <option value="system">System Default</option>
-                </select>
-              </label>
-            </div>
-
+            <h3>Appearance</h3>
             <div className="setting-item">
               <label>
                 <strong>Temperature Unit</strong>
@@ -156,29 +198,11 @@ export const Settings: React.FC = () => {
               </label>
             </div>
           </div>
-        </Card>
 
-        <Card title="Regional Settings" icon={<MdLanguage />}>
-          <div className="settings-section">
-            <div className="setting-item">
-              <label>
-                <strong>Language</strong>
-                <select
-                  name="language"
-                  value={preferences.language}
-                  onChange={handleSelectChange}
-                  className="select-field"
-                >
-                  <option value="en">English</option>
-                  <option value="fil">Filipino</option>
-                </select>
-              </label>
-            </div>
-          </div>
-        </Card>
 
-        <Card title="Data & Updates">
+
           <div className="settings-section">
+            <h3>Data & Updates</h3>
             <div className="setting-item">
               <label>
                 <strong>Weather Update Frequency</strong>
@@ -200,14 +224,18 @@ export const Settings: React.FC = () => {
               </p>
             </div>
           </div>
+          </div>
         </Card>
       </div>
 
       <div className="settings-actions">
-        <Button variant="primary" icon={<MdSave />} onClick={handleSave}>
-          Save Changes
+        <Button variant="primary" icon={<MdSave />} onClick={() => void handleSave()} disabled={saving}>
+          {saving ? 'Saving...' : 'Save Changes'}
         </Button>
-        <Button variant="outline">Reset to Defaults</Button>
+        <Button variant="outline" onClick={handleResetDefaults} disabled={saving}>
+          Reset to Defaults
+        </Button>
+        {statusMessage && <span className="settings-status-message">{statusMessage}</span>}
       </div>
     </div>
   );

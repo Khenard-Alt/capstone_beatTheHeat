@@ -1,6 +1,16 @@
-import type { WeatherData } from '../types';
+import type { WeatherData, HeatLevel } from '../types';
 import { apiClient } from './api';
 import type { ApiEnvelope } from './api';
+
+// Backend's lowest tier is 'safe' (see backend/src/services/weather.service.ts
+// getHeatLevel); the frontend's HeatLevel union uses 'normal' for that tier.
+const normalizeHeatLevel = (value: string): HeatLevel => {
+	if (value === 'safe') return 'normal';
+	if (value === 'caution' || value === 'extreme-caution' || value === 'danger' || value === 'extreme-danger') {
+		return value;
+	}
+	return 'normal';
+};
 
 interface BackendWeatherSnapshot {
 	source: 'openweathermap' | 'fallback';
@@ -35,6 +45,8 @@ const toUiWeather = (payload: BackendWeatherSnapshot): WeatherData => ({
 	windSpeed: payload.windSpeedMps,
 	pressure: payload.pressureHpa,
 	timestamp: payload.timestamp,
+	heatIndexC: payload.heatIndexC,
+	heatLevel: normalizeHeatLevel(payload.heatLevel),
 });
 
 export const fetchCurrentWeather = async (): Promise<WeatherData> => {

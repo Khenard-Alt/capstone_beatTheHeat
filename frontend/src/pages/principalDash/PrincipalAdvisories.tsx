@@ -410,7 +410,7 @@ const PrincipalAdvisories: React.FC = () => {
         <div className="guidelines">
           <div className="guideline-item">
             <div className="guideline-level guideline-normal">
-              <strong>Normal (27°C - 32°C)</strong>
+              <strong>Normal (&lt; 27°C)</strong>
             </div>
             <ul>
               {DEPED_RECOMMENDATIONS.normal.map((rec, idx) => (
@@ -421,7 +421,7 @@ const PrincipalAdvisories: React.FC = () => {
 
           <div className="guideline-item">
             <div className="guideline-level guideline-caution">
-              <strong>Caution (32°C - 41°C)</strong>
+              <strong>Caution (27°C - 32°C)</strong>
             </div>
             <ul>
               {DEPED_RECOMMENDATIONS.caution.map((rec, idx) => (
@@ -432,7 +432,7 @@ const PrincipalAdvisories: React.FC = () => {
 
           <div className="guideline-item">
             <div className="guideline-level guideline-extreme-caution">
-              <strong>Extreme Caution (41°C - 54°C)</strong>
+              <strong>Extreme Caution (32°C - 41°C)</strong>
             </div>
             <ul>
               {DEPED_RECOMMENDATIONS['extreme-caution'].map((rec, idx) => (
@@ -443,10 +443,21 @@ const PrincipalAdvisories: React.FC = () => {
 
           <div className="guideline-item">
             <div className="guideline-level guideline-danger">
-              <strong>Danger (&gt; 54°C)</strong>
+              <strong>Danger (41°C - 54°C)</strong>
             </div>
             <ul>
               {DEPED_RECOMMENDATIONS.danger.map((rec, idx) => (
+                <li key={idx}>{rec}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="guideline-item">
+            <div className="guideline-level guideline-extreme-danger">
+              <strong>Extreme Danger (&gt; 54°C)</strong>
+            </div>
+            <ul>
+              {DEPED_RECOMMENDATIONS['extreme-danger'].map((rec, idx) => (
                 <li key={idx}>{rec}</li>
               ))}
             </ul>

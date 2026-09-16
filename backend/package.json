@@ -8,6 +8,8 @@
     "build": "tsc",
     "start": "npm run build && node dist/index.js",
     "seed:heat-history": "node scripts/seed-heat-history.js",
+    "seed:heat-history-api": "node scripts/seed-heat-history-from-api.js",
+    "seed:heat-history-open-meteo": "node scripts/seed-heat-history-open-meteo.js",
     "seed:head-teacher": "node scripts/seed-head-teacher-account.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",

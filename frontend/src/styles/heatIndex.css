@@ -43,6 +43,12 @@
   color: #2563eb;
 }
 
+.stat-icon img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
 .stat-icon[data-heat-level="caution"] {
   color: #f59e0b;
 }

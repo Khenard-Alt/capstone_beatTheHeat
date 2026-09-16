@@ -45,6 +45,11 @@ export interface WeatherData {
   windSpeed: number;
   pressure: number;
   timestamp: string;
+  // Backend-computed heat index/level — the single source of truth for
+  // classification (honors admin-configured thresholds). Prefer these over
+  // recomputing heat index/level client-side, which can drift out of sync.
+  heatIndexC: number;
+  heatLevel: HeatLevel;
 }
 
 // Heat Index Types

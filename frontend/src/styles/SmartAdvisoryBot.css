@@ -25,6 +25,58 @@
 .global-advisory-header-actions {
   display: flex;
   align-items: center;
+  
+  .global-advisory-panel {
+    width: min(100%, 520px);
+    height: min(78dvh, 680px);
+    max-height: calc(100dvh - 32px);
+    border-radius: 18px;
+  }
+
+  .global-advisory-panel-body {
+    min-height: 0;
+  }
+
+  .global-advisory-messages {
+    min-height: 0;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .global-advisory-message {
+    gap: 8px;
+  }
+
+  .global-advisory-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .global-advisory-bubble {
+    max-width: calc(100% - 40px);
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .global-advisory-input-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 10px 12px 12px;
+    gap: 8px;
+  }
+
+  .global-advisory-input-row input {
+    min-width: 0;
+    padding: 11px 12px;
+  }
+
+  .global-advisory-input-row button {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
   gap: 8px;
 }
 
@@ -319,23 +371,6 @@
   font-size: 20px;
 }
 
-@media (max-width: 768px) {
-  .global-advisory-nudge {
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
-  }
-
-  .global-advisory-panel {
-    width: 100%;
-    height: 65vh;
-  }
-
-  .global-advisory-button.icon-only {
-    width: 56px;
-  }
-}
-
 .floating-advisory-header{position:static;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;min-width:320px;max-width:420px;padding:12px 14px;border:none;border-radius:999px;background:#0f172a;color:#fff;box-shadow:0 14px 30px rgba(15,23,42,0.35);cursor:pointer;font-weight:600;line-height:1.2;animation:floatAdvisorySlide 0.35s ease-out}
 .floating-advisory-header:hover{background:#111827}
 .floating-advisory-header.attention{animation:floatAdvisoryPulse 0.9s ease-in-out infinite, floatAdvisoryShake 0.18s ease-in-out infinite;box-shadow:0 0 0 0 rgba(249,115,22,0.5),0 24px 60px rgba(15,23,42,0.45)}
@@ -344,4 +379,11 @@
 .floating-advisory-text{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
 .floating-advisory-icon{display:grid;place-items:center;background:#0ea5e9;border-radius:999px;width:34px;height:34px}
 .floating-advisory-icon svg{font-size:18px}
+
+@media (max-width: 1024px) {
+  /* The floating assistant is desktop-only; avoid an invisible mobile hit area. */
+  .global-advisory-nudge {
+    display: none;
+  }
+}
 

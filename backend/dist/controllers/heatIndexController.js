@@ -45,12 +45,19 @@ const getHeatIndexHistory = async (req, res, next) => {
         }
         let data = [];
         let error = null;
+        // Scope the query to the requested period BEFORE capping row count —
+        // pulling only the latest 500 rows regardless of period starved
+        // weekly/monthly of any data older than a few hours once heat index
+        // logging ran frequently, since those rows never made it past the cap.
+        const periodCutoff = new Date(Date.now() - (period === 'daily' ? 24 : period === 'weekly' ? 7 * 24 : 30 * 24) * 60 * 60 * 1000);
+        const periodRowCap = period === 'daily' ? 2000 : period === 'weekly' ? 5000 : 10000;
         // Fetch heat index logs and optional linked weather rows by weather_data_id.
         const { data: rawLogs, error: fetchError } = await client
             .from('heat_index_logs')
             .select('created_at, observed_at, weather_data_id, heat_index_c, heat_level')
+            .gte('created_at', periodCutoff.toISOString())
             .order('created_at', { ascending: false })
-            .limit(500); // Get last 500 records for analysis
+            .limit(periodRowCap);
         error = fetchError;
         if (!error && rawLogs) {
             const weatherIds = rawLogs

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
+import { Pagination } from '../components/Pagination';
 import { useNotification } from '../hooks/useNotification';
 import { getTimeAgo } from '../utils/helpers';
 import { formatScheduledTime } from '../utils/formatters';
@@ -8,9 +9,12 @@ import { MdNotifications, MdDelete, MdDone, MdDoneAll } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Notifications.css';
 
+const NOTIFICATIONS_PAGE_SIZE = 10;
+
 export const Notifications: React.FC = () => {
   const { notifications, markAsRead, clearAll } = useNotification();
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
   const filteredNotifications = notifications.filter((n) => {
@@ -19,16 +23,32 @@ export const Notifications: React.FC = () => {
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredNotifications.length / NOTIFICATIONS_PAGE_SIZE));
+  const pagedNotifications = filteredNotifications.slice(
+    (page - 1) * NOTIFICATIONS_PAGE_SIZE,
+    page * NOTIFICATIONS_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   const unreadCount = notifications.filter((n) => n.status === 'unread').length;
 
   const getNotificationIcon = (type: string) => {
     const icons: Record<string, string> = {
-      'heat-alert': '🌡️',
-      advisory: '⚠️',
-      system: '⚙️',
-      info: 'ℹ️',
+      'heat-alert': '',
+      advisory: '',
+      system: '',
+      info: 'ℹ',
     };
-    return icons[type] || '🔔';
+    return icons[type] || '';
   };
 
   const safeTimeLabel = (date: string | Date) => {
@@ -101,7 +121,7 @@ export const Notifications: React.FC = () => {
               </p>
             </div>
           ) : (
-            filteredNotifications.map((notification) => (
+            pagedNotifications.map((notification) => (
               <div
                 key={notification.id}
                 className={`notification-item ${notification.status === 'unread' ? 'notification-item-unread' : ''} ${getPriorityClass(notification.priority)}`}
@@ -148,6 +168,16 @@ export const Notifications: React.FC = () => {
             ))
           )}
         </div>
+
+        {filteredNotifications.length > 0 && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={filteredNotifications.length}
+            pageSize={NOTIFICATIONS_PAGE_SIZE}
+            onPageChange={setPage}
+          />
+        )}
       </Card>
     </div>
   );

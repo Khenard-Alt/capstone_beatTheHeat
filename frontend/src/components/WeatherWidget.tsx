@@ -1,6 +1,7 @@
 import React from 'react';
 import type { WeatherData } from '../types';
-import { formatTemperature, formatDateTimeGlobal } from '../utils/formatters';
+import { formatDateTimeGlobal } from '../utils/formatters';
+import { useTemperatureUnit } from '../context/TemperatureUnitContext';
 import sunnyIcon from '../assets/dashboard/Wsunny.svg';
 import cloudyIcon from '../assets/dashboard/Wcloudy.svg';
 import rainyIcon from '../assets/dashboard/Wrainy.svg';
@@ -20,6 +21,7 @@ const WEATHER_ICON_ASSETS: Record<string, string> = {
 
 export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
   const icon = WEATHER_ICON_ASSETS[weather.icon] || sunnyIcon;
+  const { format } = useTemperatureUnit();
 
   return (
     <div className="weather-widget">
@@ -31,7 +33,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
         <div className="weather-main">
           <img className="weather-icon" src={icon} alt={weather.conditions} />
           <div className="weather-temp big-metric">
-            {formatTemperature(weather.temperature)}
+            {format(weather.temperature)}
           </div>
           <div className="weather-conditions">{weather.conditions}</div>
         </div>

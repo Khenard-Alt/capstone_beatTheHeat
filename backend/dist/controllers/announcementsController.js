@@ -8,6 +8,7 @@ const promises_1 = require("fs/promises");
 const path_1 = __importDefault(require("path"));
 const supabase_1 = require("../config/supabase");
 const email_service_1 = require("../services/email.service");
+const notificationPreferences_1 = require("../utils/notificationPreferences");
 const fallbackRecipients = {
     parent: ['parent@beattheheat.local'],
     teacher: ['teacher@beattheheat.local'],
@@ -123,22 +124,26 @@ exports.announcementsController = {
                 const html = (0, email_service_1.buildAnnouncementHtml)(data.title, data.body);
                 if (shouldNotifyParents) {
                     // If a school_id was set on the announcement, limit to that school; otherwise notify all parents
-                    let parentQuery = supabase.from('users').select('email').eq('role', 'parent');
+                    let parentQuery = supabase.from('users').select('email, metadata').eq('role', 'parent');
                     if (insertPayload.school_id)
                         parentQuery = parentQuery.eq('school_id', insertPayload.school_id);
                     const { data: parents } = await parentQuery;
-                    const parentEmails = (parents || []).map((p) => p.email).filter(Boolean);
+                    const parentEmails = (parents || [])
+                        .filter((p) => p.email && (0, notificationPreferences_1.prefersNotificationChannel)(p.metadata, 'email') && (0, notificationPreferences_1.prefersAlertType)(p.metadata, 'system'))
+                        .map((p) => p.email);
                     console.log('[ANNOUNCEMENT] parentEmails count:', parentEmails.length);
                     if (parentEmails.length > 0) {
                         await (0, email_service_1.sendEmail)(parentEmails, subject, html);
                     }
                 }
                 if (shouldNotifyTeachers) {
-                    let teacherQuery = supabase.from('users').select('email').eq('role', 'teacher');
+                    let teacherQuery = supabase.from('users').select('email, metadata').eq('role', 'teacher');
                     if (insertPayload.school_id)
                         teacherQuery = teacherQuery.eq('school_id', insertPayload.school_id);
                     const { data: teachers } = await teacherQuery;
-                    const teacherEmails = (teachers || []).map((teacher) => teacher.email).filter(Boolean);
+                    const teacherEmails = (teachers || [])
+                        .filter((t) => t.email && (0, notificationPreferences_1.prefersNotificationChannel)(t.metadata, 'email') && (0, notificationPreferences_1.prefersAlertType)(t.metadata, 'system'))
+                        .map((t) => t.email);
                     console.log('[ANNOUNCEMENT] teacherEmails count:', teacherEmails.length);
                     if (teacherEmails.length > 0) {
                         await (0, email_service_1.sendEmail)(teacherEmails, subject, html);

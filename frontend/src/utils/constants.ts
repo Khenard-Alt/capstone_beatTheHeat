@@ -2,6 +2,14 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 export const API_TIMEOUT = 10000; // 10 seconds
 
+// The Ctrl+Shift+A "Admin Auth" quick-unlock modal (see pages/Login.tsx)
+// signs the browser in with this placeholder id instead of a real users.id —
+// it doesn't have its own row, so GET/PUT /api/users/:id always 404s for it.
+export const ADMIN_AUTH_SESSION_ID = 'admin-auth-session';
+
+export const isRealUserId = (id?: string | null): id is string =>
+  !!id && id !== ADMIN_AUTH_SESSION_ID;
+
 // Heat Index Levels
 export const HEAT_LEVELS = {
   NORMAL: 'normal',
@@ -11,12 +19,27 @@ export const HEAT_LEVELS = {
   EXTREME_DANGER: 'extreme-danger',
 } as const;
 
-// Heat Index Thresholds (in Celsius)
+// Heat Index Thresholds (in Celsius) — mirrors the admin-configurable
+// values in backend/src/config/heatThresholds.ts. Mutated in place (not
+// reassigned) by applyHeatThresholds so every module holding a reference
+// to this object picks up admin-saved changes.
 export const HEAT_THRESHOLDS = {
   NORMAL: 27,
   CAUTION: 32,
   EXTREME_CAUTION: 41,
   DANGER: 54,
+};
+
+export const applyHeatThresholds = (thresholds: {
+  safeMax: number;
+  cautionMax: number;
+  extremeCautionMax: number;
+  dangerMax: number;
+}) => {
+  HEAT_THRESHOLDS.NORMAL = thresholds.safeMax;
+  HEAT_THRESHOLDS.CAUTION = thresholds.cautionMax;
+  HEAT_THRESHOLDS.EXTREME_CAUTION = thresholds.extremeCautionMax;
+  HEAT_THRESHOLDS.DANGER = thresholds.dangerMax;
 };
 
 // Heat Index Colors

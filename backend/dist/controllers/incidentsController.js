@@ -10,6 +10,7 @@ const aiAnalysis_service_1 = require("../services/aiAnalysis.service");
 const weather_service_1 = require("../services/weather.service");
 const supabase_1 = require("../config/supabase");
 const email_service_1 = require("../services/email.service");
+const notificationPreferences_1 = require("../utils/notificationPreferences");
 const LOCAL_LOG = path_1.default.resolve(process.cwd(), 'logs', 'health-incidents.jsonl');
 const loadLocalIncidents = async () => {
     try {
@@ -320,21 +321,25 @@ exports.incidentsController = {
                             const { data: studentRows } = await supabase.from('students').select('parent_user_id').eq('id', payload.student_id).limit(1).single();
                             const parentId = studentRows?.parent_user_id;
                             if (parentId) {
-                                const { data: parent } = await supabase.from('users').select('email').eq('id', parentId).limit(1).single();
-                                if (parent?.email)
+                                const { data: parent } = await supabase.from('users').select('email, metadata').eq('id', parentId).limit(1).single();
+                                if (parent?.email && (0, notificationPreferences_1.prefersNotificationChannel)(parent.metadata, 'email'))
                                     await (0, email_service_1.sendEmail)(parent.email, subject, html);
                             }
                         }
                         else {
-                            const { data: parents } = await supabase.from('users').select('email').eq('role', 'parent');
-                            const parentEmails = (parents || []).map((p) => p.email).filter(Boolean);
+                            const { data: parents } = await supabase.from('users').select('email, metadata').eq('role', 'parent');
+                            const parentEmails = (parents || [])
+                                .filter((p) => p.email && (0, notificationPreferences_1.prefersNotificationChannel)(p.metadata, 'email'))
+                                .map((p) => p.email);
                             if (parentEmails.length > 0)
                                 await (0, email_service_1.sendEmail)(parentEmails, subject, html);
                         }
                     }
                     if (notifyTeachers) {
-                        const { data: teachers } = await supabase.from('users').select('email').eq('role', 'teacher');
-                        const teacherEmails = (teachers || []).map((t) => t.email).filter(Boolean);
+                        const { data: teachers } = await supabase.from('users').select('email, metadata').eq('role', 'teacher');
+                        const teacherEmails = (teachers || [])
+                            .filter((t) => t.email && (0, notificationPreferences_1.prefersNotificationChannel)(t.metadata, 'email'))
+                            .map((t) => t.email);
                         if (teacherEmails.length > 0)
                             await (0, email_service_1.sendEmail)(teacherEmails, subject, html);
                     }
@@ -464,21 +469,25 @@ exports.incidentsController = {
                             const { data: studentRows } = await supabase.from('students').select('parent_user_id').eq('id', data.student_id).limit(1).single();
                             const parentId = studentRows?.parent_user_id;
                             if (parentId) {
-                                const { data: parent } = await supabase.from('users').select('email').eq('id', parentId).limit(1).single();
-                                if (parent?.email)
+                                const { data: parent } = await supabase.from('users').select('email, metadata').eq('id', parentId).limit(1).single();
+                                if (parent?.email && (0, notificationPreferences_1.prefersNotificationChannel)(parent.metadata, 'email'))
                                     await (0, email_service_1.sendEmail)(parent.email, subject, html);
                             }
                         }
                         else {
-                            const { data: parents } = await supabase.from('users').select('email').eq('role', 'parent');
-                            const parentEmails = (parents || []).map((p) => p.email).filter(Boolean);
+                            const { data: parents } = await supabase.from('users').select('email, metadata').eq('role', 'parent');
+                            const parentEmails = (parents || [])
+                                .filter((p) => p.email && (0, notificationPreferences_1.prefersNotificationChannel)(p.metadata, 'email'))
+                                .map((p) => p.email);
                             if (parentEmails.length > 0)
                                 await (0, email_service_1.sendEmail)(parentEmails, subject, html);
                         }
                     }
                     if (notifyTeachers) {
-                        const { data: teachers } = await supabase.from('users').select('email').eq('role', 'teacher');
-                        const teacherEmails = (teachers || []).map((t) => t.email).filter(Boolean);
+                        const { data: teachers } = await supabase.from('users').select('email, metadata').eq('role', 'teacher');
+                        const teacherEmails = (teachers || [])
+                            .filter((t) => t.email && (0, notificationPreferences_1.prefersNotificationChannel)(t.metadata, 'email'))
+                            .map((t) => t.email);
                         if (teacherEmails.length > 0)
                             await (0, email_service_1.sendEmail)(teacherEmails, subject, html);
                     }

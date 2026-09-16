@@ -96,6 +96,13 @@
   color: #0f172a !important;
 }
 
+#incident-reports-top .table-wrap,
+#incident-review-top .table-wrap,
+#incident-reports-top .teacher-main,
+#incident-review-top .teacher-main {
+  min-width: 0;
+}
+
 #incident-reports-top .teacher-dashboard-table thead th,
 #incident-review-top .teacher-dashboard-table thead th {
   background: transparent !important;
@@ -165,6 +172,33 @@
   #incident-reports-top .teacher-dashboard-table td.description,
   #incident-review-top .teacher-dashboard-table td.description {
     max-width: 100% !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #incident-reports-top .teacher-panel-card,
+  #incident-review-top .teacher-panel-card {
+    padding: 12px;
+  }
+
+  #incident-reports-top .teacher-incidents-toolbar,
+  #incident-review-top .teacher-incidents-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #incident-reports-top .teacher-incidents-search,
+  #incident-review-top .teacher-incidents-search,
+  #incident-reports-top .teacher-incidents-filter,
+  #incident-review-top .teacher-incidents-filter {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #incident-reports-top .teacher-incidents-search input,
+  #incident-review-top .teacher-incidents-search input {
+    min-width: 0;
+    width: 100%;
   }
 }
 

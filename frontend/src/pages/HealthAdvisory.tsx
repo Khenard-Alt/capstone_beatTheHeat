@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../components/Card';
 import { AdvisoryAlert } from '../components/AdvisoryAlert';
-import { Button } from '../components/Button';
-import { useAuth } from '../hooks/useAuth';
+import { Pagination } from '../components/Pagination';
 import type { HealthAdvisory as HealthAdvisoryType } from '../types';
 import { DEPED_RECOMMENDATIONS } from '../utils/constants';
 import { apiClient } from '../services/api';
 import '../styles/HealthAdvisory.css';
 
-export const HealthAdvisory: React.FC = () => {
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+const ADVISORIES_PAGE_SIZE = 10;
 
+const formatHeatLevelLabel = (value: string): string =>
+  value
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+const formatDateTime = (value?: string): string => {
+  if (!value) return 'N/A';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleString();
+};
+
+export const HealthAdvisory: React.FC = () => {
   const [advisories, setAdvisories] = useState<HealthAdvisoryType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewingAdvisory, setViewingAdvisory] = useState<HealthAdvisoryType | null>(null);
+  const [activePage, setActivePage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
 
   const toPercent = (value?: number): number => {
     if (typeof value !== 'number' || Number.isNaN(value)) {
@@ -29,7 +42,7 @@ export const HealthAdvisory: React.FC = () => {
       try {
         setLoading(true);
         const response = await apiClient.get('/api/health-advisories', {
-          params: { limit: 20, offset: 0 },
+          params: { limit: 100, offset: 0 },
         });
 
         if (response.data.success && response.data.data) {
@@ -37,10 +50,10 @@ export const HealthAdvisory: React.FC = () => {
           const convertedAdvisories: HealthAdvisoryType[] = response.data.data.map((log: any) => {
             // Parse heat level from safety_level or infer from response
             const heatLevel = String(log.safety_level || 'normal').toLowerCase();
-            const safeHeatLevel = ['normal', 'caution', 'extreme-caution', 'danger', 'extreme-danger'].includes(heatLevel) 
-              ? heatLevel 
+            const safeHeatLevel = ['normal', 'caution', 'extreme-caution', 'danger', 'extreme-danger'].includes(heatLevel)
+              ? heatLevel
               : 'normal';
-            
+
             return {
               id: log.id,
               schoolId: 'school-1', // Default school ID
@@ -81,14 +94,35 @@ export const HealthAdvisory: React.FC = () => {
   );
   const latestEvidence = advisories[0];
 
+  const activeTotalPages = Math.max(1, Math.ceil(activeAdvisories.length / ADVISORIES_PAGE_SIZE));
+  const pagedActiveAdvisories = activeAdvisories.slice(
+    (activePage - 1) * ADVISORIES_PAGE_SIZE,
+    activePage * ADVISORIES_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    if (activePage > activeTotalPages) {
+      setActivePage(activeTotalPages);
+    }
+  }, [activePage, activeTotalPages]);
+
+  const historyTotalPages = Math.max(1, Math.ceil(historyAdvisories.length / ADVISORIES_PAGE_SIZE));
+  const pagedHistoryAdvisories = historyAdvisories.slice(
+    (historyPage - 1) * ADVISORIES_PAGE_SIZE,
+    historyPage * ADVISORIES_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    if (historyPage > historyTotalPages) {
+      setHistoryPage(historyTotalPages);
+    }
+  }, [historyPage, historyTotalPages]);
+
   return (
     <div className="health-advisory-page">
       <div className="page-header">
         <h1>Health Advisories</h1>
         <p>Current and past health advisories for heat safety</p>
-        {isAdmin && (
-          <Button variant="primary">Create Manual Advisory</Button>
-        )}
       </div>
 
       {error && (
@@ -106,11 +140,55 @@ export const HealthAdvisory: React.FC = () => {
       {!loading && activeAdvisories.length > 0 && (
         <div className="advisory-section">
           <h2>Active Advisories</h2>
-          <div className="advisory-list">
-            {activeAdvisories.map((advisory) => (
-              <AdvisoryAlert key={advisory.id} advisory={advisory} />
-            ))}
+          <div className="advisory-table-wrap table-wrap">
+            <table className="advisory-table app-table">
+              <thead>
+                <tr>
+                  <th scope="col">Issued</th>
+                  <th scope="col">Heat Level</th>
+                  <th scope="col">Risk</th>
+                  <th scope="col">Summary</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedActiveAdvisories.map((advisory) => (
+                  <tr
+                    key={advisory.id}
+                    onClick={() => setViewingAdvisory(advisory)}
+                    style={{ cursor: 'pointer' }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setViewingAdvisory(advisory);
+                      }
+                    }}
+                  >
+                    <td data-label="Issued">{formatDateTime(advisory.createdAt)}</td>
+                    <td data-label="Heat Level">
+                      <span className={`advisory-level badge-${advisory.heatLevel}`}>
+                        {formatHeatLevelLabel(advisory.heatLevel)}
+                      </span>
+                    </td>
+                    <td data-label="Risk" className={`advisory-risk risk-${advisory.riskLevel}`}>
+                      {formatHeatLevelLabel(advisory.riskLevel)}
+                    </td>
+                    <td data-label="Summary" style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {advisory.advisoryText}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+          <Pagination
+            page={activePage}
+            totalPages={activeTotalPages}
+            totalItems={activeAdvisories.length}
+            pageSize={ADVISORIES_PAGE_SIZE}
+            onPageChange={setActivePage}
+          />
         </div>
       )}
 
@@ -161,21 +239,68 @@ export const HealthAdvisory: React.FC = () => {
 
       <div className="advisory-section">
         <h2>Recent Advisories {!loading && `(${historyAdvisories.length})`}</h2>
-        <div className="advisory-list">
-          {historyAdvisories.map((advisory) => (
-            <AdvisoryAlert key={advisory.id} advisory={advisory} />
-          ))}
-          {!loading && historyAdvisories.length === 0 && (
-            <p className="empty-state-text">No recent advisories</p>
-          )}
-        </div>
+        {!loading && historyAdvisories.length === 0 ? (
+          <p className="empty-state-text">No recent advisories</p>
+        ) : (
+          <>
+            <div className="advisory-table-wrap table-wrap">
+              <table className="advisory-table app-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Issued</th>
+                    <th scope="col">Heat Level</th>
+                    <th scope="col">Risk</th>
+                    <th scope="col">Summary</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedHistoryAdvisories.map((advisory) => (
+                    <tr
+                      key={advisory.id}
+                      onClick={() => setViewingAdvisory(advisory)}
+                      style={{ cursor: 'pointer' }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setViewingAdvisory(advisory);
+                        }
+                      }}
+                    >
+                      <td data-label="Issued">{formatDateTime(advisory.createdAt)}</td>
+                      <td data-label="Heat Level">
+                        <span className={`advisory-level badge-${advisory.heatLevel}`}>
+                          {formatHeatLevelLabel(advisory.heatLevel)}
+                        </span>
+                      </td>
+                      <td data-label="Risk" className={`advisory-risk risk-${advisory.riskLevel}`}>
+                        {formatHeatLevelLabel(advisory.riskLevel)}
+                      </td>
+                      <td data-label="Summary" style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {advisory.advisoryText}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              page={historyPage}
+              totalPages={historyTotalPages}
+              totalItems={historyAdvisories.length}
+              pageSize={ADVISORIES_PAGE_SIZE}
+              onPageChange={setHistoryPage}
+            />
+          </>
+        )}
       </div>
 
       <Card title="DepEd Heat Index Guidelines">
         <div className="guidelines">
           <div className="guideline-item">
             <div className="guideline-level guideline-normal">
-              <strong>Normal (27°C - 32°C)</strong>
+              <strong>Normal (&lt; 27°C)</strong>
             </div>
             <ul>
               {DEPED_RECOMMENDATIONS.normal.map((rec, idx) => (
@@ -186,7 +311,7 @@ export const HealthAdvisory: React.FC = () => {
 
           <div className="guideline-item">
             <div className="guideline-level guideline-caution">
-              <strong>Caution (32°C - 41°C)</strong>
+              <strong>Caution (27°C - 32°C)</strong>
             </div>
             <ul>
               {DEPED_RECOMMENDATIONS.caution.map((rec, idx) => (
@@ -197,7 +322,7 @@ export const HealthAdvisory: React.FC = () => {
 
           <div className="guideline-item">
             <div className="guideline-level guideline-extreme-caution">
-              <strong>Extreme Caution (41°C - 54°C)</strong>
+              <strong>Extreme Caution (32°C - 41°C)</strong>
             </div>
             <ul>
               {DEPED_RECOMMENDATIONS['extreme-caution'].map((rec, idx) => (
@@ -208,10 +333,21 @@ export const HealthAdvisory: React.FC = () => {
 
           <div className="guideline-item">
             <div className="guideline-level guideline-danger">
-              <strong>Danger (&gt; 54°C)</strong>
+              <strong>Danger (41°C - 54°C)</strong>
             </div>
             <ul>
               {DEPED_RECOMMENDATIONS.danger.map((rec, idx) => (
+                <li key={idx}>{rec}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="guideline-item">
+            <div className="guideline-level guideline-extreme-danger">
+              <strong>Extreme Danger (&gt; 54°C)</strong>
+            </div>
+            <ul>
+              {DEPED_RECOMMENDATIONS['extreme-danger'].map((rec, idx) => (
                 <li key={idx}>{rec}</li>
               ))}
             </ul>
@@ -233,6 +369,38 @@ export const HealthAdvisory: React.FC = () => {
           </ul>
         </div>
       </Card>
+
+      {viewingAdvisory && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setViewingAdvisory(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 16,
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: 'min(640px, 100%)',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              background: '#ffffff',
+              borderRadius: 22,
+              boxShadow: '0 24px 80px rgba(15, 23, 42, 0.35)',
+            }}
+          >
+            <AdvisoryAlert advisory={viewingAdvisory} onDismiss={() => setViewingAdvisory(null)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

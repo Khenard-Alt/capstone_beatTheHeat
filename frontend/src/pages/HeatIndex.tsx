@@ -6,7 +6,20 @@ import { formatDateTimeCompact, formatDateTimeGlobal } from '../utils/formatters
 import { getHeatLevel, getHeatLabel } from '../utils/helpers';
 import { CHART_COLORS } from '../utils/constants';
 import { apiClient } from '../services/api';
+import type { HeatLevel } from '../types';
+import highTempIcon from '../assets/dashboard/hightemperate.svg';
+import moderateTempIcon from '../assets/dashboard/moderateTemperature.svg';
+import normalTempIcon from '../assets/dashboard/normalTemperature.svg';
+import todayAverageIcon from '../assets/admin/todayAverage.svg';
 import '../styles/heatIndex.css';
+
+const HEAT_LEVEL_ICONS: Record<HeatLevel, string> = {
+  normal: normalTempIcon,
+  caution: moderateTempIcon,
+  'extreme-caution': moderateTempIcon,
+  danger: highTempIcon,
+  'extreme-danger': highTempIcon,
+};
 
 interface HeatIndexData {
   time: string;
@@ -110,7 +123,7 @@ export const HeatIndex: React.FC = () => {
         <Card className="stat-card stat-card-heat" data-heat-level={currentLevel}>
           <div className="stat-content">
             <div className="stat-icon" data-heat-level={currentLevel}>
-              🌡️
+              <img src={HEAT_LEVEL_ICONS[currentLevel] || normalTempIcon} alt={`${getHeatLabel(currentLevel)} heat index`} />
             </div>
             <div className="stat-info">
               <div className="stat-value" data-heat-level={currentLevel}>
@@ -146,7 +159,9 @@ export const HeatIndex: React.FC = () => {
 
         <Card className="stat-card">
           <div className="stat-content">
-            <div className="stat-icon">📊</div>
+            <div className="stat-icon">
+              <img src={todayAverageIcon} alt="Average heat index" />
+            </div>
             <div className="stat-info">
               <div className="stat-value">{currentStats.avg}°C</div>
               <div className="stat-label">{viewMode === 'daily' ? "Today's" : "Period's"} Average</div>

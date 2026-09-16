@@ -163,10 +163,6 @@ export const AdminDashboard: React.FC = () => {
           <p>{getGreeting()}, {user?.firstName}. System overview for Mayamot Elementary School.</p>
         </div>
         <div className="admin-dashboard-badges">
-          <span className="admin-badge">Admin Access</span>
-          <span className="admin-badge admin-badge-muted">
-            {loading ? 'Syncing...' : 'Last sync: just now'}
-          </span>
         </div>
       </div>
 
@@ -240,14 +236,6 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </Card>
 
-          <Card title="System Notes">
-            <ul className="admin-notes">
-              <li>Weather fetch interval: 15 minutes</li>
-              <li>Last advisory generation: 10 minutes ago</li>
-              <li>Email queue: 2 pending</li>
-              <li>SMS queue: 1 pending</li>
-            </ul>
-          </Card>
 
           <Card title="Most Asked Parent Questions (Week)">
             <div className="admin-question-insights">

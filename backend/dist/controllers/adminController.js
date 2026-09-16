@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getParentQuestionInsights = exports.getAdminStats = void 0;
+exports.updateHeatThresholdsHandler = exports.getHeatThresholdsHandler = exports.getParentQuestionInsights = exports.getAdminStats = void 0;
 const supabase_1 = require("../config/supabase");
+const heatThresholds_1 = require("../config/heatThresholds");
 const fallbackStats = (period) => {
     const now = new Date();
     const points = period === 'today' ? 6 : period === 'week' ? 7 : 8;
@@ -207,4 +208,41 @@ const getParentQuestionInsights = async (req, res, next) => {
     }
 };
 exports.getParentQuestionInsights = getParentQuestionInsights;
+const getHeatThresholdsHandler = async (_req, res, next) => {
+    try {
+        res.status(200).json({ success: true, thresholds: (0, heatThresholds_1.getHeatThresholds)() });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getHeatThresholdsHandler = getHeatThresholdsHandler;
+const updateHeatThresholdsHandler = async (req, res, next) => {
+    try {
+        const { safeMax, cautionMax, extremeCautionMax, dangerMax } = req.body;
+        const parsed = {
+            safeMax: Number(safeMax),
+            cautionMax: Number(cautionMax),
+            extremeCautionMax: Number(extremeCautionMax),
+            dangerMax: Number(dangerMax),
+        };
+        if (Object.values(parsed).some((value) => !Number.isFinite(value))) {
+            res.status(400).json({ success: false, message: 'All thresholds must be valid numbers.' });
+            return;
+        }
+        if (!(0, heatThresholds_1.isValidThresholdOrder)(parsed)) {
+            res.status(400).json({
+                success: false,
+                message: 'Thresholds must increase in order: Normal < Caution < Extreme Caution < Danger.',
+            });
+            return;
+        }
+        (0, heatThresholds_1.setHeatThresholds)(parsed);
+        res.status(200).json({ success: true, thresholds: parsed });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.updateHeatThresholdsHandler = updateHeatThresholdsHandler;
 //# sourceMappingURL=adminController.js.map

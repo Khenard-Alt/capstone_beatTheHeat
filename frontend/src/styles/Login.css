@@ -339,6 +339,10 @@
   max-width: 500px;
 }
 
+.login-mobile-cta {
+  display: none;
+}
+
 .login-brand-features {
   display: flex;
   flex-direction: column;
@@ -837,6 +841,28 @@
     text-align: center;
   }
 
+  .login-mobile-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    min-width: 150px;
+    margin: 4px 0 8px;
+    padding: 12px 22px;
+    border: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1d4ed8;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  }
+
+  .login-mobile-cta:active {
+    transform: translateY(1px);
+  }
+
   .login-brand-features {
     gap: 20px;
   }
@@ -922,6 +948,11 @@
 
   .login-form-section {
     padding: 30px 20px;
+  }
+
+  .login-mobile-cta {
+    width: 100%;
+    max-width: 240px;
   }
 }
 

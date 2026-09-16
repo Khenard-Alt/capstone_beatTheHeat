@@ -70,7 +70,7 @@
 }
 
 .weather-temp {
-  font-size: 56px;
+  font-size: clamp(36px, 10vw, 56px);
   font-weight: 800;
   color: #2563eb;
   line-height: 1;
@@ -81,7 +81,7 @@
 
 /* Shared utility class to make large metrics consistent across components */
 .weather-temp.big-metric {
-  font-size: 64px;
+  font-size: clamp(38px, 10vw, 64px);
   line-height: 1;
   letter-spacing: -3px;
 }

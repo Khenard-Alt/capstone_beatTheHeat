@@ -1,14 +1,61 @@
-import React, { useState } from 'react';
-import { MdNotifications, MdPerson } from 'react-icons/md';
+import React, { useEffect, useState } from 'react';
+import { MdNotifications, MdPerson, MdSave } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { ProfileInformationCard } from '../../components/ProfileInformationCard';
 import { useAuth } from '../../hooks/useAuth';
+import { apiClient } from '../../services/api';
+import { isRealUserId } from '../../utils/constants';
 import '../../styles/TeacherPanel.css';
 
 const ProfileSettings: React.FC = () => {
   const { user } = useAuth();
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [notifySms, setNotifySms] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+
+  useEffect(() => {
+    if (!isRealUserId(user?.id)) return;
+    let mounted = true;
+
+    const loadPreferences = async () => {
+      try {
+        const { data } = await apiClient.get(`/api/users/${user.id}`);
+        const maybeUser = data?.user || data;
+        const prefs = maybeUser?.notificationPreferences;
+        if (mounted && prefs) {
+          if (typeof prefs.notifyEmail === 'boolean') setNotifyEmail(prefs.notifyEmail);
+          if (typeof prefs.notifySms === 'boolean') setNotifySms(prefs.notifySms);
+        }
+      } catch (err) {
+        console.error('Failed to load notification preferences:', err);
+      }
+    };
+
+    void loadPreferences();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
+
+  const savePreferences = async () => {
+    if (!isRealUserId(user?.id)) {
+      setStatusMessage('Not signed in to a real account — preferences cannot be saved.');
+      return;
+    }
+    setSaving(true);
+    setStatusMessage('');
+    try {
+      const { data } = await apiClient.put(`/api/users/${user.id}`, {
+        preferences: { notifyEmail, notifySms },
+      });
+      setStatusMessage(data?.success ? 'Preferences saved.' : (data?.message || 'Save failed.'));
+    } catch (err: any) {
+      setStatusMessage(err?.response?.data?.message || 'Save failed.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="teacher-page-shell">
@@ -39,6 +86,12 @@ const ProfileSettings: React.FC = () => {
                 <div className="teacher-info-label">Role</div>
                 <div className="teacher-info-value" style={{ fontSize: 16 }}>{user?.role || 'teacher'}</div>
               </div> */}
+            </div>
+            <div className="teacher-form-actions" style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button type="button" className="btn btn-primary" onClick={() => void savePreferences()} disabled={saving}>
+                <MdSave /> {saving ? 'Saving...' : 'Save Preferences'}
+              </button>
+              {statusMessage && <span style={{ fontSize: 13, fontWeight: 600, color: '#16a34a' }}>{statusMessage}</span>}
             </div>
           </Card>
         </div>

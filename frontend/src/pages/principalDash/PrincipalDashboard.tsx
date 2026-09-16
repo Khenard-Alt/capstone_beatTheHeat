@@ -11,7 +11,7 @@ import { apiClient } from '../../services/api';
 import AnnouncementModal from '../../components/AnnouncementModal';
 import { formatDateTimeCompact, formatDateTimeGlobal } from '../../utils/formatters';
 import type { HeatIndexData, WeatherData, HealthAdvisory } from '../../types';
-import { calculateHeatIndex, getHeatLevel, getGreeting } from '../../utils/helpers';
+import { getGreeting } from '../../utils/helpers';
 import { CHART_COLORS, DEPED_RECOMMENDATIONS } from '../../utils/constants';
 import '../../styles/AdminDashboard.css';
 
@@ -100,16 +100,13 @@ export const PrincipalDashboard: React.FC = () => {
       };
     }
 
-    const heatIndex = calculateHeatIndex(currentWeather.temperature, currentWeather.humidity);
-    const level = getHeatLevel(heatIndex);
-
     return {
       id: '1',
       schoolId: 'school-1',
       temperature: currentWeather.temperature,
       humidity: currentWeather.humidity,
-      heatIndex,
-      level,
+      heatIndex: currentWeather.heatIndexC,
+      level: currentWeather.heatLevel,
       timestamp: new Date().toISOString(),
     };
   }, [currentWeather]);

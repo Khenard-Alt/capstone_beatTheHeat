@@ -1,1 +1,151 @@
 /* Settings Page Styles */
+
+.settings-page {
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.settings-page .page-header {
+  margin-bottom: 24px;
+}
+
+.settings-page .page-header h1 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.settings-page .page-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.settings-grid {
+  display: block;
+}
+
+.settings-sections-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 640px) {
+  .settings-sections-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .settings-sections-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-section h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+.setting-item {
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.setting-item strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.setting-item p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.setting-description {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.checkbox-label input[type='checkbox'] {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.select-field {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.select-field:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.settings-status-message {
+  font-size: 13px;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+/* Phone width: give cards/buttons full-bleed breathing room instead of
+   the desktop page padding, and stack action buttons full-width. */
+@media (max-width: 480px) {
+  .settings-page {
+    padding: 16px;
+  }
+
+  .settings-actions {
+    flex-direction: column;
+  }
+
+  .settings-actions > * {
+    width: 100%;
+  }
+}

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { env, hasWeatherApiKey } from '../config/environment';
 import { WeatherForecastDay, WeatherSnapshot } from '../types';
 import { auditLogService } from './auditLog.service';
+import { getHeatThresholds } from '../config/heatThresholds';
 
 interface OpenWeatherResponse {
 	name: string;
@@ -510,10 +511,11 @@ class WeatherService {
 	}
 
 	private getHeatLevel(heatIndexC: number): WeatherSnapshot['heatLevel'] {
-		if (heatIndexC < 27) return 'safe';
-		if (heatIndexC < 32) return 'caution';
-		if (heatIndexC < 41) return 'extreme-caution';
-		if (heatIndexC < 54) return 'danger';
+		const thresholds = getHeatThresholds();
+		if (heatIndexC < thresholds.safeMax) return 'safe';
+		if (heatIndexC < thresholds.cautionMax) return 'caution';
+		if (heatIndexC < thresholds.extremeCautionMax) return 'extreme-caution';
+		if (heatIndexC < thresholds.dangerMax) return 'danger';
 		return 'extreme-danger';
 	}
 

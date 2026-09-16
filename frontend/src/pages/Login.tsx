@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -40,6 +40,7 @@ export const Login: React.FC = () => {
   const [adminAuthError, setAdminAuthError] = useState('');
   const [adminAuthSuccess, setAdminAuthSuccess] = useState('');
   const [isAuthenticatingAdmin, setIsAuthenticatingAdmin] = useState(false);
+  const loginFormSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (searchParams.get('oauth') === 'google') setIsRegisterOpen(true);
@@ -150,6 +151,10 @@ export const Login: React.FC = () => {
   const handleManualRegistration = () => {
     sessionStorage.removeItem('bth_pending_google_registration');
     setIsRegisterOpen(true);
+  };
+
+  const scrollToLoginForm = () => {
+    loginFormSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleAdminAuth = async (event: React.FormEvent) => {
@@ -278,6 +283,9 @@ export const Login: React.FC = () => {
             <p className="login-brand-description">
               AI-Integrated Smart Heat Index and Real-Time Health Advisory System
             </p>
+            <button type="button" className="login-mobile-cta" onClick={scrollToLoginForm}>
+              Login
+            </button>
             <div className="login-brand-features">
               <div className="feature-item">
                 <img className="feature-icon" src={realtimeIcon} alt="" aria-hidden="true" />
@@ -309,7 +317,7 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="login-form-section">
+        <div className="login-form-section" ref={loginFormSectionRef}>
           <div className="login-form-container">
             <div className="login-form-header">
               <h2 className="login-form-title">Welcome Back</h2>

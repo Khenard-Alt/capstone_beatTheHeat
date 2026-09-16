@@ -998,8 +998,27 @@
 }
 
 @media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 12px;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    border-radius: 14px;
+  }
+
+  .modal-step {
+    padding: 14px 16px 18px;
+  }
+
   .register-progress {
-    padding: 18px 24px 0;
+    padding: 14px 16px 0;
+    gap: 6px;
   }
 
   .register-step-head,
@@ -1016,5 +1035,13 @@
   .register-progress {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: 10px;
+  }
+
+  .register-progress-step {
+    min-width: 0;
+  }
+
+  .register-progress-step span {
+    overflow-wrap: anywhere;
   }
 }
