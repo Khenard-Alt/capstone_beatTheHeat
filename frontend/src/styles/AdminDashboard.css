@@ -526,4 +526,52 @@
   .principal-announcement-main .admin-dashboard-header {
     padding: 14px;
   }
+
+  .principal-advisories-page,
+  .principal-advisories-page .advisory-section,
+  .principal-advisories-page .advisory-table-wrap,
+  .principal-advisories-page .card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .principal-advisories-page {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .principal-advisories-page .admin-dashboard-header {
+    margin-bottom: 14px !important;
+    min-width: 0;
+  }
+
+  .principal-advisories-page .admin-dashboard-header h1,
+  .principal-advisories-page .admin-dashboard-header p,
+  .principal-advisories-page .advisory-section h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .principal-advisories-page .advisory-table-wrap {
+    overflow: visible;
+    padding: 0;
+    border: 0;
+  }
+
+  .principal-advisories-page .advisory-table.app-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: auto;
+  }
+
+  .principal-advisories-page .advisory-table.app-table td {
+    width: auto !important;
+    max-width: none !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
 }
