@@ -404,8 +404,8 @@ const IncidentReports: React.FC = () => {
               </div>
             ) : (
               <>
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="teacher-dashboard-table app-table">
+                <div className="responsive-incident-table-wrap" style={{ overflowX: 'auto' }}>
+                  <table className="teacher-dashboard-table app-table responsive-incident-table">
                     <thead>
                       <tr>
                         <th>Student</th>
@@ -420,18 +420,18 @@ const IncidentReports: React.FC = () => {
                     <tbody>
                       {pagedIncidents.map((incident) => (
                         <tr key={incident.id}>
-                          <td>
+                          <td data-label="Student">
                             <strong>{incident.studentName}</strong>
                             <div className="teacher-info-copy" style={{ marginTop: 4, fontSize: 12 }}>
                               {incident.gradeLevel || 'N/A'} {incident.section ? `• ${incident.section}` : ''}
                             </div>
                           </td>
-                          <td>{incident.incidentType}</td>
-                          <td style={{ maxWidth: 320 }}>{incident.description || '—'}</td>
-                          <td style={{ maxWidth: 300 }}>{incident.actionTaken || '—'}</td>
-                          <td><span className={`teacher-status ${String(incident.status).toLowerCase()}`}>{incident.status}</span></td>
-                          <td>{incident.timestamp ? new Date(incident.timestamp).toLocaleString() : '—'}</td>
-                          <td>
+                          <td data-label="Incident Type">{incident.incidentType}</td>
+                          <td data-label="Description" style={{ maxWidth: 320 }}>{incident.description || '—'}</td>
+                          <td data-label="Action Taken" style={{ maxWidth: 300 }}>{incident.actionTaken || '—'}</td>
+                          <td data-label="Status"><span className={`teacher-status ${String(incident.status).toLowerCase()}`}>{incident.status}</span></td>
+                          <td data-label="Date">{incident.timestamp ? new Date(incident.timestamp).toLocaleString() : '—'}</td>
+                          <td data-label="Info">
                             <button
                               type="button"
                               className="btn btn-secondary"

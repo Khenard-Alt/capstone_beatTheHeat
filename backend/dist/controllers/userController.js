@@ -41,6 +41,7 @@ const fallbackUser = (email, role) => ({
     id: crypto_1.default.randomUUID(),
     email,
     role,
+    isDemo: true,
     firstName: 'User',
     lastName: 'Demo',
     schoolId: 'school-1',
@@ -786,7 +787,19 @@ const uploadAvatar = async (req, res, next) => {
             res.status(503).json({ success: false, message: 'Picture upload requires Supabase Storage configuration.' });
             return;
         }
-        await ensureAvatarBucket(client);
+        try {
+            await ensureAvatarBucket(client);
+        }
+        catch (bucketError) {
+            const message = bucketError instanceof Error ? bucketError.message : 'Unable to initialize avatar storage.';
+            console.error('Avatar storage initialization error:', bucketError);
+            res.status(503).json({
+                success: false,
+                message: 'Avatar storage is not available. Check Supabase Storage configuration and permissions.',
+                error: message,
+            });
+            return;
+        }
         const extension = (file.originalname.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
         const objectPath = `${id}/${crypto_1.default.randomUUID()}.${extension}`;
         const { error: uploadError } = await client.storage

@@ -173,6 +173,11 @@
   #incident-review-top .teacher-dashboard-table td.description {
     max-width: 100% !important;
   }
+
+  #incident-reports-top .teacher-dashboard-table.app-table,
+  #incident-review-top .teacher-dashboard-table.app-table {
+    min-width: 0 !important;
+  }
 }
 
 @media (max-width: 640px) {

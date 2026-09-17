@@ -145,8 +145,8 @@ const IncidentReview: React.FC = () => {
             ) : filteredIncidents.length === 0 ? (
               <div className="teacher-info-copy">No incidents match the current filter.</div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="teacher-dashboard-table app-table">
+              <div className="responsive-incident-table-wrap" style={{ overflowX: 'auto' }}>
+                <table className="teacher-dashboard-table app-table responsive-incident-table">
                   <thead>
                     <tr>
                       <th>Student</th>
@@ -162,14 +162,14 @@ const IncidentReview: React.FC = () => {
                   <tbody>
                     {filteredIncidents.map((incident) => (
                       <tr key={incident.id}>
-                        <td style={{ fontWeight: 700 }}>{incident.studentName || incident.id}</td>
-                        <td>{[incident.gradeLevel, incident.section].filter(Boolean).join(' - ') || '—'}</td>
-                        <td style={{ textTransform: 'capitalize' }}>{incident.incidentType || '—'}</td>
-                        <td className="description" title={incident.description || ''}>{incident.description || '—'}</td>
-                        <td className="action-taken" title={incident.actionTaken || ''}>{incident.actionTaken || '—'}</td>
-                        <td>{incident.status ? <span className={`status-badge ${String(incident.status).toLowerCase()}`}>{incident.status}</span> : '—'}</td>
-                        <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{incident.timestamp ? new Date(incident.timestamp).toLocaleString() : '—'}</td>
-                        <td style={{ whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <td data-label="Student" style={{ fontWeight: 700 }}>{incident.studentName || incident.id}</td>
+                        <td data-label="Grade / Section">{[incident.gradeLevel, incident.section].filter(Boolean).join(' - ') || '—'}</td>
+                        <td data-label="Incident Type" style={{ textTransform: 'capitalize' }}>{incident.incidentType || '—'}</td>
+                        <td data-label="Description" className="description" title={incident.description || ''}>{incident.description || '—'}</td>
+                        <td data-label="Action Taken" className="action-taken" title={incident.actionTaken || ''}>{incident.actionTaken || '—'}</td>
+                        <td data-label="Status">{incident.status ? <span className={`status-badge ${String(incident.status).toLowerCase()}`}>{incident.status}</span> : '—'}</td>
+                        <td data-label="Date" style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{incident.timestamp ? new Date(incident.timestamp).toLocaleString() : '—'}</td>
+                        <td data-label="Actions" style={{ whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
                           <select
                             aria-label="Set incident status"
                             defaultValue={String(incident.status || 'pending')}

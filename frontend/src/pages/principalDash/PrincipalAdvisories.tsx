@@ -151,16 +151,16 @@ const PrincipalAdvisories: React.FC = () => {
                       }
                     }}
                   >
-                    <td>{formatDateTime(advisory.createdAt)}</td>
-                    <td>
+                    <td data-label="Issued">{formatDateTime(advisory.createdAt)}</td>
+                    <td data-label="Heat Level">
                       <span className={`advisory-level badge-${advisory.heatLevel}`}>
                         {formatHeatLevelLabel(advisory.heatLevel)}
                       </span>
                     </td>
-                    <td className={`advisory-risk risk-${advisory.riskLevel}`}>
+                    <td data-label="Risk" className={`advisory-risk risk-${advisory.riskLevel}`}>
                       {formatHeatLevelLabel(advisory.riskLevel)}
                     </td>
-                    <td style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td data-label="Summary" style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {advisory.advisoryText}
                     </td>
                   </tr>
@@ -316,16 +316,16 @@ const PrincipalAdvisories: React.FC = () => {
                         }
                       }}
                     >
-                      <td>{formatDateTime(advisory.createdAt)}</td>
-                      <td>
+                      <td data-label="Issued">{formatDateTime(advisory.createdAt)}</td>
+                      <td data-label="Heat Level">
                         <span className={`advisory-level badge-${advisory.heatLevel}`}>
                           {formatHeatLevelLabel(advisory.heatLevel)}
                         </span>
                       </td>
-                      <td className={`advisory-risk risk-${advisory.riskLevel}`}>
+                      <td data-label="Risk" className={`advisory-risk risk-${advisory.riskLevel}`}>
                         {formatHeatLevelLabel(advisory.riskLevel)}
                       </td>
-                      <td style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td data-label="Summary" style={{ maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {advisory.advisoryText}
                       </td>
                     </tr>

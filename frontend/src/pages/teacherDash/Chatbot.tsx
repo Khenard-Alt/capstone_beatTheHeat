@@ -52,7 +52,16 @@ const Chatbot: React.FC = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      scrollToBottom('auto');
+      secondFrame = window.requestAnimationFrame(() => scrollToBottom('smooth'));
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
   }, [messages, isThinking]);
 
   const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -180,7 +189,7 @@ const Chatbot: React.FC = () => {
               }}
               placeholder="Magtanong tungkol sa class safety..."
             />
-            <button type="button" className="btn btn-primary" onClick={() => void askAssistant(input)} disabled={!input.trim() || isThinking}>
+            <button type="button" className="btn btn-primary chat-send-button" aria-label="Send message" title="Send message" onClick={() => void askAssistant(input)} disabled={!input.trim() || isThinking}>
               <MdSend /> Tanungin ang AI
             </button>
           </div>

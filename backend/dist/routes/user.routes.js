@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const multer_1 = __importDefault(require("multer"));
 const userController_1 = require("../controllers/userController");
 const router = express_1.default.Router();
 /**
@@ -61,7 +62,19 @@ router.put('/:id', userController_1.updateUser);
  * POST /api/users/:id/avatar
  * Upload/replace a user's profile picture (multipart/form-data, field "avatar")
  */
-router.post('/:id/avatar', userController_1.avatarUpload.single('avatar'), userController_1.uploadAvatar);
+router.post('/:id/avatar', (req, res, next) => {
+    userController_1.avatarUpload.single('avatar')(req, res, (error) => {
+        if (error instanceof multer_1.default.MulterError) {
+            res.status(400).json({ success: false, message: error.code === 'LIMIT_FILE_SIZE' ? 'Image must be 3MB or smaller.' : error.message });
+            return;
+        }
+        if (error) {
+            res.status(400).json({ success: false, message: error.message || 'Invalid image upload.' });
+            return;
+        }
+        next();
+    });
+}, userController_1.uploadAvatar);
 /**
  * PUT /api/users/:id/password
  * Change (or set, for Google-linked accounts) a user's password

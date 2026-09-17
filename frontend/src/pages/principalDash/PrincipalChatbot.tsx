@@ -38,7 +38,16 @@ const PrincipalChatbot: React.FC = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      scrollToBottom('auto');
+      secondFrame = window.requestAnimationFrame(() => scrollToBottom('smooth'));
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
   }, [messages, thinking]);
 
   const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -127,7 +136,7 @@ const PrincipalChatbot: React.FC = () => {
           <div className="parent-chatbot-prompts">{prompts.map((prompt) => <button key={prompt} type="button" onClick={() => void ask(prompt)}>{prompt}</button>)}</div>
           <div className="parent-chatbot-input-row">
             <input value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') void ask(input); }} placeholder="Ask about a school-wide heat decision..." />
-            <Button variant="primary" icon={<MdSend />} onClick={() => void ask(input)} disabled={!input.trim() || thinking}>Send</Button>
+            <Button className="chat-send-button" aria-label="Send message" title="Send message" variant="primary" icon={<MdSend />} onClick={() => void ask(input)} disabled={!input.trim() || thinking}>Send</Button>
           </div>
         </Card>
         <div className="parent-chatbot-side">

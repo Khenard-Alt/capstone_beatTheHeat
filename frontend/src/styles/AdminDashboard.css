@@ -105,6 +105,23 @@
   gap: 20px;
 }
 
+.principal-announcement-shell {
+  display: flex;
+  gap: 20px;
+  min-width: 0;
+}
+
+.principal-announcement-nav {
+  width: 240px;
+  min-width: 240px;
+  height: fit-content;
+}
+
+.principal-announcement-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .admin-announcements-content {
   padding: 16px 16px 0;
   min-width: 0;
@@ -141,6 +158,63 @@
   color: #64748b;
   font-size: 12px;
   flex-shrink: 0;
+}
+
+.principal-incident-modal-backdrop {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.principal-incident-modal {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto !important;
+}
+
+.principal-incident-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .principal-incident-modal-backdrop {
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding: 12px !important;
+  }
+
+  .principal-incident-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - 24px);
+    border-radius: 14px !important;
+  }
+
+  .principal-incident-modal-header {
+    padding: 14px !important;
+    align-items: flex-start;
+  }
+
+  .principal-incident-modal-header h2 {
+    font-size: 18px !important;
+  }
+
+  .principal-incident-modal-header .btn {
+    flex: 0 0 auto;
+    min-width: 62px;
+    padding: 8px 10px;
+  }
+
+  .principal-incident-modal-details {
+    padding: 14px !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .principal-incident-modal-sections {
+    padding: 0 14px 14px !important;
+  }
 }
 
 .admin-announcement-body {
@@ -426,5 +500,30 @@
 
   .admin-announcement-body {
     font-size: 14px;
+  }
+
+  .principal-announcement-shell {
+    display: block;
+    padding: 10px;
+  }
+
+  .principal-announcement-nav {
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 12px;
+    padding: 12px !important;
+    border-radius: 14px;
+  }
+
+  .principal-announcement-main {
+    width: 100%;
+  }
+
+  .principal-announcement-main .admin-dashboard {
+    padding: 0;
+  }
+
+  .principal-announcement-main .admin-dashboard-header {
+    padding: 14px;
   }
 }

@@ -78,7 +78,16 @@ export const ParentChatbot: React.FC = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      scrollToBottom('auto');
+      secondFrame = window.requestAnimationFrame(() => scrollToBottom('smooth'));
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
   }, [messages, isThinking]);
 
   const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -297,6 +306,9 @@ export const ParentChatbot: React.FC = () => {
               placeholder="Ask about today’s heat advisory..."
             />
             <Button
+              className="chat-send-button"
+              aria-label="Send message"
+              title="Send message"
               variant="primary"
               icon={<MdSend />}
               onClick={() => void appendAssistantReply(input)}

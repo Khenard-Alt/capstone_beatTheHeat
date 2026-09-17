@@ -60,6 +60,19 @@ const PrincipalReports: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!selectedIncident) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedIncident(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIncident]);
+
   const overviewCards = [
     { label: 'Active Advisories', value: stats?.activeAdvisories ?? advisories.length },
     { label: 'Heat Incidents', value: stats?.incidents ?? incidents.length },
@@ -227,8 +240,8 @@ const PrincipalReports: React.FC = () => {
             {incidents.length === 0 ? (
               <div className="empty-state">No incident reports available</div>
             ) : (
-              <div className="table-wrap">
-                <table className="app-table">
+              <div className="table-wrap responsive-incident-table-wrap">
+                <table className="app-table responsive-incident-table">
                   <thead>
                     <tr>
                       <th>Student</th>
@@ -243,13 +256,13 @@ const PrincipalReports: React.FC = () => {
                   <tbody>
                     {incidents.map((incident) => (
                       <tr key={incident.id}>
-                        <td style={{ fontWeight: 600 }}>{incident.studentName || 'Unknown student'}</td>
-                        <td style={{ textTransform: 'capitalize' }}>{incident.incidentType || '—'}</td>
-                        <td className="muted" style={{ maxWidth: 240 }}>{incident.description || '—'}</td>
-                        <td className="muted" style={{ maxWidth: 240 }}>{incident.actionTaken || '—'}</td>
-                        <td>{incident.status || '—'}</td>
-                        <td className="muted" style={{ whiteSpace: 'nowrap' }}>{incident.timestamp ? formatDateTimeGlobal(incident.timestamp) : '—'}</td>
-                        <td>
+                        <td data-label="Student" style={{ fontWeight: 600 }}>{incident.studentName || 'Unknown student'}</td>
+                        <td data-label="Incident Type" style={{ textTransform: 'capitalize' }}>{incident.incidentType || '—'}</td>
+                        <td data-label="Description" className="muted" style={{ maxWidth: 240 }}>{incident.description || '—'}</td>
+                        <td data-label="Action Taken" className="muted" style={{ maxWidth: 240 }}>{incident.actionTaken || '—'}</td>
+                        <td data-label="Status">{incident.status || '—'}</td>
+                        <td data-label="Date" className="muted" style={{ whiteSpace: 'nowrap' }}>{incident.timestamp ? formatDateTimeGlobal(incident.timestamp) : '—'}</td>
+                        <td data-label="Action">
                           <button
                             type="button"
                             onClick={() => setSelectedIncident(incident)}
@@ -280,6 +293,7 @@ const PrincipalReports: React.FC = () => {
     </div>
       {selectedIncident && (
         <div
+          className="principal-incident-modal-backdrop"
           role="dialog"
           aria-modal="true"
           onClick={() => setSelectedIncident(null)}
@@ -295,6 +309,7 @@ const PrincipalReports: React.FC = () => {
           }}
         >
           <div
+            className="principal-incident-modal"
             onClick={(event) => event.stopPropagation()}
             style={{
               width: 'min(720px, 100%)',
@@ -304,7 +319,7 @@ const PrincipalReports: React.FC = () => {
               overflow: 'hidden',
             }}
           >
-            <div style={{ padding: 20, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+            <div className="principal-incident-modal-header" style={{ padding: 20, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 22 }}>Incident Information</h2>
                 <p style={{ margin: '6px 0 0', color: '#64748b' }}>{selectedIncident.studentName || 'Unknown student'}</p>
@@ -314,7 +329,7 @@ const PrincipalReports: React.FC = () => {
               </button>
             </div>
 
-            <div style={{ padding: 20, display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+            <div className="principal-incident-modal-details" style={{ padding: 20, display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
               <InfoBlock label="Student" value={selectedIncident.studentName || '—'} />
               <InfoBlock label="Grade / Section" value={[selectedIncident.gradeLevel, selectedIncident.section].filter(Boolean).join(' - ') || '—'} />
               <InfoBlock label="Reported By Teacher" value={selectedIncident.reportedBy || selectedIncident.reporterName || '—'} />
@@ -324,7 +339,7 @@ const PrincipalReports: React.FC = () => {
               <InfoBlock label="Incident Type" value={selectedIncident.incidentType || '—'} />
             </div>
 
-            <div style={{ padding: '0 20px 20px', display: 'grid', gap: 12 }}>
+            <div className="principal-incident-modal-sections" style={{ padding: '0 20px 20px', display: 'grid', gap: 12 }}>
               <InfoSection label="Description" value={selectedIncident.description || '—'} />
               <InfoSection label="Action Taken" value={selectedIncident.actionTaken || '—'} />
             </div>

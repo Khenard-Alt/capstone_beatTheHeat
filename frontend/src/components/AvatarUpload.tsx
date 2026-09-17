@@ -40,6 +40,22 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ size = 96 }) => {
     setUploading(true);
 
     try {
+      if (user.isDemo) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            updateUser({ ...user, avatarUrl: reader.result });
+          }
+          setUploading(false);
+        };
+        reader.onerror = () => {
+          setError('Could not read the selected image.');
+          setUploading(false);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
       const updated = await uploadUserAvatar(user.id, file);
       updateUser({ ...user, avatarUrl: updated.avatarUrl });
     } catch (err) {

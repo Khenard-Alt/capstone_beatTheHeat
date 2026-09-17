@@ -17,11 +17,10 @@ const AnnouncementShell: React.FC = () => {
   );
 
   return (
-    <div className="admin-dashboard" style={{ display: 'flex', gap: 20 }}>
+    <div className="admin-dashboard principal-announcement-shell">
       <aside
+        className="principal-announcement-nav"
         style={{
-          width: 240,
-          minWidth: 240,
           background: '#fff',
           borderRadius: 18,
           border: '1px solid #e2e8f0',
@@ -38,7 +37,7 @@ const AnnouncementShell: React.FC = () => {
         </nav>
       </aside>
 
-      <main style={{ flex: 1, minWidth: 0 }}>
+      <main className="principal-announcement-main">
         {content}
       </main>
     </div>

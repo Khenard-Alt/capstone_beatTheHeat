@@ -7,6 +7,7 @@ export interface User {
   lastName: string;
   schoolId: string;
   avatarUrl?: string | null;
+  isDemo?: boolean;
   isGoogleAccount?: boolean;
   notificationPreferences?: Record<string, boolean> | null;
   createdAt: string;

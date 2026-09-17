@@ -78,6 +78,124 @@
 
 /* Responsive tweaks */
 @media (max-width: 720px) {
-  .app-table { font-size: 13px; }
-  .app-table th, .app-table td { padding: 10px 8px; }
+  .table-wrap {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .app-table {
+    width: 100%;
+    min-width: 0;
+    font-size: 13px;
+    table-layout: fixed;
+  }
+
+  .app-table th,
+  .app-table td {
+    padding: 10px 8px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .advisory-table-wrap .advisory-table {
+    display: block;
+    table-layout: auto;
+  }
+
+  .advisory-table-wrap .advisory-table thead {
+    display: none;
+  }
+
+  .advisory-table-wrap .advisory-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .advisory-table-wrap .advisory-table tbody tr {
+    display: block;
+    padding: 6px 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .advisory-table-wrap .advisory-table tbody td {
+    display: block;
+    width: auto !important;
+    max-width: none !important;
+    padding: 7px 10px;
+    border: 0;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .advisory-table-wrap .advisory-table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .responsive-incident-table-wrap {
+    max-width: 100%;
+    overflow: visible !important;
+    padding: 0;
+    border: 0;
+  }
+
+  .responsive-incident-table.app-table {
+    display: block;
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: auto;
+  }
+
+  .responsive-incident-table.app-table thead {
+    display: none;
+  }
+
+  .responsive-incident-table.app-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .responsive-incident-table.app-table tbody tr {
+    display: block;
+    padding: 6px 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .responsive-incident-table.app-table tbody td {
+    display: block;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding: 8px 10px;
+    border: 0;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .responsive-incident-table.app-table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
 }

@@ -46,7 +46,16 @@ const Chatbot: React.FC = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      scrollToBottom('auto');
+      secondFrame = window.requestAnimationFrame(() => scrollToBottom('smooth'));
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
   }, [messages, isThinking]);
 
   const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -161,7 +170,7 @@ const Chatbot: React.FC = () => {
               onKeyDown={(e) => { if (e.key === 'Enter') void appendAssistantReply(input); }}
               placeholder="Ask about incident actions, advisories, class safety, or parent messaging..."
             />
-            <Button variant="primary" icon={<MdSend />} onClick={() => void appendAssistantReply(input)} disabled={!input.trim() || isThinking}>Send</Button>
+            <Button className="chat-send-button" aria-label="Send message" title="Send message" variant="primary" icon={<MdSend />} onClick={() => void appendAssistantReply(input)} disabled={!input.trim() || isThinking}>Send</Button>
           </div>
         </Card>
 

@@ -202,14 +202,14 @@ const Advisories: React.FC = () => {
                   <tbody>
                     {announcements.map((announcement) => (
                       <tr key={announcement.id}>
-                        <td>{formatDateTimeGlobal(announcement.created_at ?? new Date().toISOString())}</td>
-                        <td>
+                        <td data-label="Issued">{formatDateTimeGlobal(announcement.created_at ?? new Date().toISOString())}</td>
+                        <td data-label="Priority">
                           <span className={`advisory-level badge-${announcement.priority ?? 'info'}`}>
                             {(announcement.priority ?? 'info').toUpperCase()}
                           </span>
                         </td>
-                        <td>{announcement.title}</td>
-                        <td>{announcement.body}</td>
+                        <td data-label="Title">{announcement.title}</td>
+                        <td data-label="Message">{announcement.body}</td>
                       </tr>
                     ))}
                   </tbody>

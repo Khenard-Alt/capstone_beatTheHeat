@@ -617,6 +617,15 @@
     overflow: hidden;
   }
 
+  .teacher-chatboard > .card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
   .teacher-chat-header {
     padding: 14px 14px 10px;
     flex-shrink: 0;
@@ -677,6 +686,10 @@
     padding: 10px 12px 12px;
     gap: 8px;
     flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: #ffffff;
   }
 
   .teacher-chat-input-row input {
@@ -689,5 +702,21 @@
     flex: 0 0 auto;
     min-width: 72px;
     padding-inline: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .teacher-chat-input-row .chat-send-button {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .teacher-chat-input-row .chat-send-button .btn-icon,
+  .teacher-chat-input-row .chat-send-button svg {
+    margin: 0;
+    font-size: 20px;
   }
 }

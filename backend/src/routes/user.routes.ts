@@ -1,4 +1,5 @@
 import express, { Router } from 'express';
+import multer from 'multer';
 import { registerUser, loginUser, syncOAuthUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren, uploadAvatar, avatarUpload, changePassword } from '../controllers/userController';
 
 const router: Router = express.Router();
@@ -69,7 +70,21 @@ router.put('/:id', updateUser);
  * POST /api/users/:id/avatar
  * Upload/replace a user's profile picture (multipart/form-data, field "avatar")
  */
-router.post('/:id/avatar', avatarUpload.single('avatar'), uploadAvatar);
+router.post('/:id/avatar', (req, res, next) => {
+	avatarUpload.single('avatar')(req, res, (error) => {
+		if (error instanceof multer.MulterError) {
+			res.status(400).json({ success: false, message: error.code === 'LIMIT_FILE_SIZE' ? 'Image must be 3MB or smaller.' : error.message });
+			return;
+		}
+
+		if (error) {
+			res.status(400).json({ success: false, message: error.message || 'Invalid image upload.' });
+			return;
+		}
+
+		next();
+	});
+}, uploadAvatar);
 
 /**
  * PUT /api/users/:id/password
