@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HeatIndexCard } from '../../components/HeatIndexCard';
 import { WeatherWidget } from '../../components/WeatherWidget';
@@ -128,10 +128,21 @@ export const PrincipalDashboard: React.FC = () => {
 
   const advisory = localAdvisory;
 
-  // Auto-notify parents when advisory reaches critical/high levels
+  // Auto-notify parents when advisory reaches critical/high levels. Only
+  // fire once per transition into a critical level — heatIndexData gets a
+  // fresh object reference on every ~60s weather poll, so depending on it
+  // directly re-sent this broadcast every poll for as long as the danger
+  // level persisted instead of once when it was first reached.
+  const lastNotifiedLevelRef = useRef<string | null>(null);
   useEffect(() => {
     const shouldNotify = advisory && (advisory.riskLevel === 'critical' || advisory.heatLevel === 'danger' || advisory.heatLevel === 'extreme-danger');
-    if (!shouldNotify) return;
+    if (!shouldNotify) {
+      lastNotifiedLevelRef.current = null;
+      return;
+    }
+
+    if (lastNotifiedLevelRef.current === advisory.heatLevel) return;
+    lastNotifiedLevelRef.current = advisory.heatLevel;
 
     const notify = async () => {
       try {
@@ -166,9 +177,14 @@ export const PrincipalDashboard: React.FC = () => {
     return map;
   }, [incidentTrends]);
 
+  // The backend returns trend points oldest-first, so sort then take the
+  // last 7 (most recent) — slicing from the front here would show the
+  // oldest points instead of the latest ones.
   const advisoryTrend = (principalStats?.trend || [])
     .filter((t: Trend) => t && t.timestamp && t.count >= 0)
-    .slice(0, 7)
+    .slice()
+    .sort((a: Trend, b: Trend) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    .slice(-7)
     .map((t: Trend) => ({
       timestamp: formatDateTimeCompact(t.timestamp),
       fullTimestamp: formatDateTimeGlobal(t.timestamp),

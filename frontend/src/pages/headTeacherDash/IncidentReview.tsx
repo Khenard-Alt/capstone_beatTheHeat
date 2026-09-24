@@ -3,10 +3,12 @@ import { MdOutlineLocalHospital, MdSearch } from 'react-icons/md';
 import { Card } from '../../components/Card';
 import { apiClient } from '../../services/api';
 import { fetchIncidents } from '../../services/incidents.service';
+import { useAuth } from '../../hooks/useAuth';
 import '../../styles/TeacherPanel.css';
 import '../../styles/HeadTeacherPanel.css';
 
 const IncidentReview: React.FC = () => {
+  const { user } = useAuth();
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'monitoring' | 'treated'>('pending');
@@ -59,19 +61,39 @@ const IncidentReview: React.FC = () => {
   const handleUpdate = async (id: string, changes: any) => {
     try {
       const { data } = await apiClient.put(`/api/incidents/${id}`, changes);
-      const updatedIncident = data.data;
 
-      setIncidents((prev) => {
-        if (String(updatedIncident?.status).toLowerCase() === 'resolved') {
-          return prev.filter((item) => item.id !== id);
-        }
+      if (data?.moved) {
+        // Resolving moves the row into incident_history on the backend —
+        // it no longer exists in the active incidents table.
+        setIncidents((prev) => prev.filter((item) => item.id !== id));
+        return;
+      }
 
-        return prev.map((item) => (item.id === id ? updatedIncident : item));
-      });
+      const updatedIncident = data?.data;
+      if (!updatedIncident?.id) {
+        // Unexpected response shape — refetch instead of silently dropping
+        // or leaving the row in a stale state.
+        await load();
+        return;
+      }
+
+      setIncidents((prev) => prev.map((item) => (item.id === id ? updatedIncident : item)));
     } catch (error) {
       console.error(error);
       alert('Update failed');
     }
+  };
+
+  const handleStatusChange = (id: string, status: string) => {
+    if (status === 'resolved') {
+      const resolutionNotes = window.prompt('Add resolution notes for this case (optional):');
+      // Cancel aborts resolving entirely rather than resolving with blank notes.
+      if (resolutionNotes === null) return;
+      void handleUpdate(id, { status, resolvedBy: user?.id, resolutionNotes });
+      return;
+    }
+
+    void handleUpdate(id, { status });
   };
 
   const handleDelete = async (id: string) => {
@@ -172,8 +194,8 @@ const IncidentReview: React.FC = () => {
                         <td data-label="Actions" style={{ whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
                           <select
                             aria-label="Set incident status"
-                            defaultValue={String(incident.status || 'pending')}
-                            onChange={(e) => handleUpdate(incident.id, { status: e.target.value })}
+                            value={String(incident.status || 'pending')}
+                            onChange={(e) => handleStatusChange(incident.id, e.target.value)}
                             className="select-field"
                             style={{ padding: '8px 10px', borderRadius: 8 }}
                           >

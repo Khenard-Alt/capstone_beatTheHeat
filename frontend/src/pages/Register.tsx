@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { isValidEmail, isValidPassword } from '../utils/validators';
 import { apiClient } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { MdEmail, MdLock, MdPerson, MdClose, MdCheckCircle, MdSearch } from 'react-icons/md';
+import { MdEmail, MdLock, MdPerson, MdClose, MdCheckCircle, MdSearch, MdBadge } from 'react-icons/md';
 import '../styles/Register.css';
 
 interface RegisterModalProps {
@@ -65,9 +65,12 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
     role: 'parent',
     childId: '',
     childName: '',
+    studentNumber: '',
     relationshipType: 'parent',
     termsAccepted: false,
   });
+
+  const [idPhotoFile, setIdPhotoFile] = useState<File | null>(null);
 
   const [otpCode, setOtpCode] = useState('');
   const [otpTimeLeft, setOtpTimeLeft] = useState(0);
@@ -150,9 +153,11 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
         role: 'parent',
         childId: '',
         childName: '',
+        studentNumber: '',
         relationshipType: 'parent',
         termsAccepted: false,
       });
+      setIdPhotoFile(null);
       setOtpCode('');
       setOtpTimeLeft(0);
       setErrors({});
@@ -261,6 +266,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
         setErrorMessage('Please select your child');
         return;
       }
+      if (!String(formData.studentNumber || '').trim()) {
+        setErrorMessage("Please enter your child's student number.");
+        return;
+      }
       setStep('relationship');
     } else if (step === 'relationship') {
       setStep('terms');
@@ -273,23 +282,41 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
     }
   };
 
+  const [verificationPending, setVerificationPending] = useState(false);
+
   const handleRegister = async () => {
     setIsLoading(true);
     setErrorMessage('');
     try {
-      await register({
+      const { user: newUser, verification } = await register({
         ...formData,
         role: 'parent',
         oauthAccessToken: pendingGoogle?.accessToken,
       });
       sessionStorage.removeItem('bth_pending_google_registration');
+
+      if (idPhotoFile && formData.childId) {
+        try {
+          const uploadData = new FormData();
+          uploadData.append('idProof', idPhotoFile);
+          uploadData.append('studentId', formData.childId);
+          await apiClient.post(`/api/users/${newUser.id}/id-proof`, uploadData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } catch (uploadErr) {
+          // Non-fatal — the account and pending request already exist without it.
+          console.error('Failed to upload ID proof:', uploadErr);
+        }
+      }
+
+      setVerificationPending(verification === 'pending');
       setSuccessMessage('Registration complete!');
 
       // Close modal and redirect to parent dashboard
       setTimeout(() => {
         onClose();
         navigate('/parent/dashboard');
-      }, 1500);
+      }, 2500);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -467,11 +494,35 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
                 </div>
               )}
               </div>
+
+              {formData.childId && (
+                <>
+                  <Input
+                    label="Student number"
+                    name="studentNumber"
+                    value={formData.studentNumber}
+                    onChange={handleChange}
+                    icon={<MdBadge />}
+                    placeholder="Found on your child's report card or enrollment form"
+                    helperText="We ask for this to confirm you're actually this student's parent/guardian — it isn't shown anywhere in the search above."
+                  />
+
+                  <label className="form-label" style={{ display: 'block', marginTop: 12 }}>
+                    Photo of student ID or enrollment form (optional)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => setIdPhotoFile(e.target.files?.[0] ?? null)}
+                  />
+                  {idPhotoFile && <span className="grade-label">{idPhotoFile.name}</span>}
+                </>
+              )}
             </div>
 
             <div className="modal-actions">
               <Button onClick={() => setStep('otp')} variant="secondary">Back</Button>
-              <Button onClick={handleNext} variant="primary" disabled={!formData.childId}>
+              <Button onClick={handleNext} variant="primary" disabled={!formData.childId || !String(formData.studentNumber || '').trim()}>
                 Continue
               </Button>
             </div>
@@ -581,7 +632,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
               </div>
               <div>
                 <h3>Welcome to Beat The Heat!</h3>
-                <p className="student-name">Hello! {formData.childName}'s account is now ready.</p>
+                {verificationPending ? (
+                  <p className="student-name">
+                    Your account is ready, but your link to {formData.childName} is awaiting verification by school
+                    staff before you can see their reports and messages. We'll notify you once it's approved.
+                  </p>
+                ) : (
+                  <p className="student-name">Hello! {formData.childName}'s account is now ready.</p>
+                )}
               </div>
             </div>
 

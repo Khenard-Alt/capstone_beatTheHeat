@@ -36,10 +36,11 @@ const TeacherMessages: React.FC = () => {
 	const [showNewMessage, setShowNewMessage] = useState(false);
 	const [newMessageSearch, setNewMessageSearch] = useState('');
 
-	const currentTeacherId = user?.id ?? 'teacher-1';
+	const currentTeacherId = user?.id;
 	const hasLoadedOnce = useRef(false);
 
 	const loadMessages = async () => {
+		if (!currentTeacherId) return;
 		try {
 			if (!hasLoadedOnce.current) setLoading(true);
 			const [messageData, parentData] = await Promise.all([
@@ -121,7 +122,7 @@ const TeacherMessages: React.FC = () => {
 	const activeThread = useMemo(() => parentThreads.find((thread) => thread.id === activeParentId) ?? null, [activeParentId, parentThreads]);
 
 	const handleSend = async () => {
-		if (!activeParent || !body.trim()) {
+		if (!activeParent || !body.trim() || !currentTeacherId) {
 			return;
 		}
 

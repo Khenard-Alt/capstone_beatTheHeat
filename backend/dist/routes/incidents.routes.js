@@ -11,6 +11,11 @@ const router = express_1.default.Router();
  * List student health incidents
  */
 router.get('/', incidentsController_1.default.list);
+/**
+ * GET /api/incidents/history
+ * List resolved incidents that have been moved into incident_history
+ */
+router.get('/history', incidentsController_1.default.listHistory);
 // POST /api/incidents
 router.post('/', express_1.default.json(), incidentsController_1.default.create);
 // GET /api/incidents/:id

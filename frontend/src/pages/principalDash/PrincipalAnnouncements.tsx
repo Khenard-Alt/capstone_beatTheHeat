@@ -26,25 +26,20 @@ const PrincipalAnnouncements: React.FC = () => {
     }
   }, [page, totalPages]);
 
+  const loadAnnouncements = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchAnnouncements(50, 0);
+      setAnnouncements(data);
+    } catch (error) {
+      console.error('Failed to load principal announcements:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchAnnouncements(50, 0);
-        if (mounted) setAnnouncements(data);
-      } catch (error) {
-        console.error('Failed to load principal announcements:', error);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    void load();
-    return () => {
-      mounted = false;
-    };
+    void loadAnnouncements();
   }, []);
 
   return (
@@ -58,7 +53,11 @@ const PrincipalAnnouncements: React.FC = () => {
           <button className="btn btn-secondary" onClick={() => setAnnouncementOpen(true)}>
             Create Announcement
           </button>
-          <AnnouncementModal isOpen={isAnnouncementOpen} onClose={() => setAnnouncementOpen(false)} />
+          <AnnouncementModal
+            isOpen={isAnnouncementOpen}
+            onClose={() => setAnnouncementOpen(false)}
+            onCreated={() => void loadAnnouncements()}
+          />
         </div>
       </div>
 

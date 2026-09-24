@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteStudent = exports.updateStudent = exports.createStudent = exports.getStudentById = exports.searchStudents = exports.getStudents = void 0;
+const crypto_1 = __importDefault(require("crypto"));
 const supabase_1 = require("../config/supabase");
 const fallbackStudents = [
     { id: 's1', name: 'Juan Dela Cruz', grade: 'Grade 3', section: 'Rose', schoolId: 'school-1' },
@@ -216,7 +220,7 @@ const createStudent = async (req, res, next) => {
             });
             return;
         }
-        const studentId = typeof id === 'string' && id.trim().length > 0 ? id.trim() : crypto.randomUUID();
+        const studentId = typeof id === 'string' && id.trim().length > 0 ? id.trim() : crypto_1.default.randomUUID();
         const { data, error } = await client
             .from('students')
             .insert([

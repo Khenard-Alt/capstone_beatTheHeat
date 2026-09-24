@@ -16,6 +16,8 @@ import {
   MdLogout,
   MdCheckCircle,
   MdKeyboardArrowDown,
+  MdHistory,
+  MdVerifiedUser,
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from '../Avatar';
@@ -107,6 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
       children: [
         { path: '/head-teacher/incident-review', label: 'Review Queue', icon: <MdHealthAndSafety />, sectionId: 'incident-review-top' },
         { path: '/head-teacher/incident-reports', label: 'Incident Reports', icon: <MdCampaign />, sectionId: 'incident-reports-top' },
+        { path: '/head-teacher/incident-history', label: 'Incident History', icon: <MdHistory />, sectionId: 'incident-history-top' },
       ],
     },
     {
@@ -122,6 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
         { path: '/head-teacher/advisories', label: 'Heat Data', icon: <MdThermostat />, sectionId: 'heat-data-top' },
       ],
     },
+    { path: '/head-teacher/parent-verifications', icon: <MdVerifiedUser />, label: 'Parent Verifications', roles: ['head-teacher'], badge: null },
     { path: '/head-teacher/chatbot', icon: <MdChat />, label: 'Chatbot', roles: ['head-teacher'], badge: null },
     { path: '/head-teacher/profile-settings', icon: <MdPerson />, label: 'Profile / Settings', roles: ['head-teacher'], badge: null },
   ];
@@ -165,6 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
     { path: '/health-advisory', icon: <MdHealthAndSafety />, label: 'Health Advisory', roles: ['admin', 'teacher', 'staff'], badge: null },
     { path: '/notifications', icon: <MdNotifications />, label: 'Notifications', roles: ['admin', 'teacher', 'staff'], badge: 3 },
     { path: '/schools', icon: <MdSchool />, label: 'School Management', roles: ['admin'], badge: null },
+    { path: '/admin/parent-verifications', icon: <MdVerifiedUser />, label: 'Parent Verifications', roles: ['admin'], badge: null },
     { path: '/profile', icon: <MdPerson />, label: 'Profile', roles: ['admin', 'teacher', 'staff'], badge: null },
     { path: '/settings', icon: <MdSettings />, label: 'Settings', roles: ['admin', 'teacher', 'staff'], badge: null },
   ];
@@ -206,6 +211,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
     userRole === 'head-teacher' && location.pathname.startsWith('/head-teacher/incident-review');
   const isHeadTeacherIncidentReportsActive =
     userRole === 'head-teacher' && location.pathname.startsWith('/head-teacher/incident-reports');
+  const isHeadTeacherIncidentHistoryActive =
+    userRole === 'head-teacher' && location.pathname.startsWith('/head-teacher/incident-history');
   const isHeadTeacherAnnouncementsActive =
     userRole === 'head-teacher' && (
       location.pathname.startsWith('/head-teacher/advisories') ||
@@ -231,7 +238,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
       return;
     }
 
-    if (isHeadTeacherIncidentReviewActive || isHeadTeacherIncidentReportsActive) {
+    if (isHeadTeacherIncidentReviewActive || isHeadTeacherIncidentReportsActive || isHeadTeacherIncidentHistoryActive) {
       setOpenMenu('incident-review');
       return;
     }

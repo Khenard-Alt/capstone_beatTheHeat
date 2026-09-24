@@ -65,7 +65,12 @@ export const ParentStudentList: React.FC = () => {
             </div>
           ))
         ) : (
-          <div className="parent-student-item"><em>No student information available</em></div>
+          <div className="parent-student-item">
+            <em>
+              No linked student yet. If you just registered, your account is awaiting verification by school staff —
+              this usually resolves once they confirm the student number you provided.
+            </em>
+          </div>
         )}
       </div>
     </div>

@@ -317,7 +317,8 @@ export const notificationController = {
   getNotifications: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = String(req.query.userId ?? '').trim();
-      const limit = parseInt(req.query.limit as string) || 50;
+      const parsedLimit = parseInt(req.query.limit as string);
+      const limit = Number.isFinite(parsedLimit) && parsedLimit >= 0 ? parsedLimit : 50;
       const offset = parseInt(req.query.offset as string) || 0;
 
       if (!userId) {

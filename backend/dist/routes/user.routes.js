@@ -18,6 +18,26 @@ router.post('/register', userController_1.registerUser);
  */
 router.post('/login', userController_1.loginUser);
 /**
+ * POST /api/users/logout
+ * Revoke the caller's own session so it doesn't block a future login
+ */
+router.post('/logout', userController_1.logoutUser);
+/**
+ * GET /api/users/device-confirmation/pending?userId=
+ * Check whether the logged-in device has a pending login-confirmation request
+ */
+router.get('/device-confirmation/pending', userController_1.getPendingDeviceConfirmation);
+/**
+ * POST /api/users/device-confirmation/resolve
+ * Approve or deny a pending login-confirmation request
+ */
+router.post('/device-confirmation/resolve', userController_1.resolveDeviceConfirmation);
+/**
+ * GET /api/users/device-confirmation/status?sessionId=
+ * Poll the status of a pending login-confirmation request
+ */
+router.get('/device-confirmation/status', userController_1.getDeviceConfirmationStatus);
+/**
  * POST /api/users/oauth/sync
  * Verify a Supabase OAuth session and sync its application user record.
  */
@@ -48,6 +68,11 @@ router.post('/verify-otp', userController_1.verifyOTPCode);
  */
 router.get('/otp-status/:email', userController_1.getOTPStatus);
 /**
+ * POST /api/users/reset-password
+ * Reset a forgotten password using a verified email OTP
+ */
+router.post('/reset-password', userController_1.resetPasswordWithOTP);
+/**
  * GET /api/users/:id
  * Get user profile by ID
  */
@@ -75,6 +100,24 @@ router.post('/:id/avatar', (req, res, next) => {
         next();
     });
 }, userController_1.uploadAvatar);
+/**
+ * POST /api/users/:id/id-proof
+ * Upload a supporting ID photo for a pending parent-child verification request
+ * (multipart/form-data, field "idProof", body also includes studentId)
+ */
+router.post('/:id/id-proof', (req, res, next) => {
+    userController_1.idProofUpload.single('idProof')(req, res, (error) => {
+        if (error instanceof multer_1.default.MulterError) {
+            res.status(400).json({ success: false, message: error.code === 'LIMIT_FILE_SIZE' ? 'Image must be 5MB or smaller.' : error.message });
+            return;
+        }
+        if (error) {
+            res.status(400).json({ success: false, message: error.message || 'Invalid image upload.' });
+            return;
+        }
+        next();
+    });
+}, userController_1.uploadIdProof);
 /**
  * PUT /api/users/:id/password
  * Change (or set, for Google-linked accounts) a user's password

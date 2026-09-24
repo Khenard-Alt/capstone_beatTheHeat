@@ -7,6 +7,8 @@ import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { isValidEmail } from '../utils/validators';
 import { STORAGE_KEYS } from '../utils/constants';
+import { PendingDeviceConfirmationError } from '../context/AuthContext';
+import { fetchDeviceConfirmationStatus } from '../services/deviceSession.service';
 import { MdEmail, MdLock, MdClose, MdAdminPanelSettings } from 'react-icons/md';
 import schoolLogo from '../assets/mayamotlogo.png';
 import realtimeIcon from '../assets/login/realtime.svg';
@@ -18,10 +20,13 @@ import { isSupabaseAuthConfigured } from '../services/supabase';
 
 const ADMIN_AUTH_STORAGE_KEY = 'school_management_admin_unlocked';
 
+const DEVICE_CONFIRMATION_TIMEOUT_MS = 5 * 60 * 1000;
+const DEVICE_CONFIRMATION_POLL_MS = 3000;
+
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const auth = useAuth();
-  const { login } = auth;
+  const { login, completeLogin } = auth;
 
   const [formData, setFormData] = useState({
     email: '',
@@ -31,6 +36,7 @@ export const Login: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [searchParams] = useSearchParams();
@@ -130,12 +136,74 @@ export const Login: React.FC = () => {
       // button lands back on the login screen even though the session is
       // still valid, which reads as an unexpected logout.
       navigate(getLandingPath(signedInUser.role), { replace: true });
-    } catch {
+      setIsLoading(false);
+    } catch (error) {
+      if (error instanceof PendingDeviceConfirmationError) {
+        setPendingSessionId(error.sessionId);
+        // isLoading stays true while we wait for the other device to respond.
+        return;
+      }
       setErrorMessage('Invalid email or password. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };
+
+  // While a login is pending confirmation from the user's other device,
+  // poll for the outcome (approved/denied/expired) and act accordingly.
+  useEffect(() => {
+    if (!pendingSessionId) return;
+
+    let cancelled = false;
+    const startedAt = Date.now();
+
+    const poll = async () => {
+      try {
+        const result = await fetchDeviceConfirmationStatus(pendingSessionId);
+        if (cancelled) return;
+
+        if (result.status === 'active' && result.user && result.token) {
+          completeLogin(result.user, result.token);
+          navigate(getLandingPath(result.user.role), { replace: true });
+          return;
+        }
+
+        if (result.status === 'denied') {
+          setErrorMessage('Login denied from your other device.');
+          setPendingSessionId(null);
+          setIsLoading(false);
+          return;
+        }
+
+        if (result.status === 'expired' || result.status === 'not_found') {
+          setErrorMessage('Request timed out. Please try again.');
+          setPendingSessionId(null);
+          setIsLoading(false);
+          return;
+        }
+
+        if (Date.now() - startedAt >= DEVICE_CONFIRMATION_TIMEOUT_MS) {
+          setErrorMessage('Request timed out. Please try again.');
+          setPendingSessionId(null);
+          setIsLoading(false);
+          return;
+        }
+
+        timeoutHandle = window.setTimeout(poll, DEVICE_CONFIRMATION_POLL_MS);
+      } catch {
+        if (!cancelled) {
+          timeoutHandle = window.setTimeout(poll, DEVICE_CONFIRMATION_POLL_MS);
+        }
+      }
+    };
+
+    let timeoutHandle = window.setTimeout(poll, DEVICE_CONFIRMATION_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutHandle);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingSessionId]);
 
   const handleGoogleSignIn = async () => {
     setErrorMessage('');
@@ -331,7 +399,14 @@ export const Login: React.FC = () => {
               </div>
             )}
 
-            <form className="login-form" onSubmit={handleSubmit}>
+            {pendingSessionId && (
+              <div className="login-error-message" style={{ background: '#eff6ff', color: '#1d4ed8', borderColor: '#bfdbfe' }}>
+                <span className="loading-spinner"></span>
+                <span>Waiting for approval on your other device… Check the device where you're already logged in.</span>
+              </div>
+            )}
+
+            <form className="login-form" onSubmit={handleSubmit} style={pendingSessionId ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
               <div className="form-group">
                 <label className="form-label">Email Address</label>
                 <div className="input-wrapper">

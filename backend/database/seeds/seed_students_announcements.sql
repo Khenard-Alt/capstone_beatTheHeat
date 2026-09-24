@@ -1,0 +1,78 @@
+-- Seeds 50 searchable students (no parent linked — safe to edit/delete
+-- freely, unlike s1-s6 in seed_data.sql where s2/s3/s4 already have a
+-- parent_user_id) and 10 announcements for demo/testing purposes.
+
+insert into public.students (id, first_name, last_name, grade_level, section, school_id, status)
+values
+	('stu-001', 'Angelo', 'Dela Cruz', 'Grade 1', 'A', 'school-1', 'active'),
+	('stu-002', 'Bea', 'Santos', 'Grade 1', 'A', 'school-1', 'active'),
+	('stu-003', 'Carlo', 'Reyes', 'Grade 1', 'B', 'school-1', 'active'),
+	('stu-004', 'Diana', 'Garcia', 'Grade 1', 'B', 'school-1', 'active'),
+	('stu-005', 'Emmanuel', 'Bautista', 'Grade 1', 'C', 'school-1', 'active'),
+	('stu-006', 'Faith', 'Mendoza', 'Grade 1', 'C', 'school-1', 'active'),
+	('stu-007', 'Gabriel', 'Torres', 'Grade 1', 'A', 'school-1', 'active'),
+	('stu-008', 'Hannah', 'Ramos', 'Grade 1', 'B', 'school-1', 'active'),
+	('stu-009', 'Ivan', 'Flores', 'Grade 2', 'A', 'school-1', 'active'),
+	('stu-010', 'Joy', 'Villanueva', 'Grade 2', 'A', 'school-1', 'active'),
+	('stu-011', 'Kevin', 'Aquino', 'Grade 2', 'B', 'school-1', 'active'),
+	('stu-012', 'Liza', 'Castillo', 'Grade 2', 'B', 'school-1', 'active'),
+	('stu-013', 'Mark', 'Del Rosario', 'Grade 2', 'C', 'school-1', 'active'),
+	('stu-014', 'Nica', 'Navarro', 'Grade 2', 'C', 'school-1', 'active'),
+	('stu-015', 'Oliver', 'Domingo', 'Grade 2', 'A', 'school-1', 'active'),
+	('stu-016', 'Precious', 'Salazar', 'Grade 2', 'B', 'school-1', 'active'),
+	('stu-017', 'Raymond', 'Marquez', 'Grade 3', 'A', 'school-1', 'active'),
+	('stu-018', 'Sarah', 'Gonzales', 'Grade 3', 'A', 'school-1', 'active'),
+	('stu-019', 'Tristan', 'Aguilar', 'Grade 3', 'B', 'school-1', 'active'),
+	('stu-020', 'Unica', 'Pascual', 'Grade 3', 'B', 'school-1', 'active'),
+	('stu-021', 'Vanessa', 'Rivera', 'Grade 3', 'C', 'school-1', 'active'),
+	('stu-022', 'Wendell', 'Cortez', 'Grade 3', 'C', 'school-1', 'active'),
+	('stu-023', 'Ximena', 'Fernandez', 'Grade 3', 'A', 'school-1', 'active'),
+	('stu-024', 'Yohan', 'Manalo', 'Grade 3', 'B', 'school-1', 'active'),
+	('stu-025', 'Zenaida', 'Padilla', 'Grade 4', 'A', 'school-1', 'active'),
+	('stu-026', 'Aldrin', 'Santiago', 'Grade 4', 'A', 'school-1', 'active'),
+	('stu-027', 'Bianca', 'Tolentino', 'Grade 4', 'B', 'school-1', 'active'),
+	('stu-028', 'Christian', 'Valdez', 'Grade 4', 'B', 'school-1', 'active'),
+	('stu-029', 'Divine', 'Ocampo', 'Grade 4', 'C', 'school-1', 'active'),
+	('stu-030', 'Erickson', 'Bernardo', 'Grade 4', 'C', 'school-1', 'active'),
+	('stu-031', 'Francesca', 'Ilagan', 'Grade 4', 'A', 'school-1', 'active'),
+	('stu-032', 'Gerald', 'Lazaro', 'Grade 4', 'B', 'school-1', 'active'),
+	('stu-033', 'Honeylet', 'Guerrero', 'Grade 5', 'A', 'school-1', 'active'),
+	('stu-034', 'Ian', 'Morales', 'Grade 5', 'A', 'school-1', 'active'),
+	('stu-035', 'Jasmine', 'Roque', 'Grade 5', 'B', 'school-1', 'active'),
+	('stu-036', 'Kurt', 'Ferrer', 'Grade 5', 'B', 'school-1', 'active'),
+	('stu-037', 'Leah', 'Escobar', 'Grade 5', 'C', 'school-1', 'active'),
+	('stu-038', 'Miguel', 'Alvarez', 'Grade 5', 'C', 'school-1', 'active'),
+	('stu-039', 'Noreen', 'Concepcion', 'Grade 5', 'A', 'school-1', 'active'),
+	('stu-040', 'Owen', 'Rosales', 'Grade 5', 'B', 'school-1', 'active'),
+	('stu-041', 'Patricia', 'Serrano', 'Grade 6', 'A', 'school-1', 'active'),
+	('stu-042', 'Quincy', 'Mercado', 'Grade 6', 'A', 'school-1', 'active'),
+	('stu-043', 'Rafael', 'Diaz', 'Grade 6', 'B', 'school-1', 'active'),
+	('stu-044', 'Shaira', 'Cabrera', 'Grade 6', 'B', 'school-1', 'active'),
+	('stu-045', 'Timothy', 'Espino', 'Grade 6', 'C', 'school-1', 'active'),
+	('stu-046', 'Vincent', 'Gatchalian', 'Grade 6', 'C', 'school-1', 'active'),
+	('stu-047', 'Winona', 'Hernandez', 'Grade 6', 'A', 'school-1', 'active'),
+	('stu-048', 'Xander', 'Isidro', 'Grade 6', 'B', 'school-1', 'active'),
+	('stu-049', 'Yasmin', 'Jimenez', 'Grade 3', 'C', 'school-1', 'active'),
+	('stu-050', 'Zachary', 'Katigbak', 'Grade 2', 'C', 'school-1', 'active')
+on conflict (id) do update set
+	first_name = excluded.first_name,
+	last_name = excluded.last_name,
+	grade_level = excluded.grade_level,
+	section = excluded.section,
+	school_id = excluded.school_id,
+	status = excluded.status,
+	updated_at = now();
+
+insert into public.announcements (school_id, title, body, priority)
+values
+	('school-1', 'Heat Advisory: Extreme Caution Today', 'Heat index has reached extreme caution levels. Please limit outdoor activities and ensure students stay hydrated throughout the day.', 'critical'),
+	('school-1', 'Class Suspension Update', 'All outdoor classes are suspended until 2:00 PM due to high heat index. Indoor classes continue as scheduled.', 'critical'),
+	('school-1', 'Parent-Teacher Conference Schedule', 'The quarterly parent-teacher conference is scheduled for next Friday. Please check your child''s advisory class for the assigned time slot.', 'info'),
+	('school-1', 'Hydration Station Reminder', 'Hydration stations are now available in every hallway. Teachers are encouraged to remind students to drink water regularly.', 'info'),
+	('school-1', 'Heat Safety Orientation for New Students', 'A short heat safety orientation will be conducted for all new enrollees this Monday during flag ceremony.', 'info'),
+	('school-1', 'Weather Monitoring System Maintenance', 'The heat index monitoring system will undergo scheduled maintenance this weekend. Data may be delayed during this period.', 'warning'),
+	('school-1', 'Reminder: Bring Extra Water Bottles', 'With the ongoing heat wave, parents are reminded to send their children with extra water bottles and light clothing.', 'warning'),
+	('school-1', 'PE Class Schedule Adjustment', 'Physical education classes have been moved to early morning slots this week to avoid peak heat hours.', 'info'),
+	('school-1', 'Clinic Hours Extended', 'The school clinic will extend its hours until 5:00 PM this week to accommodate heat-related health concerns.', 'info'),
+	('school-1', 'Emergency Contact Information Update', 'Please update your emergency contact information through the Profile Settings page to ensure we can reach you quickly if needed.', 'warning')
+;

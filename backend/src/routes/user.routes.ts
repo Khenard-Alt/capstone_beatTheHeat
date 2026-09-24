@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 import multer from 'multer';
-import { registerUser, loginUser, syncOAuthUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren, uploadAvatar, avatarUpload, changePassword } from '../controllers/userController';
+import { registerUser, loginUser, logoutUser, syncOAuthUser, authenticateAdminTools, listUsers, getUserProfile, sendOTP, verifyOTPCode, getOTPStatus, deleteUser, updateUser, getUserChildren, uploadAvatar, avatarUpload, uploadIdProof, idProofUpload, changePassword, resetPasswordWithOTP, getPendingDeviceConfirmation, resolveDeviceConfirmation, getDeviceConfirmationStatus } from '../controllers/userController';
 
 const router: Router = express.Router();
 
@@ -15,6 +15,30 @@ router.post('/register', registerUser);
  * Authenticate a user and return their stored role
  */
 router.post('/login', loginUser);
+
+/**
+ * POST /api/users/logout
+ * Revoke the caller's own session so it doesn't block a future login
+ */
+router.post('/logout', logoutUser);
+
+/**
+ * GET /api/users/device-confirmation/pending?userId=
+ * Check whether the logged-in device has a pending login-confirmation request
+ */
+router.get('/device-confirmation/pending', getPendingDeviceConfirmation);
+
+/**
+ * POST /api/users/device-confirmation/resolve
+ * Approve or deny a pending login-confirmation request
+ */
+router.post('/device-confirmation/resolve', resolveDeviceConfirmation);
+
+/**
+ * GET /api/users/device-confirmation/status?sessionId=
+ * Poll the status of a pending login-confirmation request
+ */
+router.get('/device-confirmation/status', getDeviceConfirmationStatus);
 
 /**
  * POST /api/users/oauth/sync
@@ -53,6 +77,12 @@ router.post('/verify-otp', verifyOTPCode);
 router.get('/otp-status/:email', getOTPStatus);
 
 /**
+ * POST /api/users/reset-password
+ * Reset a forgotten password using a verified email OTP
+ */
+router.post('/reset-password', resetPasswordWithOTP);
+
+/**
  * GET /api/users/:id
  * Get user profile by ID
  */
@@ -85,6 +115,27 @@ router.post('/:id/avatar', (req, res, next) => {
 		next();
 	});
 }, uploadAvatar);
+
+/**
+ * POST /api/users/:id/id-proof
+ * Upload a supporting ID photo for a pending parent-child verification request
+ * (multipart/form-data, field "idProof", body also includes studentId)
+ */
+router.post('/:id/id-proof', (req, res, next) => {
+	idProofUpload.single('idProof')(req, res, (error) => {
+		if (error instanceof multer.MulterError) {
+			res.status(400).json({ success: false, message: error.code === 'LIMIT_FILE_SIZE' ? 'Image must be 5MB or smaller.' : error.message });
+			return;
+		}
+
+		if (error) {
+			res.status(400).json({ success: false, message: error.message || 'Invalid image upload.' });
+			return;
+		}
+
+		next();
+	});
+}, uploadIdProof);
 
 /**
  * PUT /api/users/:id/password

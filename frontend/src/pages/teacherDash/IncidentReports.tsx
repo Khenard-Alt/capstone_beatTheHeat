@@ -120,7 +120,7 @@ const IncidentReports: React.FC = () => {
           description.trim(),
         ].filter(Boolean).join(' | '),
         actionTaken: actionTaken.trim() || undefined,
-        heatIndex: heatIndex.trim() ? Number(heatIndex) : undefined,
+        heatIndex: heatIndex.trim() && Number.isFinite(Number(heatIndex)) ? Number(heatIndex) : undefined,
       });
 
       setSelectedStudentId('');

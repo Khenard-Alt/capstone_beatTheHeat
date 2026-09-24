@@ -184,18 +184,15 @@ exports.incidentsController = {
                 .select('id, school_id, reporter_id, student_id, type, description, action_taken, heat_index_at_time, status, created_at, resolved_at', { count: 'exact' })
                 .order('created_at', { ascending: false })
                 .range(offset, offset + limit - 1);
-            if (incidentsError || !incidents) {
-                res.status(200).json({
-                    success: true,
-                    data: [],
-                    pagination: { limit, offset, total: 0 },
-                    message: 'No incident data available',
-                });
+            if (incidentsError) {
+                console.error('Failed to fetch incidents:', incidentsError.message);
+                res.status(500).json({ success: false, message: 'Failed to fetch incidents', error: incidentsError.message });
                 return;
             }
+            const incidentRows = incidents || [];
             // Collect student and reporter IDs and fetch related records
-            const studentIds = Array.from(new Set(incidents.map((it) => it.student_id).filter(Boolean)));
-            const reporterIds = Array.from(new Set(incidents.map((it) => it.reporter_id).filter(Boolean)));
+            const studentIds = Array.from(new Set(incidentRows.map((it) => it.student_id).filter(Boolean)));
+            const reporterIds = Array.from(new Set(incidentRows.map((it) => it.reporter_id).filter(Boolean)));
             let studentsById = {};
             let reportersById = {};
             let parentsById = {};
@@ -218,9 +215,12 @@ exports.incidentsController = {
                     reportersById[u.id] = u;
                 });
             }
-            let mapped = (incidents || []).map((row) => mapIncidentRow(row, studentsById, reportersById, parentsById));
-            // If there are no incidents in the canonical `incidents` table, attempt to read from legacy `health_incidents` view
-            if ((mapped || []).length === 0) {
+            let mapped = incidentRows.map((row) => mapIncidentRow(row, studentsById, reportersById, parentsById));
+            // Only fall back to the legacy `health_incidents` view when the canonical
+            // `incidents` table has no rows at all — checking the page's mapped
+            // length here would also (wrongly) trigger the fallback for a valid
+            // empty page (e.g. an offset past the end of a non-empty result set).
+            if ((count ?? 0) === 0) {
                 const { data: legacyData, error: legacyError, count: legacyCount } = await supabase
                     .from('health_incidents')
                     .select('id, student_name, grade_level, section, incident_type, severity, symptoms, heat_index, temperature, timestamp, action_taken, reported_by, status', { count: 'exact' })
@@ -271,6 +271,65 @@ exports.incidentsController = {
                 data: mapped,
                 pagination: { limit, offset, total: count || 0 },
             });
+        }
+        catch (error) {
+            next(error);
+        }
+    },
+    listHistory: async (req, res, next) => {
+        try {
+            const limit = parseInt(req.query.limit || '20', 10);
+            const offset = parseInt(req.query.offset || '0', 10);
+            const supabase = (0, supabase_1.getSupabaseAdminClient)();
+            if (!supabase) {
+                res.status(200).json({ success: true, data: [], pagination: { limit, offset, total: 0 } });
+                return;
+            }
+            const { data: rows, error, count } = await supabase
+                .from('incident_history')
+                .select('*', { count: 'exact' })
+                .order('resolved_at', { ascending: false })
+                .range(offset, offset + limit - 1);
+            if (error) {
+                res.status(500).json({ success: false, message: 'Failed to fetch incident history', error: error.message });
+                return;
+            }
+            const rowsList = rows || [];
+            const studentIds = Array.from(new Set(rowsList.map((it) => it.student_id).filter(Boolean)));
+            const reporterIds = Array.from(new Set(rowsList.map((it) => it.reporter_id).filter(Boolean)));
+            const resolverIds = Array.from(new Set(rowsList.map((it) => it.resolved_by).filter(Boolean)));
+            const studentsById = {};
+            const reportersById = {};
+            const parentsById = {};
+            const resolversById = {};
+            if (studentIds.length > 0) {
+                const { data: studs } = await supabase.from('students').select('id, first_name, last_name, grade_level, section, parent_user_id').in('id', studentIds);
+                (studs || []).forEach((u) => { studentsById[u.id] = u; });
+            }
+            const parentIds = Array.from(new Set(Object.values(studentsById).map((student) => student?.parent_user_id).filter(Boolean)));
+            if (parentIds.length > 0) {
+                const { data: parents } = await supabase.from('users').select('id, first_name, last_name, role, email').in('id', parentIds);
+                (parents || []).forEach((u) => { parentsById[u.id] = u; });
+            }
+            const usersToLookup = Array.from(new Set([...reporterIds, ...resolverIds]));
+            if (usersToLookup.length > 0) {
+                const { data: users } = await supabase.from('users').select('id, first_name, last_name, role, email').in('id', usersToLookup);
+                (users || []).forEach((u) => {
+                    reportersById[u.id] = u;
+                    resolversById[u.id] = u;
+                });
+            }
+            const mapped = rowsList.map((row) => ({
+                ...mapIncidentRow(row, studentsById, reportersById, parentsById),
+                id: row.id,
+                status: 'resolved',
+                originalIncidentId: row.original_incident_id,
+                resolvedBy: row.resolved_by || null,
+                resolvedByName: formatPersonName(resolversById[row.resolved_by]),
+                resolutionNotes: row.resolution_notes || null,
+                resolvedAt: row.resolved_at,
+            }));
+            res.status(200).json({ success: true, data: mapped, pagination: { limit, offset, total: count || 0 } });
         }
         catch (error) {
             next(error);
@@ -413,7 +472,7 @@ exports.incidentsController = {
     update: async (req, res, next) => {
         try {
             const { id } = req.params;
-            const { schoolId, reporterId, studentId, type, description, actionTaken, heatIndex, status } = req.body;
+            const { schoolId, reporterId, studentId, type, description, actionTaken, heatIndex, status, resolvedBy, resolutionNotes } = req.body;
             const updates = {};
             if (typeof schoolId === 'string')
                 updates.school_id = schoolId || null;
@@ -450,6 +509,47 @@ exports.incidentsController = {
                 local[index] = { ...local[index], ...updates, updated_at: new Date().toISOString() };
                 await saveLocalIncidents(local);
                 res.status(200).json({ success: true, data: local[index] });
+                return;
+            }
+            // Resolving an incident moves it out of the active table entirely
+            // (into `incident_history`) rather than just flipping its status in
+            // place, so head teachers get a real resolved-case history.
+            if (updates.status === 'resolved') {
+                const { data: current, error: fetchError } = await supabase.from('incidents').select('*').eq('id', id).single();
+                if (fetchError || !current) {
+                    res.status(404).json({ success: false, message: 'Incident not found' });
+                    return;
+                }
+                const merged = { ...current, ...updates };
+                const { data: historyRow, error: historyError } = await supabase
+                    .from('incident_history')
+                    .insert({
+                    original_incident_id: id,
+                    school_id: merged.school_id,
+                    reporter_id: merged.reporter_id,
+                    student_id: merged.student_id,
+                    type: merged.type,
+                    description: merged.description,
+                    action_taken: merged.action_taken,
+                    heat_index_at_time: merged.heat_index_at_time,
+                    resolved_by: typeof resolvedBy === 'string' && resolvedBy ? resolvedBy : null,
+                    resolution_notes: typeof resolutionNotes === 'string' && resolutionNotes.trim() ? resolutionNotes.trim() : null,
+                    created_at: merged.created_at,
+                    resolved_at: updates.resolved_at,
+                })
+                    .select('*')
+                    .single();
+                if (historyError || !historyRow) {
+                    res.status(500).json({ success: false, message: 'Failed to archive resolved incident', error: historyError?.message || 'Unknown error' });
+                    return;
+                }
+                const { error: deleteError } = await supabase.from('incidents').delete().eq('id', id);
+                if (deleteError) {
+                    // The history row was already created; log but don't fail the
+                    // request over a cleanup step the caller can't do anything about.
+                    console.error('Failed to remove resolved incident from active table:', deleteError.message);
+                }
+                res.status(200).json({ success: true, moved: true, data: historyRow });
                 return;
             }
             const { data, error } = await supabase.from('incidents').update(updates).eq('id', id).select('*').single();

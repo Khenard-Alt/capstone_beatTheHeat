@@ -250,7 +250,8 @@ exports.notificationController = {
     getNotifications: async (req, res, next) => {
         try {
             const userId = String(req.query.userId ?? '').trim();
-            const limit = parseInt(req.query.limit) || 50;
+            const parsedLimit = parseInt(req.query.limit);
+            const limit = Number.isFinite(parsedLimit) && parsedLimit >= 0 ? parsedLimit : 50;
             const offset = parseInt(req.query.offset) || 0;
             if (!userId) {
                 res.status(400).json({ success: false, message: 'userId is required' });

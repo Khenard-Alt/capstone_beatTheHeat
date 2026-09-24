@@ -8,9 +8,10 @@ type AnnouncementAudience = 'global' | 'parents' | 'teachers';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  onCreated?: () => void;
 }
 
-export const AnnouncementModal: React.FC<Props> = ({ isOpen, onClose }) => {
+export const AnnouncementModal: React.FC<Props> = ({ isOpen, onClose, onCreated }) => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [priority, setPriority] = useState('info');
@@ -64,6 +65,7 @@ export const AnnouncementModal: React.FC<Props> = ({ isOpen, onClose }) => {
       setTitle('');
       setBody('');
       setAudience('global');
+      onCreated?.();
       onClose();
     } catch (err) {
       console.error(err);

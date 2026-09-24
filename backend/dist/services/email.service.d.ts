@@ -6,7 +6,7 @@ export declare const sendEmail: (to: string | string[], subject: string, html: s
 /**
  * Send OTP email
  */
-export declare const sendOTPEmail: (email: string, otpCode: string, expiresIn: number) => Promise<boolean>;
+export declare const sendOTPEmail: (email: string, otpCode: string, expiresIn: number, purpose?: "verify" | "reset") => Promise<boolean>;
 /**
  * Send welcome email after registration
  */
@@ -25,7 +25,7 @@ export declare const buildAnnouncementHtml: (title: string, body: string) => str
 export declare const sendAdvisoryNotificationEmail: (email: string, recipientName: string, schoolName: string, advisoryTitle: string, advisoryText: string, riskLevel: "low" | "medium" | "high" | "critical") => Promise<boolean>;
 declare const _default: {
     initializeTransporter: () => Promise<nodemailer.Transporter | null>;
-    sendOTPEmail: (email: string, otpCode: string, expiresIn: number) => Promise<boolean>;
+    sendOTPEmail: (email: string, otpCode: string, expiresIn: number, purpose?: "verify" | "reset") => Promise<boolean>;
     sendWelcomeEmail: (email: string, firstName: string, studentName: string) => Promise<boolean>;
     sendHeatAlertEmail: (email: string, recipientName: string, schoolName: string, heatLevel: string, heatIndex: number, recommendations: string[]) => Promise<boolean>;
     sendAdvisoryNotificationEmail: (email: string, recipientName: string, schoolName: string, advisoryTitle: string, advisoryText: string, riskLevel: "low" | "medium" | "high" | "critical") => Promise<boolean>;

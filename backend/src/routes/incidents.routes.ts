@@ -10,6 +10,12 @@ const router: Router = express.Router();
  */
 router.get('/', incidentsController.list);
 
+/**
+ * GET /api/incidents/history
+ * List resolved incidents that have been moved into incident_history
+ */
+router.get('/history', incidentsController.listHistory);
+
 // POST /api/incidents
 router.post('/', express.json(), incidentsController.create);
 

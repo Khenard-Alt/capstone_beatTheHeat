@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { getSupabaseAdminClient } from '../config/supabase';
 
 const fallbackStudents = [

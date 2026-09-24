@@ -2,7 +2,11 @@
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 1100;
+  /* Above other fixed bottom-right widgets sharing this corner (e.g.
+     .parent-advisory-popup at z-index 1300) so the assistant stays
+     reachable/clickable instead of being covered by them, but still below
+     true modal overlays (z-index 2000+) which should take priority. */
+  z-index: 1500;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -25,7 +29,13 @@
 .global-advisory-header-actions {
   display: flex;
   align-items: center;
-  
+  gap: 8px;
+}
+
+/* This block was previously nested (invalidly) inside
+   .global-advisory-header-actions with no @media wrapper, so it never
+   actually applied — the panel had no real mobile sizing at all. */
+@media (max-width: 768px) {
   .global-advisory-panel {
     width: min(100%, 520px);
     height: min(78dvh, 680px);
@@ -77,7 +87,6 @@
     padding: 10px 12px;
     white-space: nowrap;
   }
-  gap: 8px;
 }
 
 .global-advisory-scope-btn {
@@ -380,10 +389,102 @@
 .floating-advisory-icon{display:grid;place-items:center;background:#0ea5e9;border-radius:999px;width:34px;height:34px}
 .floating-advisory-icon svg{font-size:18px}
 
-@media (max-width: 1024px) {
-  /* The floating assistant is desktop-only; avoid an invisible mobile hit area. */
-  .global-advisory-nudge {
+/* Referenced by .floating-advisory-header/.attention and the compact mobile
+   icon below — previously undefined anywhere in this file, so those
+   animations silently never ran. */
+@keyframes floatAdvisorySlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatAdvisoryPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5), 0 24px 60px rgba(15, 23, 42, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(249, 115, 22, 0), 0 24px 60px rgba(15, 23, 42, 0.45);
+  }
+}
+
+@keyframes floatAdvisoryShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(1px);
+  }
+}
+
+@keyframes floatAdvisoryRing {
+  from {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+/* Compact draggable icon shown in place of the wide desktop pill on small
+   screens. Positioned via inline style (left/top, in JS state) instead of
+   the .global-advisory-nudge wrapper's right/bottom, so it can be dragged
+   anywhere on screen. */
+.global-advisory-compact-icon {
+  position: fixed;
+  /* See .global-advisory-nudge above for why this is higher than other
+     fixed bottom-corner widgets. */
+  z-index: 1500;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.35);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.global-advisory-compact-icon svg {
+  font-size: 24px;
+  pointer-events: none;
+}
+
+.global-advisory-compact-icon.attention::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(249, 115, 22, 0.55);
+  animation: floatAdvisoryRing 1.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@media (min-width: 769px) {
+  .global-advisory-compact-icon {
     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* The wide pill is desktop-only; the compact icon above replaces it. */
+  .floating-advisory-header {
+    display: none;
+  }
+
+  .global-advisory-nudge {
+    right: 16px;
+    bottom: 16px;
   }
 }
 

@@ -88,31 +88,37 @@ export const sendEmail = async (to: string | string[], subject: string, html: st
 /**
  * Send OTP email
  */
-export const sendOTPEmail = async (email: string, otpCode: string, expiresIn: number): Promise<boolean> => {
+export const sendOTPEmail = async (
+  email: string,
+  otpCode: string,
+  expiresIn: number,
+  purpose: 'verify' | 'reset' = 'verify'
+): Promise<boolean> => {
   try {
     const transport = await initializeTransporter();
-    
+
     if (!transport) {
       console.error('[EMAIL] Transporter not available');
       return false;
     }
 
     const expiresInMinutes = Math.round(expiresIn / 60);
+    const isReset = purpose === 'reset';
 
     const mailOptions = {
       from: process.env.EMAIL_FROM || 'noreply@beattheheat.com',
       to: email,
-      subject: 'Beat The Heat - Email Verification Code',
+      subject: isReset ? 'Beat The Heat - Password Reset Code' : 'Beat The Heat - Email Verification Code',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #1e40af;">Email Verification</h2>
+          <h2 style="color: #1e40af;">${isReset ? 'Password Reset' : 'Email Verification'}</h2>
           <p>Hello!</p>
-          <p>Your verification code is:</p>
+          <p>${isReset ? 'Use this code to reset your password:' : 'Your verification code is:'}</p>
           <div style="background: #f0f9ff; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
             <h1 style="color: #2563eb; letter-spacing: 5px; margin: 0;">${otpCode}</h1>
           </div>
           <p><strong>This code expires in ${expiresInMinutes} minutes.</strong></p>
-          <p>If you didn't request this code, please ignore this email.</p>
+          <p>If you didn't request this code, please ignore this email${isReset ? ' — your password will not be changed' : ''}.</p>
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
           <p style="color: #64748b; font-size: 12px;">This is an automated message from Beat The Heat. Please do not reply to this email.</p>
         </div>

@@ -7,6 +7,8 @@ import { Avatar } from './Avatar';
 import '../styles/Avatar.css';
 
 const MAX_AVATAR_BYTES = 3 * 1024 * 1024;
+// Mirrors the backend's multer fileFilter (backend/src/controllers/userController.ts).
+const ALLOWED_AVATAR_TYPES = /^image\/(png|jpe?g|webp|gif)$/;
 
 interface AvatarUploadProps {
   size?: number;
@@ -28,6 +30,11 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ size = 96 }) => {
     event.target.value = '';
 
     if (!file || !user) {
+      return;
+    }
+
+    if (!ALLOWED_AVATAR_TYPES.test(file.type)) {
+      setError('Only PNG, JPG, WEBP, or GIF images are allowed.');
       return;
     }
 

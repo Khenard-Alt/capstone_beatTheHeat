@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MdChat, MdClose, MdInfoOutline } from 'react-icons/md';
 import { useAuth } from '../hooks/useAuth';
 import { fetchCurrentWeather } from '../services/weather.service';
@@ -42,6 +42,91 @@ export const SmartAdvisoryBot: React.FC = () => {
   const [tickerMessage, setTickerMessage] = useState('Fetching the latest heat advisory...');
   const [isAttention, setIsAttention] = useState(true);
   const [showScopeNotice, setShowScopeNotice] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+  const dragState = useRef({ dragging: false, startX: 0, startY: 0, originX: 0, originY: 0, moved: false, startTime: 0 });
+
+  const COMPACT_ICON_SIZE = 52;
+
+  const getDefaultCompactPos = useCallback(
+    () => ({ x: window.innerWidth - COMPACT_ICON_SIZE - 16, y: window.innerHeight - COMPACT_ICON_SIZE - 16 }),
+    []
+  );
+
+  const clampToViewport = useCallback((x: number, y: number) => {
+    const maxX = window.innerWidth - COMPACT_ICON_SIZE - 8;
+    const maxY = window.innerHeight - COMPACT_ICON_SIZE - 8;
+    return { x: Math.min(Math.max(8, x), maxX), y: Math.min(Math.max(8, y), maxY) };
+  }, []);
+
+  // Detect mobile/small-screen viewports so the compact draggable icon can
+  // replace the wide desktop pill (matching the app's standard 768px
+  // breakpoint) instead of hiding the assistant entirely, as it did before.
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+
+  // Restore a dragged position for this tab only — a fresh session starts
+  // back at the default bottom-right corner.
+  useEffect(() => {
+    if (!isMobile) return;
+    try {
+      const saved = sessionStorage.getItem('bth_chatbot_pos');
+      if (saved) setDragPos(JSON.parse(saved));
+    } catch {
+      // ignore corrupt/blocked storage
+    }
+  }, [isMobile]);
+
+  const handleCompactPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const pos = dragPos ?? getDefaultCompactPos();
+    dragState.current = {
+      dragging: true,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: pos.x,
+      originY: pos.y,
+      moved: false,
+      startTime: Date.now(),
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleCompactPointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (!dragState.current.dragging) return;
+    const dx = event.clientX - dragState.current.startX;
+    const dy = event.clientY - dragState.current.startY;
+    if (Math.abs(dx) + Math.abs(dy) > 6) dragState.current.moved = true;
+    setDragPos(clampToViewport(dragState.current.originX + dx, dragState.current.originY + dy));
+  };
+
+  const handleCompactPointerUp = () => {
+    if (!dragState.current.dragging) return;
+    dragState.current.dragging = false;
+
+    // A small movement within a short window counts as a tap (open the
+    // chat) rather than a drag (reposition the icon).
+    const wasTap = !dragState.current.moved && Date.now() - dragState.current.startTime < 300;
+    if (wasTap) {
+      setIsOpen(true);
+      return;
+    }
+
+    setDragPos((current) => {
+      if (current) {
+        try {
+          sessionStorage.setItem('bth_chatbot_pos', JSON.stringify(current));
+        } catch {
+          // ignore
+        }
+      }
+      return current;
+    });
+  };
 
   const roleLabel = useMemo(() => user?.role ?? 'user', [user?.role]);
   const chatPath = useMemo(() => (user?.role === 'parent' ? '/parent/chatbot' : '/health-advisory'), [user?.role]);
@@ -169,6 +254,24 @@ export const SmartAdvisoryBot: React.FC = () => {
       setIsThinking(false);
     }
   };
+
+  if (isMobile && !isOpen) {
+    const pos = dragPos ?? getDefaultCompactPos();
+    return (
+      <button
+        className={`global-advisory-compact-icon${isAttention ? ' attention' : ''}`}
+        style={{ left: pos.x, top: pos.y }}
+        onPointerDown={handleCompactPointerDown}
+        onPointerMove={handleCompactPointerMove}
+        onPointerUp={handleCompactPointerUp}
+        onPointerCancel={handleCompactPointerUp}
+        aria-label="Open AI Chatbot"
+        title="Open AI Chatbot"
+      >
+        <MdChat />
+      </button>
+    );
+  }
 
   return (
     <div className="global-advisory-nudge">

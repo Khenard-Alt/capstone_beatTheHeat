@@ -5,15 +5,27 @@ import { STORAGE_KEYS } from '../utils/constants';
 import axios from 'axios';
 import { apiClient } from '../services/api';
 import { supabase } from '../services/supabase';
+import { getDeviceId, getDeviceLabel } from '../utils/deviceInfo';
+
+export class PendingDeviceConfirmationError extends Error {
+  sessionId: string;
+
+  constructor(sessionId: string) {
+    super('Awaiting confirmation from your other device.');
+    this.name = 'PendingDeviceConfirmationError';
+    this.sessionId = sessionId;
+  }
+}
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<User>;
+  completeLogin: (user: User, token: string) => void;
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
-  register: (data: any) => Promise<void>;
+  register: (data: any) => Promise<{ user: User; verification?: string }>;
   setAdminAuthSession: (user: User) => void;
   updateUser: (u: User) => void;
 }
@@ -60,15 +72,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { data } = await apiClient.post('/api/users/login', {
         email,
         password: _password,
+        deviceId: getDeviceId(),
+        deviceLabel: getDeviceLabel(),
       });
 
-      const mockUser: User = data.user;
+      if (data.status === 'pending_confirmation') {
+        throw new PendingDeviceConfirmationError(data.sessionId);
+      }
 
-      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mockUser));
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'mock-token');
-      setUser(mockUser);
-      return mockUser;
+      const loggedInUser: User = data.user;
+
+      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(loggedInUser));
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token ?? 'mock-token');
+      setUser(loggedInUser);
+      return loggedInUser;
     } catch (error) {
+      if (error instanceof PendingDeviceConfirmationError) {
+        throw error;
+      }
       if (axios.isAxiosError(error)) {
         const responseData = error.response?.data;
         const message =
@@ -85,7 +106,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const completeLogin = (loggedInUser: User, token: string) => {
+    localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(loggedInUser));
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    setUser(loggedInUser);
+  };
+
   const logout = () => {
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    if (token) {
+      // Best-effort: revoke server-side so a later login from another device
+      // doesn't wait forever for approval from a device that already logged
+      // out. Fire-and-forget — logout must not be blocked by the network.
+      void apiClient.post('/api/users/logout', { token }).catch(() => {});
+    }
     localStorage.removeItem(STORAGE_KEYS.USER_DATA);
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     setUser(null);
@@ -104,7 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (error) throw error;
   };
 
-  const register = async (data: any) => {
+  const register = async (data: any): Promise<{ user: User; verification?: string }> => {
     setIsLoading(true);
     try {
       const { data: result } = await apiClient.post('/api/users/register', {
@@ -115,7 +149,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: data.role,
         phone: data.phone,
         childId: data.childId,
+        studentNumber: data.studentNumber,
         oauthAccessToken: data.oauthAccessToken,
+        deviceId: getDeviceId(),
+        deviceLabel: getDeviceLabel(),
       });
 
       const newUser: User = {
@@ -130,8 +167,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(newUser));
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'auth-token');
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, result.token ?? 'auth-token');
       setUser(newUser);
+      return { user: newUser, verification: result.verification };
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const responseData = error.response?.data;
@@ -156,6 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAuthenticated: !!user,
         isLoading,
         login,
+        completeLogin,
         loginWithGoogle,
         logout,
         register,

@@ -69,10 +69,10 @@ export const HeadTeacherDashboard: React.FC = () => {
   );
 
   const stats = useMemo(() => ([
-    { label: 'Pending Reviews', value: incidents.filter((item) => item.status === 'pending').length || incidents.length || 0, note: 'For head teacher action' },
+    { label: 'Pending Reviews', value: incidents.filter((item) => item.status === 'pending').length, note: 'For head teacher action' },
     { label: 'Open Advisories', value: advisories.length || headTeacherAnnouncements.length || 0, note: 'Current school guidance' },
-    { label: 'Heat Level', value: realtimeAdvisory?.riskLevel?.toUpperCase() || 'DANGER', note: 'Live advisory' },
-    { label: 'Reports Logged', value: incidents.length || 0, note: 'Recent incident rows' },
+    { label: 'Heat Level', value: realtimeAdvisory?.riskLevel?.toUpperCase() || 'LOADING...', note: 'Live advisory' },
+    { label: 'Reports Logged', value: incidents.length, note: 'Recent incident rows' },
   ]), [advisories.length, headTeacherAnnouncements.length, incidents, realtimeAdvisory?.riskLevel]);
 
   const quickActions = [
@@ -104,7 +104,7 @@ export const HeadTeacherDashboard: React.FC = () => {
         <div className="teacher-hero-card">
           <MdOutlineThermostat className="teacher-hero-icon" />
           <div>
-            <strong>{realtimeAdvisory?.riskLevel?.toUpperCase() || 'DANGER'}</strong>
+            <strong>{realtimeAdvisory?.riskLevel?.toUpperCase() || 'LOADING...'}</strong>
             <p>{realtimeAdvisory?.summary || 'Live heat advisory and incident data loading.'}</p>
           </div>
         </div>

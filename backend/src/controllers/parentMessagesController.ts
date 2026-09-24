@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { appendFile } from 'fs/promises';
+import { appendFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { getSupabaseAdminClient } from '../config/supabase';
 
@@ -78,6 +78,7 @@ export const parentMessagesController = {
           body,
           created_at: new Date().toISOString(),
         };
+        await mkdir(path.dirname(LOCAL_LOG), { recursive: true });
         await appendFile(LOCAL_LOG, JSON.stringify(record) + '\n');
         res.status(201).json({ success: true, data: record });
         return;

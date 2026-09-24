@@ -174,10 +174,14 @@ export const AdminDashboard: React.FC = () => {
     { label: 'System Status', value: loading ? 'Loading...' : 'Healthy', note: 'All systems' },
   ];
 
-  // Convert trend data for charts
+  // Convert trend data for charts. The backend returns trend points
+  // oldest-first, so sort then take the last 5 (most recent) — slicing from
+  // the front here would show the oldest points instead of the latest ones.
   const advisoryTrend = (adminStats?.trend || [])
     .filter((t: Trend) => t && t.timestamp && t.count >= 0)
-    .slice(0, 5)
+    .slice()
+    .sort((a: Trend, b: Trend) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    .slice(-5)
     .map((t: Trend) => ({
       timestamp: formatDateTimeCompact(t.timestamp),
       fullTimestamp: formatDateTimeGlobal(t.timestamp),

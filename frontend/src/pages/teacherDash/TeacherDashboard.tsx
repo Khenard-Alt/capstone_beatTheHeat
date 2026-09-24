@@ -25,11 +25,11 @@ export const TeacherDashboard: React.FC = () => {
   const latestIncident = incidents[0];
 
   const teacherStats = useMemo(() => ([
-    { label: 'Pending Forms', value: Math.max(1, incidents.filter((item) => item.status === 'pending').length || 2), note: 'Need review' },
-    { label: 'Incidents Logged', value: incidents.length || 3, note: 'This period' },
-    { label: 'Heat Level', value: realtimeAdvisory?.riskLevel || 'danger', note: 'Live advisory' },
+    { label: 'Pending Forms', value: incidents.filter((item) => item.status === 'pending').length, note: 'Need review' },
+    { label: 'Incidents Logged', value: incidents.length, note: 'This period' },
+    { label: 'Heat Level', value: realtimeAdvisory?.riskLevel ?? 'Loading...', note: 'Live advisory' },
     { label: 'Announcements', value: announcements.length || 0, note: 'Recent school notices' },
-  ]), [announcements.length, incidents.length, realtimeAdvisory?.riskLevel]);
+  ]), [announcements.length, incidents, realtimeAdvisory?.riskLevel]);
 
   useEffect(() => {
     let mounted = true;
@@ -147,7 +147,7 @@ export const TeacherDashboard: React.FC = () => {
           <div className="teacher-hero-card">
             <MdOutlineThermostat className="teacher-hero-icon" />
             <div>
-              <strong>{realtimeAdvisory?.riskLevel?.toUpperCase() || 'DANGER'}</strong>
+              <strong>{realtimeAdvisory?.riskLevel?.toUpperCase() || 'LOADING...'}</strong>
               <p>
                 {realtimeAdvisory?.summary || 'Live heat guidance is loading. Keep hydration and indoor alternatives ready.'}
               </p>

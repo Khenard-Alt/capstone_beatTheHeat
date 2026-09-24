@@ -108,6 +108,7 @@ export const STORAGE_KEYS = {
   USER_DATA: 'user_data',
   THEME: 'theme',
   PREFERENCES: 'user_preferences',
+  DEVICE_ID: 'device_id',
 };
 
 // Weather Condition Icons

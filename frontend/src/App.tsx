@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { TemperatureUnitProvider } from './context/TemperatureUnitContext';
+import { DeviceConfirmationProvider } from './context/DeviceConfirmationContext';
+import { DeviceSwitchModal } from './components/DeviceSwitchModal';
 import { useAuth } from './hooks/useAuth';
 import { Sidebar } from './components/sidebar/Sidebar';
 import { Footer } from './components/Footer';
@@ -12,6 +14,7 @@ import { Dashboard } from './pages/Dashboard';
 import { AdminDashboard } from './pages/adminDash/AdminDashboard';
 import { ParentDashboard } from './pages/parentDash/ParentDashboard';
 import { Login } from './pages/Login';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { AuthCallback } from './pages/AuthCallback';
 import { FrontScreenDisplay } from './pages/FrontScreenDisplay';
 import { HeatIndex } from './pages/HeatIndex';
@@ -35,6 +38,8 @@ import PrincipalChatbot from './pages/principalDash/PrincipalChatbot';
 import PrincipalProfileSettings from './pages/principalDash/PrincipalProfileSettings';
 import { HeadTeacherDashboard } from './pages/headTeacherDash/HeadTeacherDashboard';
 import IncidentReview from './pages/headTeacherDash/IncidentReview';
+import IncidentReportHistory from './pages/headTeacherDash/IncidentReportHistory';
+import ParentVerificationQueue from './pages/ParentVerificationQueue';
 import IncidentReports from './pages/headTeacherDash/IncidentReports';
 import Chatbot from './pages/headTeacherDash/Chatbot';
 import ProfileSettings from './pages/headTeacherDash/ProfileSettings';
@@ -58,6 +63,24 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const AdminOrHeadTeacherRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'admin' && user?.role !== 'head-teacher') {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -279,6 +302,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginLayout><Login /></LoginLayout>} />
+      <Route path="/forgot-password" element={<LoginLayout><ForgotPassword /></LoginLayout>} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/register" element={<Navigate to="/login" replace />} />
       {/* Public kiosk/TV display — no login required, meant to run fullscreen on a lobby screen. */}
@@ -482,6 +506,39 @@ const AppRoutes: React.FC = () => {
               <IncidentReview />
             </AppLayout>
           </HeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/head-teacher/incident-history"
+        element={
+          <HeadTeacherRoute>
+            <AppLayout>
+              <IncidentReportHistory />
+            </AppLayout>
+          </HeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/head-teacher/parent-verifications"
+        element={
+          <AdminOrHeadTeacherRoute>
+            <AppLayout>
+              <ParentVerificationQueue />
+            </AppLayout>
+          </AdminOrHeadTeacherRoute>
+        }
+      />
+
+      <Route
+        path="/admin/parent-verifications"
+        element={
+          <AdminOrHeadTeacherRoute>
+            <AppLayout>
+              <ParentVerificationQueue />
+            </AppLayout>
+          </AdminOrHeadTeacherRoute>
         }
       />
 
@@ -701,7 +758,10 @@ function App() {
         <AuthProvider>
           <TemperatureUnitProvider>
             <NotificationProvider>
-              <AppRoutes />
+              <DeviceConfirmationProvider>
+                <AppRoutes />
+                <DeviceSwitchModal />
+              </DeviceConfirmationProvider>
             </NotificationProvider>
           </TemperatureUnitProvider>
         </AuthProvider>

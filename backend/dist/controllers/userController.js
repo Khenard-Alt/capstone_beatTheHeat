@@ -3,13 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserChildren = exports.changePassword = exports.uploadAvatar = exports.updateUser = exports.deleteUser = exports.getOTPStatus = exports.verifyOTPCode = exports.sendOTP = exports.getUserProfile = exports.listUsers = exports.authenticateAdminTools = exports.syncOAuthUser = exports.loginUser = exports.registerUser = exports.avatarUpload = void 0;
+exports.logoutUser = exports.getDeviceConfirmationStatus = exports.resolveDeviceConfirmation = exports.getPendingDeviceConfirmation = exports.getUserChildren = exports.resetPasswordWithOTP = exports.changePassword = exports.uploadIdProof = exports.uploadAvatar = exports.updateUser = exports.deleteUser = exports.getOTPStatus = exports.verifyOTPCode = exports.sendOTP = exports.getUserProfile = exports.listUsers = exports.authenticateAdminTools = exports.syncOAuthUser = exports.loginUser = exports.registerUser = exports.idProofUpload = exports.avatarUpload = void 0;
 const multer_1 = __importDefault(require("multer"));
 const supabase_1 = require("../config/supabase");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
 const otp_service_1 = require("../services/otp.service");
 const email_service_1 = require("../services/email.service"); // eslint-disable-line @typescript-eslint/no-unused-vars
+const deviceSession_service_1 = require("../services/deviceSession.service");
 const AVATAR_BUCKET = 'avatars';
 const MAX_AVATAR_BYTES = 3 * 1024 * 1024; // 3MB
 exports.avatarUpload = (0, multer_1.default)({
@@ -35,6 +36,31 @@ const ensureAvatarBucket = async (client) => {
     }
     avatarBucketReady = true;
 };
+const ID_PROOF_BUCKET = 'id-proofs';
+const MAX_ID_PROOF_BYTES = 5 * 1024 * 1024; // 5MB
+exports.idProofUpload = (0, multer_1.default)({
+    storage: multer_1.default.memoryStorage(),
+    limits: { fileSize: MAX_ID_PROOF_BYTES },
+    fileFilter: (_req, file, cb) => {
+        if (!/^image\/(png|jpe?g|webp)$/.test(file.mimetype)) {
+            cb(new Error('Only PNG, JPG, or WEBP images are allowed.'));
+            return;
+        }
+        cb(null, true);
+    },
+});
+let idProofBucketReady = false;
+const ensureIdProofBucket = async (client) => {
+    if (idProofBucketReady) {
+        return;
+    }
+    const { data: buckets } = await client.storage.listBuckets();
+    const exists = buckets?.some((bucket) => bucket.name === ID_PROOF_BUCKET);
+    if (!exists) {
+        await client.storage.createBucket(ID_PROOF_BUCKET, { public: true, fileSizeLimit: MAX_ID_PROOF_BYTES });
+    }
+    idProofBucketReady = true;
+};
 const allowedRoles = ['admin', 'principal', 'head-teacher', 'teacher', 'staff', 'parent'];
 const isAllowedRole = (role) => typeof role === 'string' && allowedRoles.includes(role);
 const fallbackUser = (email, role) => ({
@@ -53,28 +79,6 @@ const fallbackUsers = [
     fallbackUser('parent@beattheheat.local', 'parent'),
     fallbackUser('teacher@beattheheat.local', 'teacher'),
 ];
-const inferFallbackRole = (email) => {
-    const normalizedEmail = String(email).trim().toLowerCase();
-    if (normalizedEmail.includes('admin')) {
-        return 'admin';
-    }
-    if (normalizedEmail.includes('principal')) {
-        return 'principal';
-    }
-    if (normalizedEmail.includes('head-teacher') || normalizedEmail.includes('head teacher')) {
-        return 'head-teacher';
-    }
-    if (normalizedEmail.includes('teacher')) {
-        return 'teacher';
-    }
-    if (normalizedEmail.includes('staff')) {
-        return 'staff';
-    }
-    if (normalizedEmail.includes('parent')) {
-        return 'parent';
-    }
-    return null;
-};
 const isGoogleAccountMetadata = (metadata) => Boolean(metadata && typeof metadata === 'object' && metadata.auth_provider === 'google');
 const notificationPreferencesFromMetadata = (metadata) => metadata && typeof metadata === 'object' && metadata.notificationPreferences
     ? metadata.notificationPreferences
@@ -128,11 +132,20 @@ const raceWithTimeout = async (promise, timeoutMs) => {
  */
 const registerUser = async (req, res, next) => {
     try {
-        const { email, password, firstName, lastName, role, phone, childId, idProofUrl, oauthAccessToken } = req.body;
+        const { email, password, firstName, lastName, role, phone, childId, studentNumber, idProofUrl, oauthAccessToken } = req.body;
         const isGoogleRegistration = typeof oauthAccessToken === 'string' && oauthAccessToken.length > 0;
         // Validate required fields
         if (!email || !firstName || !lastName || !role || (!password && !isGoogleRegistration)) {
             res.status(400).json({ success: false, message: 'Missing required fields' });
+            return;
+        }
+        // A parent claiming a child must prove they actually know that child's
+        // private student number (never shown in the public search list) —
+        // otherwise anyone who just knows a student's name could register as
+        // their "parent" and gain access to that child's incident reports and
+        // messages. This is checked before any account is created.
+        if (role === 'parent' && childId && !String(studentNumber || '').trim()) {
+            res.status(400).json({ success: false, message: "The student's number is required to link a child." });
             return;
         }
         if (!isGoogleRegistration && !/^[^\s@]+@gmail\.com$/i.test(String(email).trim())) {
@@ -158,6 +171,19 @@ const registerUser = async (req, res, next) => {
                 return;
             }
         }
+        if (client && role === 'parent' && childId) {
+            const { data: claimedStudent, error: studentLookupError } = await client
+                .from('students')
+                .select('id, student_number')
+                .eq('id', childId)
+                .maybeSingle();
+            const realStudentNumber = String(claimedStudent?.student_number || '').trim().toLowerCase();
+            const submittedStudentNumber = String(studentNumber || '').trim().toLowerCase();
+            if (studentLookupError || !claimedStudent || !realStudentNumber || realStudentNumber !== submittedStudentNumber) {
+                res.status(400).json({ success: false, message: "Student number does not match our records for this student." });
+                return;
+            }
+        }
         // If no database, return mock user
         if (!client) {
             const mockUser = fallbackUser(email, role);
@@ -171,10 +197,33 @@ const registerUser = async (req, res, next) => {
         // Check if user already exists
         const { data: existingUser, error: checkError } = await client
             .from('users')
-            .select('id')
+            .select('id, email, role, first_name, last_name, school_id, avatar_url, metadata, created_at, updated_at')
             .eq('email', email)
             .single();
         if (existingUser) {
+            // A returning Google user hits this "already registered" branch every
+            // time they sign in (there's no separate login call for OAuth) — treat
+            // it as a login instead of rejecting them out of their own account.
+            if (isGoogleRegistration) {
+                if (!isAllowedRole(existingUser.role)) {
+                    res.status(500).json({ success: false, message: 'User role is invalid in the database' });
+                    return;
+                }
+                const deviceId = typeof req.body?.deviceId === 'string' && req.body.deviceId
+                    ? req.body.deviceId
+                    : `ephemeral-${crypto_1.default.randomUUID()}`;
+                const deviceLabel = typeof req.body?.deviceLabel === 'string' && req.body.deviceLabel ? req.body.deviceLabel : 'Unknown device';
+                const token = crypto_1.default.randomUUID();
+                await deviceSession_service_1.deviceSessionService.createActiveSession(existingUser.id, deviceId, deviceLabel, token);
+                res.status(200).json({
+                    success: true,
+                    status: 'active',
+                    message: 'Google account linked',
+                    user: sanitizeUserRow(existingUser),
+                    token,
+                });
+                return;
+            }
             res.status(409).json({ success: false, message: 'Email already registered' });
             return;
         }
@@ -211,23 +260,23 @@ const registerUser = async (req, res, next) => {
             res.status(500).json({ success: false, message: 'Registration failed', error: insertError.message });
             return;
         }
-        // Map the parent to the student if childId is provided
+        // The student-number check above only proves the parent knows a private
+        // identifier — it doesn't replace staff judgment. Record the claim as
+        // 'pending' and leave students.parent_user_id untouched until an
+        // admin/head teacher approves it (see parentVerificationController).
+        // This is intentionally not gated behind `if (client)` above since
+        // `client` is guaranteed non-null past this point (the !client branch
+        // returns earlier).
         if (role === 'parent' && childId) {
-            const { error: studentUpdateError } = await client
-                .from('students')
-                .update({ parent_user_id: newUser.id })
-                .eq('id', childId);
-            if (studentUpdateError) {
-                console.error('Failed to link parent to student:', studentUpdateError);
-            }
-            // Also add to parent_student_guardians join table if it exists
             const { error: guardianError } = await client
                 .from('parent_student_guardians')
                 .insert({
                 parent_user_id: newUser.id,
                 student_id: childId,
                 relationship_type: 'parent',
-                is_primary: true
+                is_primary: true,
+                status: 'pending',
+                submitted_student_number: String(studentNumber || '').trim(),
             });
             if (guardianError) {
                 // Log but don't fail registration as the main user record is created
@@ -236,10 +285,19 @@ const registerUser = async (req, res, next) => {
         }
         // Return user (without password hash)
         const safeUser = sanitizeUserRow(newUser);
+        const deviceId = typeof req.body?.deviceId === 'string' && req.body.deviceId ? req.body.deviceId : `ephemeral-${crypto_1.default.randomUUID()}`;
+        const deviceLabel = typeof req.body?.deviceLabel === 'string' && req.body.deviceLabel ? req.body.deviceLabel : 'Unknown device';
+        const token = crypto_1.default.randomUUID();
+        // A brand-new account can't have a conflicting active session yet, so
+        // there's nothing to challenge — just register the device as active.
+        await deviceSession_service_1.deviceSessionService.createActiveSession(newUser.id, deviceId, deviceLabel, token);
         res.status(201).json({
             success: true,
+            status: 'active',
+            verification: role === 'parent' && childId ? 'pending' : undefined,
             message: 'User registered successfully',
             user: safeUser,
+            token,
         });
     }
     catch (error) {
@@ -255,24 +313,23 @@ exports.registerUser = registerUser;
 const loginUser = async (req, res, next) => {
     try {
         const { email, password } = req.body;
+        // A fresh random id when the client couldn't supply one (e.g. localStorage
+        // blocked) — never a shared constant, or two unrelated devices in that
+        // state would look identical and silently skip the confirmation prompt.
+        const deviceId = typeof req.body?.deviceId === 'string' && req.body.deviceId ? req.body.deviceId : `ephemeral-${crypto_1.default.randomUUID()}`;
+        const deviceLabel = typeof req.body?.deviceLabel === 'string' && req.body.deviceLabel ? req.body.deviceLabel : 'Unknown device';
         if (!email || !password) {
             res.status(400).json({ success: false, message: 'Email and password are required' });
             return;
         }
         const client = (0, supabase_1.getSupabaseAdminClient)();
+        // Login must always be verified against the real database — silently
+        // signing someone in as a fake "User Demo" account (the old fallback
+        // behavior) when Supabase is unreachable is worse than a clear error,
+        // especially since a demo login isn't tied to any real account or
+        // session record.
         if (!client) {
-            const inferredRole = inferFallbackRole(email);
-            if (!inferredRole) {
-                res.status(401).json({ success: false, message: 'Invalid email or password' });
-                return;
-            }
-            const mockUser = fallbackUser(email, inferredRole);
-            res.status(200).json({
-                success: true,
-                message: 'Login successful (fallback mode)',
-                user: mockUser,
-                token: 'mock-token',
-            });
+            res.status(503).json({ success: false, message: 'Login is temporarily unavailable. Please try again shortly.' });
             return;
         }
         const loginTimeoutMs = Number(process.env.SUPABASE_LOGIN_TIMEOUT_MS ?? 5000);
@@ -290,50 +347,11 @@ const loginUser = async (req, res, next) => {
             error = result?.error;
         }
         catch (queryError) {
-            if (process.env.NODE_ENV !== 'production') {
-                const normalizedEmail = String(email).trim().toLowerCase();
-                const inferredRole = normalizedEmail.includes('admin')
-                    ? 'admin'
-                    : normalizedEmail.includes('principal')
-                        ? 'principal'
-                        : normalizedEmail.includes('head-teacher') || normalizedEmail.includes('head teacher')
-                            ? 'head-teacher'
-                            : normalizedEmail.includes('teacher')
-                                ? 'teacher'
-                                : normalizedEmail.includes('staff')
-                                    ? 'staff'
-                                    : normalizedEmail.includes('parent')
-                                        ? 'parent'
-                                        : null;
-                if (!inferredRole) {
-                    res.status(401).json({ success: false, message: 'Invalid email or password' });
-                    return;
-                }
-                const mockUser = fallbackUser(email, inferredRole);
-                res.status(200).json({
-                    success: true,
-                    message: 'Login successful (fallback mode)',
-                    user: mockUser,
-                    token: 'mock-token',
-                });
-                return;
-            }
-            throw queryError;
+            console.error('Login query timed out or failed:', queryError);
+            res.status(503).json({ success: false, message: 'Login is temporarily unavailable. Please try again shortly.' });
+            return;
         }
         if (error || !user) {
-            if (process.env.NODE_ENV !== 'production') {
-                const inferredRole = inferFallbackRole(email);
-                if (inferredRole) {
-                    const mockUser = fallbackUser(email, inferredRole);
-                    res.status(200).json({
-                        success: true,
-                        message: 'Login successful (fallback mode)',
-                        user: mockUser,
-                        token: 'mock-token',
-                    });
-                    return;
-                }
-            }
             res.status(401).json({ success: false, message: 'Invalid email or password' });
             return;
         }
@@ -347,11 +365,29 @@ const loginUser = async (req, res, next) => {
             return;
         }
         const safeUser = sanitizeUserRow(user);
+        const token = crypto_1.default.randomUUID();
+        const existingSession = await deviceSession_service_1.deviceSessionService.findActiveSession(user.id);
+        if (existingSession && existingSession.device_id !== deviceId) {
+            const sessionId = await deviceSession_service_1.deviceSessionService.createPendingSession(user.id, deviceId, deviceLabel, token);
+            if (!sessionId) {
+                res.status(503).json({ success: false, message: 'Could not start device confirmation. Please try again.' });
+                return;
+            }
+            res.status(200).json({
+                success: true,
+                status: 'pending_confirmation',
+                message: 'Awaiting confirmation from your other device.',
+                sessionId,
+            });
+            return;
+        }
+        await deviceSession_service_1.deviceSessionService.createActiveSession(user.id, deviceId, deviceLabel, token);
         res.status(200).json({
             success: true,
+            status: 'active',
             message: 'Login successful',
             user: safeUser,
-            token: 'auth-token',
+            token,
         });
     }
     catch (error) {
@@ -583,15 +619,28 @@ exports.getUserProfile = getUserProfile;
  */
 const sendOTP = async (req, res, next) => {
     try {
-        const { email } = req.body;
+        const { email, purpose } = req.body;
         if (!email) {
             res.status(400).json({ success: false, message: 'Email is required' });
             return;
         }
+        // A password-reset OTP should only go to an email that actually has an
+        // account — registration's OTP step (purpose omitted) has no such
+        // requirement since the account doesn't exist yet.
+        if (purpose === 'reset') {
+            const client = (0, supabase_1.getSupabaseAdminClient)();
+            if (client) {
+                const { data: existing } = await client.from('users').select('id').eq('email', email).maybeSingle();
+                if (!existing) {
+                    res.status(404).json({ success: false, message: 'No account found with that email.' });
+                    return;
+                }
+            }
+        }
         // Generate OTP
         const { code, expiresIn } = (0, otp_service_1.createOTP)(email);
         // Send OTP email
-        const emailSent = await (0, email_service_1.sendOTPEmail)(email, code, expiresIn);
+        const emailSent = await (0, email_service_1.sendOTPEmail)(email, code, expiresIn, purpose === 'reset' ? 'reset' : 'verify');
         if (!emailSent) {
             res.status(500).json({ success: false, message: 'Failed to send OTP email' });
             return;
@@ -738,14 +787,23 @@ const updateUser = async (req, res, next) => {
             // metadata also carries system fields (auth_provider, child_id, etc.) —
             // overwriting the whole column would silently wipe those out, so fetch
             // the existing value and merge the preferences in under their own key.
+            // Each role's settings page only sends its own subset of preference
+            // fields (e.g. teacher sends {notifyEmail, notifySms}), so
+            // notificationPreferences itself must also be merged rather than
+            // replaced wholesale — otherwise saving from one page silently erases
+            // fields set from another (e.g. temperatureUnit from Settings.tsx).
             const { data: existing } = await client
                 .from('users')
                 .select('metadata')
                 .eq('id', id)
                 .single();
+            const existingMetadata = existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {};
+            const existingPreferences = existingMetadata.notificationPreferences && typeof existingMetadata.notificationPreferences === 'object'
+                ? existingMetadata.notificationPreferences
+                : {};
             updatePayload.metadata = {
-                ...(existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {}),
-                notificationPreferences: preferences,
+                ...existingMetadata,
+                notificationPreferences: { ...existingPreferences, ...preferences },
             };
         }
         const { data, error } = await client
@@ -833,6 +891,67 @@ const uploadAvatar = async (req, res, next) => {
 };
 exports.uploadAvatar = uploadAvatar;
 /**
+ * Upload a supporting ID photo for a pending parent-child verification
+ * request. Purely supplementary evidence for the admin/head-teacher
+ * reviewer — the student-number check at registration is the actual gate,
+ * since a photo alone can be faked with image editing tools.
+ * POST /api/users/:id/id-proof  (multipart/form-data, field name "idProof")
+ */
+const uploadIdProof = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { studentId } = req.body;
+        const file = req.file;
+        if (!id || !studentId) {
+            res.status(400).json({ success: false, message: 'User ID and studentId are required' });
+            return;
+        }
+        if (!file) {
+            res.status(400).json({ success: false, message: 'No image file was provided.' });
+            return;
+        }
+        const client = (0, supabase_1.getSupabaseAdminClient)();
+        if (!client) {
+            res.status(503).json({ success: false, message: 'Picture upload requires Supabase Storage configuration.' });
+            return;
+        }
+        try {
+            await ensureIdProofBucket(client);
+        }
+        catch (bucketError) {
+            const message = bucketError instanceof Error ? bucketError.message : 'Unable to initialize ID proof storage.';
+            console.error('ID proof storage initialization error:', bucketError);
+            res.status(503).json({ success: false, message: 'ID proof storage is not available.', error: message });
+            return;
+        }
+        const extension = (file.originalname.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const objectPath = `${id}/${crypto_1.default.randomUUID()}.${extension}`;
+        const { error: uploadError } = await client.storage
+            .from(ID_PROOF_BUCKET)
+            .upload(objectPath, file.buffer, { contentType: file.mimetype, upsert: true });
+        if (uploadError) {
+            res.status(500).json({ success: false, message: 'Failed to upload picture', error: uploadError.message });
+            return;
+        }
+        const { data: publicUrlData } = client.storage.from(ID_PROOF_BUCKET).getPublicUrl(objectPath);
+        const { error: updateError } = await client
+            .from('parent_student_guardians')
+            .update({ id_photo_url: publicUrlData.publicUrl })
+            .eq('parent_user_id', id)
+            .eq('student_id', studentId);
+        if (updateError) {
+            res.status(500).json({ success: false, message: 'Picture uploaded but failed to attach to request', error: updateError.message });
+            return;
+        }
+        res.status(200).json({ success: true, message: 'ID proof uploaded' });
+    }
+    catch (error) {
+        console.error('Upload ID proof error:', error);
+        next(error);
+    }
+};
+exports.uploadIdProof = uploadIdProof;
+/**
  * Change (or, for Google-linked accounts, set) a user's password.
  * PUT /api/users/:id/password
  */
@@ -891,6 +1010,63 @@ const changePassword = async (req, res, next) => {
 };
 exports.changePassword = changePassword;
 /**
+ * Reset a forgotten password using a verified email OTP — unlike
+ * changePassword, this doesn't require knowing the current password or the
+ * user's internal id, since the whole point is the caller is locked out.
+ * POST /api/users/reset-password
+ */
+const resetPasswordWithOTP = async (req, res, next) => {
+    try {
+        const { email, code, newPassword } = req.body;
+        if (!email || !code) {
+            res.status(400).json({ success: false, message: 'Email and code are required' });
+            return;
+        }
+        if (typeof newPassword !== 'string' || newPassword.length < 8) {
+            res.status(400).json({ success: false, message: 'New password must be at least 8 characters.' });
+            return;
+        }
+        // Re-verify rather than trust a prior /verify-otp call in isolation —
+        // the OTP record (and its verified flag) lives in the same in-memory
+        // store either way, so this just confirms the code is still valid.
+        const verification = (0, otp_service_1.verifyOTP)(email, code);
+        if (!verification.valid && !(0, otp_service_1.isOTPVerified)(email)) {
+            res.status(401).json({ success: false, message: verification.message });
+            return;
+        }
+        const client = (0, supabase_1.getSupabaseAdminClient)();
+        if (!client) {
+            res.status(503).json({ success: false, message: 'Password reset requires database configuration.' });
+            return;
+        }
+        const { data: user, error } = await client
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
+        if (error || !user) {
+            res.status(404).json({ success: false, message: 'No account found with that email.' });
+            return;
+        }
+        const newHash = await bcryptjs_1.default.hash(newPassword, 10);
+        const { error: updateError } = await client
+            .from('users')
+            .update({ password_hash: newHash })
+            .eq('id', user.id);
+        if (updateError) {
+            res.status(500).json({ success: false, message: 'Failed to reset password', error: updateError.message });
+            return;
+        }
+        (0, otp_service_1.clearOTP)(email);
+        res.status(200).json({ success: true, message: 'Password reset successfully.' });
+    }
+    catch (error) {
+        console.error('Reset password error:', error);
+        next(error);
+    }
+};
+exports.resetPasswordWithOTP = resetPasswordWithOTP;
+/**
  * Get children/students linked to a parent user
  * GET /api/users/:id/children
  */
@@ -934,4 +1110,133 @@ const getUserChildren = async (req, res, next) => {
     }
 };
 exports.getUserChildren = getUserChildren;
+/**
+ * Check whether the currently logged-in device has a pending login-confirmation
+ * request from another device attempting to sign into the same account.
+ * The caller must present the token of the account's currently-active
+ * session — otherwise anyone who merely knows a userId could read (and, via
+ * /resolve, act on) another account's pending login.
+ * GET /api/users/device-confirmation/pending?userId=&token=
+ */
+const getPendingDeviceConfirmation = async (req, res, next) => {
+    try {
+        const userId = typeof req.query.userId === 'string' ? req.query.userId : '';
+        const token = typeof req.query.token === 'string' ? req.query.token : '';
+        if (!userId || !token) {
+            res.status(400).json({ success: false, message: 'userId and token are required' });
+            return;
+        }
+        const pending = await deviceSession_service_1.deviceSessionService.getPendingForUser(userId, token);
+        res.status(200).json({ success: true, pending });
+    }
+    catch (error) {
+        console.error('Get pending device confirmation error:', error);
+        next(error);
+    }
+};
+exports.getPendingDeviceConfirmation = getPendingDeviceConfirmation;
+/**
+ * Approve or deny a pending login-confirmation request from the device that
+ * is already logged in. `token` must be that device's own active-session
+ * token — this is what stops the device attempting the new login from
+ * approving its own request.
+ * POST /api/users/device-confirmation/resolve
+ */
+const resolveDeviceConfirmation = async (req, res, next) => {
+    try {
+        const { sessionId, approve, token } = req.body;
+        if (typeof sessionId !== 'string' || !sessionId || typeof approve !== 'boolean' || typeof token !== 'string' || !token) {
+            res.status(400).json({ success: false, message: 'sessionId, approve, and token are required' });
+            return;
+        }
+        const result = await deviceSession_service_1.deviceSessionService.resolvePending(sessionId, approve, token);
+        if (result === 'invalid_caller') {
+            res.status(403).json({ success: false, message: 'You are not authorized to resolve this request.' });
+            return;
+        }
+        if (result === 'not_found' || result === 'expired') {
+            res.status(200).json({ success: false, status: result, message: 'This request is no longer available.' });
+            return;
+        }
+        res.status(200).json({ success: true, status: result });
+    }
+    catch (error) {
+        console.error('Resolve device confirmation error:', error);
+        next(error);
+    }
+};
+exports.resolveDeviceConfirmation = resolveDeviceConfirmation;
+/**
+ * Poll the status of a pending login-confirmation request from the new
+ * device that is waiting to be let in.
+ * GET /api/users/device-confirmation/status?sessionId=
+ */
+const getDeviceConfirmationStatus = async (req, res, next) => {
+    try {
+        const sessionId = typeof req.query.sessionId === 'string' ? req.query.sessionId : '';
+        if (!sessionId) {
+            res.status(400).json({ success: false, message: 'sessionId is required' });
+            return;
+        }
+        const status = await deviceSession_service_1.deviceSessionService.getSessionStatus(sessionId);
+        if (status !== 'active') {
+            res.status(200).json({ success: true, status });
+            return;
+        }
+        const client = (0, supabase_1.getSupabaseAdminClient)();
+        if (!client) {
+            res.status(200).json({ success: true, status });
+            return;
+        }
+        const { data: session, error: sessionError } = await client
+            .from('active_sessions')
+            .select('user_id, token')
+            .eq('id', sessionId)
+            .single();
+        if (sessionError || !session) {
+            res.status(200).json({ success: true, status: 'not_found' });
+            return;
+        }
+        const { data: user, error: userError } = await client
+            .from('users')
+            .select('id, email, role, first_name, last_name, phone, school_id, avatar_url, metadata, created_at, updated_at')
+            .eq('id', session.user_id)
+            .single();
+        if (userError || !user) {
+            res.status(200).json({ success: true, status: 'not_found' });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            status: 'active',
+            user: mapUserRow(user),
+            token: session.token,
+        });
+    }
+    catch (error) {
+        console.error('Get device confirmation status error:', error);
+        next(error);
+    }
+};
+exports.getDeviceConfirmationStatus = getDeviceConfirmationStatus;
+/**
+ * Revoke the caller's own session on logout, so a later login from a
+ * different device doesn't get stuck waiting for approval from a device
+ * whose user already signed out.
+ * POST /api/users/logout
+ */
+const logoutUser = async (req, res, next) => {
+    try {
+        const token = typeof req.body?.token === 'string' ? req.body.token : '';
+        if (token) {
+            await deviceSession_service_1.deviceSessionService.revokeByToken(token);
+        }
+        res.status(200).json({ success: true });
+    }
+    catch (error) {
+        console.error('Logout error:', error);
+        next(error);
+    }
+};
+exports.logoutUser = logoutUser;
 //# sourceMappingURL=userController.js.map

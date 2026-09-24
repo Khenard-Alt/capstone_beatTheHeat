@@ -28,6 +28,13 @@ export interface IncidentRecord {
   resolvedAt?: string | null;
 }
 
+export interface IncidentHistoryRecord extends IncidentRecord {
+  originalIncidentId: string;
+  resolvedBy?: string | null;
+  resolvedByName?: string | null;
+  resolutionNotes?: string | null;
+}
+
 export const fetchIncidents = async (limit = 20, offset = 0, parentId?: string): Promise<IncidentRecord[]> => {
   const { data } = await apiClient.get<ApiEnvelope<IncidentRecord[]>>('/api/incidents', {
     params: { limit, offset, parentId },
@@ -38,4 +45,11 @@ export const fetchIncidents = async (limit = 20, offset = 0, parentId?: string):
 export const createIncident = async (payload: { schoolId?: string; reporterId?: string; studentId?: string; type: string; description: string; actionTaken?: string; heatIndex?: number }) => {
   const { data } = await apiClient.post<ApiEnvelope<any>>('/api/incidents', payload);
   return data.data;
+};
+
+export const fetchIncidentHistory = async (limit = 20, offset = 0): Promise<IncidentHistoryRecord[]> => {
+  const { data } = await apiClient.get<ApiEnvelope<IncidentHistoryRecord[]>>('/api/incidents/history', {
+    params: { limit, offset },
+  });
+  return data.data ?? [];
 };

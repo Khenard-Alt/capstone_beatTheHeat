@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { getSupabaseAdminClient } from '../config/supabase';
 
+// userId/peerId are interpolated directly into a PostgREST `.or()` filter
+// string below — restricting them to UUID shape prevents a value like
+// `x),or(sender_id.neq.` from escaping the intended filter and widening the
+// query to other users' messages.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const staffMessagesController = {
   list: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -11,6 +17,11 @@ export const staffMessagesController = {
 
       if (!userId) {
         res.status(400).json({ success: false, message: 'userId is required' });
+        return;
+      }
+
+      if (!UUID_PATTERN.test(userId) || (peerId && !UUID_PATTERN.test(peerId))) {
+        res.status(400).json({ success: false, message: 'userId and peerId must be valid ids' });
         return;
       }
 

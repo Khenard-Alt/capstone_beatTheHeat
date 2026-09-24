@@ -35,10 +35,11 @@ export const ParentQuestionsConcerns: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [advisoryTeacherIds, setAdvisoryTeacherIds] = useState<Set<string>>(new Set());
 
-  const currentParentId = user?.id ?? 'parent-1';
+  const currentParentId = user?.id;
   const hasLoadedOnce = useRef(false);
 
   const loadMessages = async () => {
+    if (!currentParentId) return;
     try {
       if (!hasLoadedOnce.current) setLoading(true);
       const [messageData, teacherData, studentsRes] = await Promise.all([
@@ -122,7 +123,7 @@ export const ParentQuestionsConcerns: React.FC = () => {
   const activeThread = useMemo(() => teacherThreads.find((thread) => thread.id === activeTeacherId) ?? null, [activeTeacherId, teacherThreads]);
 
   const handleSend = async () => {
-    if (!activeTeacher || !body.trim()) {
+    if (!activeTeacher || !body.trim() || !currentParentId) {
       return;
     }
 

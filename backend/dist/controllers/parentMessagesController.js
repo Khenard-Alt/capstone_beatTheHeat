@@ -66,6 +66,7 @@ exports.parentMessagesController = {
                     body,
                     created_at: new Date().toISOString(),
                 };
+                await (0, promises_1.mkdir)(path_1.default.dirname(LOCAL_LOG), { recursive: true });
                 await (0, promises_1.appendFile)(LOCAL_LOG, JSON.stringify(record) + '\n');
                 res.status(201).json({ success: true, data: record });
                 return;
