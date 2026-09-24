@@ -540,6 +540,11 @@ export const syncOAuthUser = async (
 
     let user = existingUser;
     if (!user) {
+      if (req.body?.existingOnly === true) {
+        res.status(404).json({ success: false, message: 'Google account is not registered yet' });
+        return;
+      }
+
       const metadata = authUser.user_metadata ?? {};
       const fullName = String(metadata.full_name ?? metadata.name ?? '').trim().split(/\s+/).filter(Boolean);
       const firstName = String(metadata.first_name ?? fullName[0] ?? 'Google').trim();

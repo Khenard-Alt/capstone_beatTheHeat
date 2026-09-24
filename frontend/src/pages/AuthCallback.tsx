@@ -1,10 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { supabase } from '../services/supabase';
+import { apiClient } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 export const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
+  const { completeLogin } = useAuth();
   const [message, setMessage] = useState('Completing Google sign-in...');
+
+  const getLandingPath = (role: string): string => {
+    switch (role) {
+      case 'parent': return '/parent/dashboard';
+      case 'principal': return '/principal/dashboard';
+      case 'head-teacher': return '/head-teacher/dashboard';
+      case 'teacher': return '/teacher/dashboard';
+      case 'admin': return '/admin';
+      default: return '/dashboard';
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -19,6 +34,21 @@ export const AuthCallback: React.FC = () => {
       if (error || !data.session) {
         setMessage(error?.message ?? 'Google sign-in session was not found.');
         return;
+      }
+
+      try {
+        const { data: syncResponse } = await apiClient.post('/api/users/oauth/sync', {
+          accessToken: data.session.access_token,
+          existingOnly: true,
+        });
+        completeLogin(syncResponse.user, syncResponse.token);
+        if (active) navigate(getLandingPath(syncResponse.user.role), { replace: true });
+        return;
+      } catch (syncError) {
+        if (!axios.isAxiosError(syncError) || syncError.response?.status !== 404) {
+          setMessage('Could not complete Google sign-in. Please try again.');
+          return;
+        }
       }
 
       const metadata = data.session.user.user_metadata ?? {};
