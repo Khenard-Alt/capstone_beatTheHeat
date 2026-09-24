@@ -586,7 +586,7 @@
 .parent-advisory-popup {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: 72px;
   width: min(380px, calc(100vw - 32px));
   background: linear-gradient(160deg, #fef3c7 0%, #ffedd5 100%);
   border: 1px solid #fdba74;
@@ -1056,6 +1056,7 @@
     right: 12px;
     left: 12px;
     width: auto;
+    bottom: 72px;
   }
 
   .parent-ai-nudge {

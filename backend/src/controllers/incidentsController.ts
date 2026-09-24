@@ -135,11 +135,13 @@ const mapIncidentRow = (
   row: any,
   studentsById: Record<string, any>,
   reportersById: Record<string, any>,
-  parentsById: Record<string, any>
+  parentsById: Record<string, any>,
+  guardianParentByStudentId: Record<string, string> = {}
 ) => {
   const student = row.student_id ? studentsById[row.student_id] : null;
   const reporter = row.reporter_id ? reportersById[row.reporter_id] : null;
-  const parent = student?.parent_user_id ? parentsById[student.parent_user_id] : null;
+  const parentId = student?.parent_user_id || guardianParentByStudentId[row.student_id];
+  const parent = parentId ? parentsById[parentId] : null;
   const reporterName = formatPersonName(reporter);
   const parentName = formatPersonName(parent);
 
@@ -221,6 +223,7 @@ export const incidentsController = {
       let studentsById: Record<string, any> = {};
       let reportersById: Record<string, any> = {};
       let parentsById: Record<string, any> = {};
+      let guardianParentByStudentId: Record<string, string> = {};
 
       if (studentIds.length > 0) {
         const { data: studs } = await supabase.from('students').select('id, first_name, last_name, grade_level, section, parent_user_id').in('id', studentIds);
@@ -232,6 +235,24 @@ export const incidentsController = {
       const parentIds = Array.from(
         new Set(Object.values(studentsById).map((student: any) => student?.parent_user_id).filter(Boolean))
       );
+
+      if (studentIds.length > 0) {
+        const { data: guardianLinks } = await supabase
+          .from('parent_student_guardians')
+          .select('parent_user_id, student_id, status, is_primary, created_at')
+          .in('student_id', studentIds)
+          .order('is_primary', { ascending: false })
+          .order('created_at', { ascending: false });
+        (guardianLinks || []).forEach((link: any) => {
+          if (!guardianParentByStudentId[link.student_id] && link.parent_user_id) {
+            guardianParentByStudentId[link.student_id] = link.parent_user_id;
+          }
+        });
+      }
+
+      guardianParentByStudentId && Object.values(guardianParentByStudentId).forEach((parentId) => {
+        if (!parentIds.includes(parentId)) parentIds.push(parentId);
+      });
 
       if (parentIds.length > 0) {
         const { data: parents } = await supabase.from('users').select('id, first_name, last_name, role, email').in('id', parentIds);
@@ -247,7 +268,7 @@ export const incidentsController = {
         });
       }
 
-      let mapped = incidentRows.map((row: any) => mapIncidentRow(row, studentsById, reportersById, parentsById));
+      let mapped = incidentRows.map((row: any) => mapIncidentRow(row, studentsById, reportersById, parentsById, guardianParentByStudentId));
       // Only fall back to the legacy `health_incidents` view when the canonical
       // `incidents` table has no rows at all — checking the page's mapped
       // length here would also (wrongly) trigger the fallback for a valid
@@ -341,6 +362,7 @@ export const incidentsController = {
       const studentsById: Record<string, any> = {};
       const reportersById: Record<string, any> = {};
       const parentsById: Record<string, any> = {};
+      const guardianParentByStudentId: Record<string, string> = {};
       const resolversById: Record<string, any> = {};
 
       if (studentIds.length > 0) {
@@ -349,6 +371,22 @@ export const incidentsController = {
       }
 
       const parentIds = Array.from(new Set(Object.values(studentsById).map((student: any) => student?.parent_user_id).filter(Boolean)));
+      if (studentIds.length > 0) {
+        const { data: guardianLinks } = await supabase
+          .from('parent_student_guardians')
+          .select('parent_user_id, student_id, status, is_primary, created_at')
+          .in('student_id', studentIds)
+          .order('is_primary', { ascending: false })
+          .order('created_at', { ascending: false });
+        (guardianLinks || []).forEach((link: any) => {
+          if (!guardianParentByStudentId[link.student_id] && link.parent_user_id) {
+            guardianParentByStudentId[link.student_id] = link.parent_user_id;
+          }
+        });
+      }
+      Object.values(guardianParentByStudentId).forEach((parentId) => {
+        if (!parentIds.includes(parentId)) parentIds.push(parentId);
+      });
       if (parentIds.length > 0) {
         const { data: parents } = await supabase.from('users').select('id, first_name, last_name, role, email').in('id', parentIds);
         (parents || []).forEach((u: any) => { parentsById[u.id] = u; });
@@ -364,7 +402,7 @@ export const incidentsController = {
       }
 
       const mapped = rowsList.map((row: any) => ({
-        ...mapIncidentRow(row, studentsById, reportersById, parentsById),
+        ...mapIncidentRow(row, studentsById, reportersById, parentsById, guardianParentByStudentId),
         id: row.id,
         status: 'resolved',
         originalIncidentId: row.original_incident_id,
@@ -495,6 +533,7 @@ export const incidentsController = {
       const studentsById: Record<string, any> = {};
       const reportersById: Record<string, any> = {};
       const parentsById: Record<string, any> = {};
+      const guardianParentByStudentId: Record<string, string> = {};
 
       if (studentIds.length > 0) {
         const { data: studs } = await supabase.from('students').select('id, first_name, last_name, grade_level, section, parent_user_id').in('id', studentIds);
@@ -506,6 +545,23 @@ export const incidentsController = {
       const parentIds = Array.from(
         new Set(Object.values(studentsById).map((student: any) => student?.parent_user_id).filter(Boolean))
       );
+
+      if (studentIds.length > 0) {
+        const { data: guardianLinks } = await supabase
+          .from('parent_student_guardians')
+          .select('parent_user_id, student_id, status, is_primary, created_at')
+          .in('student_id', studentIds)
+          .order('is_primary', { ascending: false })
+          .order('created_at', { ascending: false });
+        (guardianLinks || []).forEach((link: any) => {
+          if (!guardianParentByStudentId[link.student_id] && link.parent_user_id) {
+            guardianParentByStudentId[link.student_id] = link.parent_user_id;
+          }
+        });
+      }
+      Object.values(guardianParentByStudentId).forEach((parentId) => {
+        if (!parentIds.includes(parentId)) parentIds.push(parentId);
+      });
 
       if (parentIds.length > 0) {
         const { data: parents } = await supabase.from('users').select('id, first_name, last_name, role, email').in('id', parentIds);
@@ -521,7 +577,7 @@ export const incidentsController = {
         });
       }
 
-      const mapped = mapIncidentRow(data, studentsById, reportersById, parentsById);
+      const mapped = mapIncidentRow(data, studentsById, reportersById, parentsById, guardianParentByStudentId);
       res.status(200).json({ success: true, data: mapped });
     } catch (error) {
       next(error);

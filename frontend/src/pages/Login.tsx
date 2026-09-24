@@ -448,8 +448,8 @@ export const Login: React.FC = () => {
 
               <div className="login-options">
                 <label className="checkbox-label">
-                  <input type="checkbox" className="checkbox-input" />
-                  <span>Remember me</span>
+                  {/* <input type="checkbox" className="checkbox-input" />
+                  <span>Remember me</span> */}
                 </label>
                 <Link to="/forgot-password" className="forgot-password">
                   Forgot Password?

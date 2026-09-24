@@ -177,8 +177,9 @@ const registerUser = async (req, res, next) => {
                 .select('id, student_number')
                 .eq('id', childId)
                 .maybeSingle();
-            const realStudentNumber = String(claimedStudent?.student_number || '').trim().toLowerCase();
-            const submittedStudentNumber = String(studentNumber || '').trim().toLowerCase();
+            const normalizeStudentNumber = (value) => String(value || '').trim().toLowerCase().replace(/[\s-]/g, '');
+            const realStudentNumber = normalizeStudentNumber(claimedStudent?.student_number);
+            const submittedStudentNumber = normalizeStudentNumber(studentNumber);
             if (studentLookupError || !claimedStudent || !realStudentNumber || realStudentNumber !== submittedStudentNumber) {
                 res.status(400).json({ success: false, message: "Student number does not match our records for this student." });
                 return;

@@ -212,12 +212,6 @@ export const PrincipalDashboard: React.FC = () => {
         <div className="admin-dashboard-badges">
           <span className="admin-badge">Principal</span>
           <span className="admin-badge admin-badge-muted">{loading ? 'Loading...' : 'Ready'}</span>
-          <button className="btn btn-secondary" style={{ marginLeft: 12 }} onClick={() => setAnnouncementOpen(true)}>
-            Create Announcement
-          </button>
-          <button className="btn btn-primary" style={{ marginLeft: 12 }} onClick={() => navigate('/principal/reports')}>
-            Open Reports
-          </button>
           <AnnouncementModal isOpen={isAnnouncementOpen} onClose={() => setAnnouncementOpen(false)} />
         </div>
       </div>
@@ -295,6 +289,13 @@ export const PrincipalDashboard: React.FC = () => {
           <Card title="Quick Actions">
             <div className="principal-actions">
               <button
+                className="btn btn-secondary"
+                style={{width: '100%', marginBottom: '8px'}}
+                onClick={() => setAnnouncementOpen(true)}
+              >
+                Create Announcement
+              </button>
+              <button
                 className="btn btn-primary"
                 style={{width: '100%', marginBottom: '8px'}}
                 onClick={() => navigate('/principal/announcements/heat-data')}
@@ -302,11 +303,11 @@ export const PrincipalDashboard: React.FC = () => {
                 Review Incident Trends
               </button>
               <button
-                className="btn btn-secondary"
+                className="btn btn-primary"
                 style={{width: '100%'}}
                 onClick={() => navigate('/principal/reports')}
               >
-                Generate Report
+                Open Reports
               </button>
             </div>
           </Card>

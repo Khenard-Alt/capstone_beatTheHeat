@@ -2,15 +2,37 @@
    Scoped to #incident-reports-top and #incident-review-top so other pages are unaffected
 */
 
-/* Constrain the main content area and keep sidebar width predictable */
+/* Constrain the main content area. The side column on these three pages is
+   always empty (see the JSX comments), so reserving 320px for it was
+   needlessly squeezing the table — collapse to a single column instead. */
 #incident-reports-top .teacher-layout,
-#incident-review-top .teacher-layout {
+#incident-review-top .teacher-layout,
+#incident-history-top .teacher-layout {
   max-width: 1180px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr;
   gap: 24px;
   align-items: start;
+}
+
+#incident-reports-top .teacher-side,
+#incident-review-top .teacher-side,
+#incident-history-top .teacher-side {
+  display: none;
+}
+
+#parent-verifications-top .teacher-layout {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+#parent-verifications-top .teacher-side {
+  display: none;
 }
 
 /* Ensure the notes card sits above the tables and spans main column */
@@ -40,15 +62,18 @@
   padding: 10px 12px;
 }
 
-/* Allow description cells to wrap on these pages */
+/* Truncate to one line with an ellipsis (full text is already available via
+   the cell's `title` tooltip) instead of wrapping — wrapping at 420px was
+   forcing the table wide enough that Status/Date/Actions got pushed past
+   the card's visible width, requiring a non-obvious horizontal scroll. */
 #incident-reports-top .teacher-dashboard-table td.description,
 #incident-review-top .teacher-dashboard-table td.description,
 #incident-reports-top .teacher-dashboard-table td.action-taken,
 #incident-review-top .teacher-dashboard-table td.action-taken {
-  max-width: 420px;
-  white-space: normal;
-  overflow: visible;
-  word-break: break-word;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Make the action select and delete button align nicely */
@@ -89,7 +114,8 @@
 #incident-review-top .teacher-dashboard-table.app-table {
   width: 100% !important;
   border-collapse: collapse !important;
-  min-width: 760px;
+  min-width: 0;
+  table-layout: auto;
   background: transparent !important;
   border: none !important;
   font-size: 14px !important;
@@ -130,15 +156,15 @@
   background: #fbfdff !important;
 }
 
-/* Make description cells wrap neatly and avoid overflow */
+/* Truncate to one line (see the earlier rule above for why) */
 #incident-reports-top .teacher-dashboard-table td.description,
 #incident-review-top .teacher-dashboard-table td.description,
 #incident-reports-top .teacher-dashboard-table td.action-taken,
 #incident-review-top .teacher-dashboard-table td.action-taken {
-  max-width: 420px !important;
-  white-space: normal !important;
-  overflow: visible !important;
-  word-break: break-word !important;
+  max-width: 200px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 /* Status badge styling */
@@ -151,14 +177,47 @@
   font-size: 12px !important;
 }
 
-/* Action select/button sizing */
-#incident-review-top .teacher-dashboard-table td select.select-field {
-  min-width: 140px !important;
-  padding: 8px 10px !important;
+/* Keep the status control and row actions together without letting the table
+   cell's flex layout distort the table. */
+#incident-review-top .teacher-dashboard-table td.incident-actions-cell {
+  min-width: 250px;
+  white-space: nowrap;
+  vertical-align: middle !important;
 }
 
-#incident-review-top .teacher-dashboard-table td .btn-danger {
-  margin-left: 8px !important;
+#incident-review-top .incident-actions-cell .select-field {
+  width: 140px !important;
+  min-width: 140px !important;
+  height: 38px;
+  padding: 8px 30px 8px 10px !important;
+}
+
+#incident-review-top .incident-action-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+#incident-review-top .incident-action-controls .table-action-btn,
+#incident-review-top .incident-action-controls .btn-danger {
+  height: 38px;
+  box-sizing: border-box;
+}
+
+#incident-review-top .incident-action-controls .table-action-btn {
+  width: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+#incident-review-top .incident-action-controls .btn-danger {
+  min-width: 76px;
+  margin-left: 0 !important;
+  padding: 8px 12px;
 }
 
 /* Make sure the notes card header aligns with the table area */
@@ -204,6 +263,15 @@
   #incident-review-top .teacher-incidents-search input {
     min-width: 0;
     width: 100%;
+  }
+
+  #incident-review-top .teacher-dashboard-table td.incident-actions-cell {
+    min-width: 0;
+  }
+
+  #incident-review-top .incident-action-controls {
+    margin-left: 0;
+    margin-top: 8px;
   }
 }
 
@@ -268,4 +336,153 @@
 #incident-reports-top .teacher-panel-card .teacher-incidents-toolbar,
 #incident-review-top .teacher-panel-card .teacher-incidents-toolbar {
   margin-top: 6px;
+}
+
+/* Resolution confirmation modal */
+#incident-review-top .resolution-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+#incident-review-top .resolution-modal {
+  width: min(520px, 100%);
+  overflow: hidden;
+  border: 1px solid #dbe5f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
+}
+
+#incident-review-top .resolution-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+#incident-review-top .resolution-modal-eyebrow {
+  margin: 0 0 6px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#incident-review-top .resolution-modal h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 21px;
+  line-height: 1.25;
+}
+
+#incident-review-top .resolution-modal-close {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid #dbe5f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+#incident-review-top .resolution-modal-body {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px;
+  color: #475569;
+  line-height: 1.55;
+}
+
+#incident-review-top .resolution-modal-body p {
+  margin: 0;
+}
+
+#incident-review-top .resolution-confirmation-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid #99f6e4;
+  border-radius: 10px;
+  background: #f0fdfa;
+  color: #134e4a;
+  font-weight: 700;
+}
+
+#incident-review-top .resolution-confirmation-check input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: #0f766e;
+}
+
+#incident-review-top .resolution-notes-field {
+  display: grid;
+  gap: 8px;
+  color: #334155;
+  font-weight: 700;
+}
+
+#incident-review-top .resolution-notes-field small {
+  color: #64748b;
+  font-weight: 500;
+}
+
+#incident-review-top .resolution-notes-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 82px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font: inherit;
+}
+
+#incident-review-top .resolution-notes-field textarea:focus,
+#incident-review-top .resolution-modal-close:focus-visible,
+#incident-review-top .resolution-confirmation-check input:focus-visible {
+  outline: 3px solid rgba(20, 184, 166, 0.25);
+  outline-offset: 2px;
+}
+
+#incident-review-top .resolution-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 22px;
+  border-top: 1px solid #f1f5f9;
+}
+
+#incident-review-top .resolution-modal-actions .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 640px) {
+  #incident-review-top .resolution-modal-header,
+  #incident-review-top .resolution-modal-body {
+    padding: 18px;
+  }
+
+  #incident-review-top .resolution-modal-actions {
+    padding: 14px 18px 18px;
+  }
+
+  #incident-review-top .resolution-modal-actions .btn {
+    flex: 1;
+  }
 }

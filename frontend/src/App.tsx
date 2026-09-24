@@ -40,7 +40,6 @@ import { HeadTeacherDashboard } from './pages/headTeacherDash/HeadTeacherDashboa
 import IncidentReview from './pages/headTeacherDash/IncidentReview';
 import IncidentReportHistory from './pages/headTeacherDash/IncidentReportHistory';
 import ParentVerificationQueue from './pages/ParentVerificationQueue';
-import IncidentReports from './pages/headTeacherDash/IncidentReports';
 import Chatbot from './pages/headTeacherDash/Chatbot';
 import ProfileSettings from './pages/headTeacherDash/ProfileSettings';
 import { TeacherDashboard } from './pages/teacherDash/TeacherDashboard';
@@ -542,16 +541,8 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      <Route
-        path="/head-teacher/incident-reports"
-        element={
-          <HeadTeacherRoute>
-            <AppLayout>
-              <IncidentReports />
-            </AppLayout>
-          </HeadTeacherRoute>
-        }
-      />
+      {/* Merged into Incident Review — kept as a redirect so old links/bookmarks still work */}
+      <Route path="/head-teacher/incident-reports" element={<Navigate to="/head-teacher/incident-review" replace />} />
 
       <Route
         path="/head-teacher/advisories"

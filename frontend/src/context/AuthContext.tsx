@@ -66,6 +66,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
   }, []);
 
+  useEffect(() => {
+    // Closing the tab/browser (instead of clicking Logout) leaves no chance
+    // for a normal async request to finish, so the server-side active_sessions
+    // row would otherwise stay 'active' forever. sendBeacon is the one API
+    // guaranteed to fire during unload, so we use it as a best-effort revoke.
+    const revokeOnClose = () => {
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) return;
+      const url = `${apiClient.defaults.baseURL ?? ''}/api/users/logout`;
+      const payload = JSON.stringify({ token });
+      try {
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
+        } else {
+          fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
+        }
+      } catch {
+        // best-effort only; nothing to do if the browser blocks the beacon
+      }
+    };
+
+    window.addEventListener('pagehide', revokeOnClose);
+    return () => window.removeEventListener('pagehide', revokeOnClose);
+  }, []);
+
   const login = async (email: string, _password: string): Promise<User> => {
     setIsLoading(true);
     try {

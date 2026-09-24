@@ -108,7 +108,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
       menuKey: 'incident-review',
       children: [
         { path: '/head-teacher/incident-review', label: 'Review Queue', icon: <MdHealthAndSafety />, sectionId: 'incident-review-top' },
-        { path: '/head-teacher/incident-reports', label: 'Incident Reports', icon: <MdCampaign />, sectionId: 'incident-reports-top' },
         { path: '/head-teacher/incident-history', label: 'Incident History', icon: <MdHistory />, sectionId: 'incident-history-top' },
       ],
     },

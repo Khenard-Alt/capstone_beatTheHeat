@@ -85,6 +85,40 @@
   animation: slideIn 0.8s ease-out;
 }
 
+/* Forgot Password uses the opposite desktop arrangement while Login keeps
+   its original branding-first layout. */
+.forgot-password-layout .login-form-section {
+  order: 1;
+  animation: forgotPanelFromLeft 0.65s 0.08s both cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.forgot-password-layout .login-brand-section {
+  order: 2;
+  animation: forgotPanelFromRight 0.65s 0.14s both cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes forgotPanelFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes forgotPanelFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;

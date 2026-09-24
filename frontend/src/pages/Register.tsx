@@ -257,7 +257,6 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
     }));
     setSearchQuery('');
     setSearchResults([]);
-    setStep('relationship');
   };
 
   const handleNext = () => {
@@ -318,7 +317,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
         navigate('/parent/dashboard');
       }, 2500);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Registration failed');
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      if (message.toLowerCase().includes('student number')) {
+        setErrors((prev) => ({ ...prev, studentNumber: message }));
+        setErrorMessage('');
+        setStep('child-search');
+      } else {
+        setErrorMessage(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -436,7 +442,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
 
         {/* Step 3: Child Search & Selection */}
         {step === 'child-search' && (
-          <div className="modal-step">
+          <div className="modal-step register-child-step">
             <div className="register-step-head">
               <div>
                 <h3>Please double check your selection</h3>
@@ -504,6 +510,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
                     onChange={handleChange}
                     icon={<MdBadge />}
                     placeholder="Found on your child's report card or enrollment form"
+                    error={errors.studentNumber}
                     helperText="We ask for this to confirm you're actually this student's parent/guardian — it isn't shown anywhere in the search above."
                   />
 
@@ -599,9 +606,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
               </div>
             </div>
 
-            {!hasScrolledTerms && (
+            {/* {!hasScrolledTerms && (
               <p className="terms-scroll-hint">Scroll to the end of the terms to enable the checkbox.</p>
-            )}
+            )} */}
 
             <label className={`terms-checkbox ${!hasScrolledTerms ? 'disabled' : ''}`}>
               <input
@@ -616,7 +623,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose }) =
 
             <div className="modal-actions">
               <Button onClick={() => setStep('relationship')} variant="secondary">Back</Button>
-              <Button onClick={handleNext} variant="primary" disabled={!formData.termsAccepted}>
+              <Button onClick={handleNext} variant="primary" disabled={!hasScrolledTerms || !formData.termsAccepted}>
                 Continue
               </Button>
             </div>
