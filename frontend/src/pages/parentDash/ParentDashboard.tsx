@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { HeatIndexCard } from '../../components/HeatIndexCard';
 import { WeatherWidget } from '../../components/WeatherWidget';
 import { AdvisoryAlert } from '../../components/AdvisoryAlert';
@@ -72,6 +73,7 @@ interface TodayTrendPoint {
 
 const mapIncidentRecord = (incident: IncidentRecord): StudentHealthIncident => ({
   id: incident.id,
+  studentId: incident.studentId ?? undefined,
   studentName: incident.studentName,
   gradeLevel: incident.gradeLevel?.trim() || 'N/A',
   section: incident.section?.trim() || 'N/A',
@@ -98,6 +100,7 @@ const isVisibleToParent = (incident: StudentHealthIncident): boolean => {
 
 export const ParentDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [todayTrend, setTodayTrend] = useState<TodayTrendPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +113,7 @@ export const ParentDashboard: React.FC = () => {
   const ANNOUNCEMENTS_PAGE_SIZE = 10;
 
   const [healthIncidents, setHealthIncidents] = useState<StudentHealthIncident[]>([]);
+  const [parentChildIds, setParentChildIds] = useState<Set<string>>(new Set());
   const [incidentsLoading, setIncidentsLoading] = useState(true);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcementsOffset, setAnnouncementsOffset] = useState(0);
@@ -118,6 +122,33 @@ export const ParentDashboard: React.FC = () => {
   const [viewingAnnouncement, setViewingAnnouncement] = useState<Announcement | null>(null);
   const announcementsListRef = useRef<HTMLDivElement | null>(null);
   const [aiAdvisory, setAiAdvisory] = useState<HealthAdvisory | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (!user?.id) {
+      setParentChildIds(new Set());
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const loadParentChildren = async () => {
+      try {
+        const { data } = await apiClient.get(`/api/users/${user.id}/children`);
+        if (mounted) {
+          setParentChildIds(new Set((data.children ?? []).map((child: { id: string }) => child.id)));
+        }
+      } catch {
+        if (mounted) setParentChildIds(new Set());
+      }
+    };
+
+    void loadParentChildren();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -427,9 +458,17 @@ export const ParentDashboard: React.FC = () => {
                 )}
 
                 {!incidentsLoading && filteredHealthIncidents.map((incident) => (
-                  <article key={incident.id} className="parent-incident-item">
+                  <article
+                    key={incident.id}
+                    className={`parent-incident-item ${incident.studentId && parentChildIds.has(incident.studentId) ? 'parent-incident-item--child' : ''}`}
+                  >
                     <div className="parent-incident-head">
-                      <h4>{incident.studentName}</h4>
+                      <div className="parent-incident-title">
+                        <h4>{incident.studentName}</h4>
+                        {incident.studentId && parentChildIds.has(incident.studentId) && (
+                          <span className="parent-incident-child-badge">Your child</span>
+                        )}
+                      </div>
                       <span className={`parent-incident-status ${incident.status}`}>{incident.status}</span>
                     </div>
                     <p className="parent-incident-acad">{incident.gradeLevel} - {incident.section}</p>

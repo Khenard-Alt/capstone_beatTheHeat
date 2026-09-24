@@ -164,6 +164,7 @@ export interface HeatIndexChartData {
 // Student Health Incident Types
 export interface StudentHealthIncident {
   id: string;
+  studentId?: string;
   studentName: string;
   gradeLevel: string;
   section: string;

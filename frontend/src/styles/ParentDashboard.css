@@ -518,6 +518,13 @@
   background: #ffffff;
 }
 
+.parent-incident-item--child {
+  border-color: #fca5a5;
+  border-left: 4px solid #dc2626;
+  background: #fff7f7;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);
+}
+
 .parent-incident-head {
   display: flex;
   align-items: center;
@@ -525,10 +532,27 @@
   gap: 8px;
 }
 
+.parent-incident-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .parent-incident-head h4 {
   margin: 0;
   font-size: 14px;
   color: #0f172a;
+}
+
+.parent-incident-child-badge {
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .parent-incident-acad {
