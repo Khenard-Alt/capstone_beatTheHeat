@@ -1,5 +1,6 @@
 jest.mock('../config/supabase', () => ({
   getSupabaseAdminClient: jest.fn(),
+  isSupabaseConfigured: jest.fn(() => false),
 }));
 
 const { incidentsController } = require('../controllers/incidentsController');
