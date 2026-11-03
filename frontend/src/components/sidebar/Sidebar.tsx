@@ -21,6 +21,8 @@ import {
 } from 'react-icons/md';
 import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from '../Avatar';
+import { apiClient } from '../../services/api';
+import { fetchNotifications } from '../../services/notifications.service';
 import schoolLogo from '../../assets/mayamotlogo.png';
 import '../../styles/Sidebar.css';
 
@@ -38,6 +40,23 @@ interface SidebarSectionLink {
   sectionId?: string;
 }
 
+interface NetworkConnectionInfo {
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+  addEventListener?: (type: string, listener: () => void) => void;
+  removeEventListener?: (type: string, listener: () => void) => void;
+}
+
+const getNetworkConnection = (): NetworkConnectionInfo | undefined => {
+  const nav = navigator as Navigator & {
+    connection?: NetworkConnectionInfo;
+    mozConnection?: NetworkConnectionInfo;
+    webkitConnection?: NetworkConnectionInfo;
+  };
+  return nav.connection || nav.mozConnection || nav.webkitConnection;
+};
+
 interface SidebarMenuItem {
   path: string;
   icon: React.ReactNode;
@@ -52,6 +71,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
   const { user } = useAuth();
   const [networkStatus, setNetworkStatus] = useState<'online' | 'offline' | 'slow'>('online');
   const [showNetworkStatus, setShowNetworkStatus] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState<number | null>(null);
+  const [pendingIncidentCount, setPendingIncidentCount] = useState<number | null>(null);
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const networkStatusRef = useRef<'online' | 'offline' | 'slow'>('online');
@@ -65,7 +86,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
       icon: <MdForum />,
       label: "teacher's panel",
       roles: ['parent'],
-      badge: 4,
+      // No unread-tracking exists for parent/teacher messages yet, so this
+      // stays null instead of showing a fabricated count.
+      badge: null,
       menuKey: 'questions-concerns',
       children: [
         { path: '/parent/questions-concerns', label: "Questions & Concerns", icon: <MdForum />, sectionId: 'question-and-concern-top' },
@@ -77,7 +100,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
       icon: <MdCampaign />,
       label: 'Announcement',
       roles: ['parent'],
-      badge: 2,
+      // No unread-tracking exists for announcements yet, so this stays null
+      // instead of showing a fabricated count.
+      badge: null,
       menuKey: 'announcements',
       children: [
         { path: '/parent/announcements', label: 'Announcement', icon: <MdCampaign />, sectionId: 'announcements-top' },
@@ -104,7 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
       icon: <MdHealthAndSafety />,
       label: 'Incident Review',
       roles: ['head-teacher'],
-      badge: 3,
+      badge: pendingIncidentCount,
       menuKey: 'incident-review',
       children: [
         { path: '/head-teacher/incident-review', label: 'Review Queue', icon: <MdHealthAndSafety />, sectionId: 'incident-review-top' },
@@ -166,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
     { path: '/dashboard', icon: <MdDashboard />, label: 'Dashboard', roles: ['teacher', 'staff'], badge: null },
     { path: '/heat-index', icon: <MdThermostat />, label: 'Heat Index', roles: ['admin', 'teacher', 'staff'], badge: null },
     { path: '/health-advisory', icon: <MdHealthAndSafety />, label: 'Health Advisory', roles: ['admin', 'teacher', 'staff'], badge: null },
-    { path: '/notifications', icon: <MdNotifications />, label: 'Notifications', roles: ['admin', 'teacher', 'staff'], badge: 3 },
+    { path: '/notifications', icon: <MdNotifications />, label: 'Notifications', roles: ['admin', 'teacher', 'staff'], badge: unreadNotificationCount },
     { path: '/schools', icon: <MdSchool />, label: 'School Management', roles: ['admin'], badge: null },
     { path: '/admin/parent-verifications', icon: <MdVerifiedUser />, label: 'Parent Verifications', roles: ['admin'], badge: null },
     { path: '/profile', icon: <MdPerson />, label: 'Profile', roles: ['admin', 'teacher', 'staff'], badge: null },
@@ -263,6 +288,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
     isParentQuestionsConcernsActive,
     isHeadTeacherIncidentReviewActive,
     isHeadTeacherIncidentReportsActive,
+    isHeadTeacherIncidentHistoryActive,
     isHeadTeacherAnnouncementsActive,
     isTeacherAnnouncementsActive,
     isTeacherQuestionsConcernsActive,
@@ -285,8 +311,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
         return;
       }
 
-      const anyNav = navigator as any;
-      const conn = anyNav.connection || anyNav.mozConnection || anyNav.webkitConnection;
+      const conn = getNetworkConnection();
       const effective = String(conn?.effectiveType ?? '').toLowerCase();
       const downlink = Number(conn?.downlink ?? 10);
       const rtt = Number(conn?.rtt ?? 0);
@@ -302,7 +327,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
         return;
       }
 
-      const healthUrl = `${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000'}/health`;
+      // Reuse apiClient's own resolved base URL (which already handles dev
+      // tunnels / prod / localhost) instead of hardcoding localhost — a
+      // hardcoded localhost is unreachable from a devtunnel-forwarded device
+      // and was making this health check falsely report "offline".
+      const healthUrl = `${apiClient.defaults.baseURL ?? 'http://localhost:5000'}/health`;
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), 1400);
       const startedAt = performance.now();
@@ -356,7 +385,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
           statusHideTimerRef.current = null;
         }
       }
-    } catch (error) {
+    } catch {
       networkStatusRef.current = 'online';
       setNetworkStatus('online');
       setStatusVisibility(false);
@@ -373,8 +402,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
     const scheduleUpdate = () => { void updateNetworkStatus(); };
     window.addEventListener('online', scheduleUpdate);
     window.addEventListener('offline', scheduleUpdate);
-    const anyNav = navigator as any;
-    const conn = anyNav.connection || anyNav.mozConnection || anyNav.webkitConnection;
+    const conn = getNetworkConnection();
     if (conn && conn.addEventListener) {
       conn.addEventListener('change', scheduleUpdate);
     }
@@ -394,6 +422,53 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole, onLogout, on
       }
     };
   }, []);
+
+  // Real sidebar badge counts. Notifications and pending incidents both have
+  // genuine status fields to count from; other badges (parent messages,
+  // announcements) have no unread-tracking in the schema, so they stay null
+  // (no badge) rather than show a fabricated number.
+  useEffect(() => {
+    if (!user?.id) return;
+    const role = userRole ?? user.role;
+    const wantsNotificationBadge = ['admin', 'teacher', 'staff'].includes(role as string);
+    const wantsIncidentBadge = role === 'head-teacher';
+    if (!wantsNotificationBadge && !wantsIncidentBadge) return;
+
+    let cancelled = false;
+
+    const loadCounts = async () => {
+      if (wantsNotificationBadge) {
+        try {
+          const notifications = await fetchNotifications(user.id, 100, 0);
+          if (!cancelled) {
+            setUnreadNotificationCount(notifications.filter((n) => n.status === 'unread').length);
+          }
+        } catch {
+          // leave the previous count in place; a transient fetch failure
+          // shouldn't flash the badge away
+        }
+      }
+
+      if (wantsIncidentBadge) {
+        try {
+          const { data } = await apiClient.get('/api/incidents', { params: { limit: 100, offset: 0 } });
+          const incidents: Array<{ status?: string }> = data?.data ?? [];
+          if (!cancelled) {
+            setPendingIncidentCount(incidents.filter((i) => i.status === 'pending').length);
+          }
+        } catch {
+          // same as above — keep the last known count on a transient error
+        }
+      }
+    };
+
+    void loadCounts();
+    const pollId = window.setInterval(() => void loadCounts(), 60000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(pollId);
+    };
+  }, [user?.id, user?.role, userRole]);
 
   const openMenuPanel = (menuKey: string) => {
     setOpenMenu((current) => (current === menuKey ? null : menuKey));

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -14,6 +15,14 @@ import '../styles/Login.css';
 import '../styles/Register.css';
 
 type Step = 'email' | 'otp' | 'reset' | 'done';
+
+const getErrorMessage = (err: unknown, fallback: string): string => {
+  if (axios.isAxiosError(err)) {
+    const message = err.response?.data?.message;
+    if (typeof message === 'string') return message;
+  }
+  return fallback;
+};
 
 const stages: Step[] = ['email', 'otp', 'reset', 'done'];
 
@@ -66,8 +75,7 @@ export const ForgotPassword: React.FC = () => {
       setOtpCode('');
       transitionToStep('otp');
     } catch (err) {
-      const responseData = (err as any)?.response?.data;
-      setErrorMessage(responseData?.message || 'Failed to send reset code. Please try again.');
+      setErrorMessage(getErrorMessage(err, 'Failed to send reset code. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -86,8 +94,7 @@ export const ForgotPassword: React.FC = () => {
       setSuccessMessage('Code verified. Choose your new password.');
       transitionToStep('reset');
     } catch (err) {
-      const responseData = (err as any)?.response?.data;
-      setErrorMessage(responseData?.message || 'Code verification failed.');
+      setErrorMessage(getErrorMessage(err, 'Code verification failed.'));
     } finally {
       setIsLoading(false);
     }
@@ -107,8 +114,7 @@ export const ForgotPassword: React.FC = () => {
       await apiClient.post('/api/users/reset-password', { email, code: otpCode, newPassword });
       transitionToStep('done');
     } catch (err) {
-      const responseData = (err as any)?.response?.data;
-      setErrorMessage(responseData?.message || 'Failed to reset password. Please try again.');
+      setErrorMessage(getErrorMessage(err, 'Failed to reset password. Please try again.'));
     } finally {
       setIsLoading(false);
     }
