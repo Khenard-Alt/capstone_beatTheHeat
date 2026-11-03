@@ -24,6 +24,11 @@ const formatTime = (value?: string | null) => {
 
 const getDisplayName = (person?: AppUser) => (person ? `${person.firstName} ${person.lastName}`.trim() : 'Unknown staff');
 
+// Sentinel for "no subject was typed" — kept out of view (see render below)
+// instead of shown as text, since any placeholder text here reads either
+// like a stale baked-in name or, worse, like an "unread" indicator.
+const NO_SUBJECT_PLACEHOLDER = '(no subject)';
+
 const TeacherStaffMessages: React.FC = () => {
 	const { user } = useAuth();
 	const [messages, setMessages] = useState<StaffMessage[]>([]);
@@ -113,7 +118,11 @@ const TeacherStaffMessages: React.FC = () => {
 			const created = await sendStaffMessage({
 				senderId: currentUserId,
 				recipientId: activePeer.id,
-				subject: subject.trim() || `Re: ${getDisplayName(activePeer)}`,
+				// A name baked into the stored subject would go stale if the peer's
+				// account is later renamed; the conversation header already shows
+				// the (always-current) peer name, so default to a placeholder
+				// that's hidden in the UI instead.
+				subject: subject.trim() || NO_SUBJECT_PLACEHOLDER,
 				body: body.trim(),
 			});
 
@@ -287,7 +296,9 @@ const TeacherStaffMessages: React.FC = () => {
 												<span className="messenger-meta">
 													{outgoing ? 'You' : getDisplayName(activePeer ?? undefined)} · {formatTime(message.created_at)}
 												</span>
-												{message.subject && <strong style={{ display: 'block', marginBottom: 8 }}>{message.subject}</strong>}
+												{message.subject && message.subject !== NO_SUBJECT_PLACEHOLDER && (
+													<strong style={{ display: 'block', marginBottom: 8 }}>{message.subject}</strong>
+												)}
 												<div>{message.body}</div>
 											</div>
 										</article>

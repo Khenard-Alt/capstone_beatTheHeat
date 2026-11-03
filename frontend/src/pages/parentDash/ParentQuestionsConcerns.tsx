@@ -24,6 +24,11 @@ const formatTime = (value?: string | null) => {
 
 const getDisplayName = (person?: AppUser) => (person ? `${person.firstName} ${person.lastName}`.trim() : 'Unknown teacher');
 
+// Sentinel for "no subject was typed" — kept out of view (see render below)
+// instead of shown as text, since any placeholder text here reads either
+// like a stale baked-in name or, worse, like an "unread" indicator.
+const NO_SUBJECT_PLACEHOLDER = '(no subject)';
+
 export const ParentQuestionsConcerns: React.FC = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ParentMessage[]>([]);
@@ -133,7 +138,12 @@ export const ParentQuestionsConcerns: React.FC = () => {
         parentUserId: currentParentId,
         teacherUserId: activeTeacher.id,
         senderRole: 'parent',
-        subject: subject.trim() || `Re: ${getDisplayName(activeTeacher)}`,
+        // A name baked into the stored subject would go stale if the teacher
+        // is later renamed; the conversation header already shows the
+        // (always-current) teacher name, so default to a placeholder that's
+        // hidden in the UI (see NO_SUBJECT_PLACEHOLDER below) rather than one
+        // baking in a name, or one that reads like an "unread" indicator.
+        subject: subject.trim() || NO_SUBJECT_PLACEHOLDER,
         body: body.trim(),
       });
 
@@ -271,7 +281,9 @@ export const ParentQuestionsConcerns: React.FC = () => {
                         <span className="messenger-meta">
                           {outgoing ? 'You' : getDisplayName(activeTeacher ?? undefined)} · {formatTime(message.created_at)}
                         </span>
-                        {message.subject && <strong style={{ display: 'block', marginBottom: 8 }}>{message.subject}</strong>}
+                        {message.subject && message.subject !== NO_SUBJECT_PLACEHOLDER && (
+                          <strong style={{ display: 'block', marginBottom: 8 }}>{message.subject}</strong>
+                        )}
                         <div>{message.body}</div>
                       </div>
                     </article>

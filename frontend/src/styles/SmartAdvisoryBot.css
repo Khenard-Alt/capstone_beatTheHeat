@@ -483,6 +483,12 @@
   }
 
   .global-advisory-nudge {
+    /* `right` alone leaves this fixed-position wrapper's width ambiguous
+       (shrink-to-fit), which made the panel's `width: min(100%, 520px)`
+       child resolve its percentage unpredictably and collapse toward the
+       left edge instead of respecting the intended 16px right gap. Setting
+       `left` too gives it an explicit, unambiguous width. */
+    left: 16px;
     right: 16px;
     bottom: 16px;
   }

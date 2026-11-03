@@ -278,6 +278,17 @@
   .parent-portal-sections-split {
     grid-template-columns: 1fr;
   }
+
+  /* Once the hero stacks (above), the help button sits near the left edge
+     instead of the far right of a wide row — the popover's `right: 0`
+     anchoring (written for the wide layout) then pushes a 320px-wide box
+     off the left side of a narrow screen. Anchor from the left instead and
+     cap the width to the viewport so it always stays fully visible. */
+  .parent-portal-help-popover {
+    left: 0;
+    right: auto;
+    width: min(320px, calc(100vw - 48px));
+  }
 }
 
 @media (max-width: 640px) {

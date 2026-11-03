@@ -3,6 +3,7 @@ import { MdOutlineChat, MdSend, MdSmartToy, MdKeyboardArrowDown } from 'react-ic
 import { Card } from '../../components/Card';
 import { TeacherHeatReminder } from '../../components/TeacherHeatReminder';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
+import { buildHumanizedFallback } from '../../services/chatbotFallback';
 import '../../styles/TeacherPanel.css';
 
 type ChatRole = 'teacher' | 'assistant';
@@ -101,7 +102,8 @@ const Chatbot: React.FC = () => {
       setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: reply, meta: 'Generated from current heat context' }]);
     } catch (error) {
       console.error('Teacher chatbot request failed:', error);
-      setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: 'Hindi available ang advisory ngayon. Sundin muna ang latest school heat guidance.', meta: 'Fallback response' }]);
+      const fallback = await buildHumanizedFallback('teacher');
+      setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: fallback.text, meta: fallback.meta }]);
     } finally {
       setIsThinking(false);
     }

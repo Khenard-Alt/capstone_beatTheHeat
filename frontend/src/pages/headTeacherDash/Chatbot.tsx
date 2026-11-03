@@ -3,6 +3,7 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { MdSend, MdSmartToy, MdOutlineChat, MdRefresh, MdOpenInNew, MdKeyboardArrowDown } from 'react-icons/md';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
+import { buildHumanizedFallback } from '../../services/chatbotFallback';
 import '../../styles/ParentPortalPages.css';
 
 type ChatRole = 'head-teacher' | 'assistant';
@@ -86,7 +87,8 @@ const Chatbot: React.FC = () => {
       setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: reply, meta: 'Generated from live heat context' }]);
     } catch (error) {
       console.error('Head teacher chatbot advisory request failed:', error);
-      setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: 'Advisory service unavailable. Check latest heat advisory and incident log.', meta: 'Fallback response' }]);
+      const fallback = await buildHumanizedFallback('head-teacher');
+      setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: fallback.text, meta: fallback.meta }]);
     } finally {
       setIsThinking(false);
     }

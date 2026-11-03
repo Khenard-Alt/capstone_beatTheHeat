@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
+import { buildHumanizedFallback } from '../../services/chatbotFallback';
 import { MdSend, MdSmartToy, MdOutlineChat, MdRefresh, MdOpenInNew, MdHelpOutline, MdKeyboardArrowDown } from 'react-icons/md';
 import '../../styles/ParentPortalPages.css';
 
@@ -137,13 +138,14 @@ export const ParentChatbot: React.FC = () => {
       ]);
     } catch (error) {
       console.error('Parent chatbot advisory request failed:', error);
+      const fallback = await buildHumanizedFallback('parent');
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           role: 'assistant',
-          text: 'Hindi available ang advisory service ngayon. Paki-check ang latest school heat level at sundin ang current safety notice.',
-          meta: 'Fallback response',
+          text: fallback.text,
+          meta: fallback.meta,
         },
       ]);
     } finally {

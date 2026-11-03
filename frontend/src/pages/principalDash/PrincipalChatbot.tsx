@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { generateScopedAdvisory } from '../../services/healthAdvisory.service';
+import { buildHumanizedFallback } from '../../services/chatbotFallback';
 import { MdOutlineChat, MdRefresh, MdSend, MdSmartToy, MdKeyboardArrowDown } from 'react-icons/md';
 import '../../styles/ParentPortalPages.css';
 
@@ -85,7 +86,8 @@ const PrincipalChatbot: React.FC = () => {
       setMessages((current) => [...current, { id: Date.now() + 1, sender: 'assistant', text: reply }]);
     } catch (error) {
       console.error('Principal chatbot request failed:', error);
-      setMessages((current) => [...current, { id: Date.now() + 1, sender: 'assistant', text: 'The advisory service is unavailable. Review the current heat index, school policy, and latest incident reports before changing operations.', meta: 'Fallback response' }]);
+      const fallback = await buildHumanizedFallback('principal');
+      setMessages((current) => [...current, { id: Date.now() + 1, sender: 'assistant', text: fallback.text, meta: fallback.meta }]);
     } finally {
       setThinking(false);
     }
