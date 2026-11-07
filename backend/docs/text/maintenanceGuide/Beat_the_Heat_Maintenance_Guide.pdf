@@ -1,0 +1,3366 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R 29 0 R 31 0 R 33 0 R 35 0 R 37 0 R 39 0 R 41 0 R 43 0 R 45 0 R 47 0 R 49 0 R 51 0 R 53 0 R 55 0 R 57 0 R 59 0 R 61 0 R 63 0 R 65 0 R 67 0 R 69 0 R 71 0 R 73 0 R 75 0 R 77 0 R 79 0 R 81 0 R 83 0 R 85 0 R 87 0 R 89 0 R 91 0 R 93 0 R 95 0 R 97 0 R 99 0 R 101 0 R 103 0 R 105 0 R] /Count 52 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 287 >>
+stream
+BT
+/F1 25 Tf
+72 670 Td
+(BEAT THE HEAT) Tj
+/F1 17 Tf
+0 -36 Td
+(MAINTENANCE GUIDE) Tj
+/F1 11 Tf
+0 -50 Td
+(AI-Integrated Smart Heat Index and Real-Time Health Advisory System) Tj
+0 -32 Td
+(Prepared by: ______________________________) Tj
+0 -18 Td
+(Date: ______________________________) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2950 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(CONTENTS) Tj
+/F1 {fs} Tf
+0 -24 Td
+(CONTENTS) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Main content pages 1-50 follow the course maintenance-guide requirements.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(PAGE 1: INTRODUCTION AND DOCUMENT CONTROL) Tj
+0 -14 Td
+(PAGE 2: SYSTEM PURPOSE AND SCOPE) Tj
+0 -14 Td
+(PAGE 3: ROLES AND RESPONSIBILITIES) Tj
+0 -14 Td
+(PAGE 4: MAINTENANCE CLASSIFICATION) Tj
+0 -14 Td
+(PAGE 5: MAINTENANCE WORKFLOW) Tj
+0 -14 Td
+(PAGE 6: ENVIRONMENT INVENTORY) Tj
+0 -14 Td
+(PAGE 7: HARDWARE AND SOFTWARE PREREQUISITES) Tj
+0 -14 Td
+(PAGE 8: INSTALLING THE BACKEND) Tj
+0 -14 Td
+(PAGE 9: INSTALLING THE FRONTEND) Tj
+0 -14 Td
+(PAGE 10: CONFIGURATION MANAGEMENT) Tj
+0 -14 Td
+(PAGE 11: RELEASE AND VERSION CONTROL) Tj
+0 -14 Td
+(PAGE 12: DEPENDENCY MAINTENANCE) Tj
+0 -14 Td
+(PAGE 13: FRONTEND MAINTENANCE) Tj
+0 -14 Td
+(PAGE 14: BACKEND API MAINTENANCE) Tj
+0 -14 Td
+(PAGE 15: AUTHENTICATION AND SESSION MAINTENANCE) Tj
+0 -14 Td
+(PAGE 16: USER AND ROLE MAINTENANCE) Tj
+0 -14 Td
+(PAGE 17: DATABASE STRUCTURE) Tj
+0 -14 Td
+(PAGE 18: DATABASE HEALTH CHECK) Tj
+0 -14 Td
+(PAGE 19: DATABASE CLEANUP AND RETENTION) Tj
+0 -14 Td
+(PAGE 20: INDEXES AND PERFORMANCE) Tj
+0 -14 Td
+(PAGE 21: BACKUP POLICY) Tj
+0 -14 Td
+(PAGE 22: MYSQL BACKUP) Tj
+0 -14 Td
+(PAGE 23: ORACLE LITE BACKUP) Tj
+0 -14 Td
+(PAGE 24: MSSQL BACKUP) Tj
+0 -14 Td
+(PAGE 25: MS ACCESS 2010 BACKUP) Tj
+0 -14 Td
+(PAGE 26: POSTGRESQL BACKUP) Tj
+0 -14 Td
+(PAGE 27: EXCEL BACKUP) Tj
+0 -14 Td
+(PAGE 28: DBASE III BACKUP) Tj
+0 -14 Td
+(PAGE 29: BACKUP VERIFICATION) Tj
+0 -14 Td
+(PAGE 30: RESTORE READINESS) Tj
+0 -14 Td
+(PAGE 31: MYSQL RESTORE) Tj
+0 -14 Td
+(PAGE 32: ORACLE LITE RESTORE) Tj
+0 -14 Td
+(PAGE 33: MSSQL RESTORE) Tj
+0 -14 Td
+(PAGE 34: MS ACCESS 2010 RESTORE) Tj
+0 -14 Td
+(PAGE 35: POSTGRESQL RESTORE) Tj
+0 -14 Td
+(PAGE 36: EXCEL AND DBASE RESTORE) Tj
+0 -14 Td
+(PAGE 37: FULL DATABASE RESTORE TEST) Tj
+0 -14 Td
+(PAGE 38: DATABASE MIGRATION PLANNING) Tj
+0 -14 Td
+(PAGE 39: DATABASE MIGRATION PROCEDURE) Tj
+0 -14 Td
+(PAGE 40: MIGRATION VALIDATION) Tj
+0 -14 Td
+(PAGE 41: AI AND WEATHER DATA MAINTENANCE) Tj
+0 -14 Td
+(PAGE 42: HEAT INDEX AND ADVISORY VALIDATION) Tj
+0 -14 Td
+(PAGE 43: NOTIFICATIONS, INCIDENTS, AND MESSAGES) Tj
+0 -14 Td
+(PAGE 44: LOGGING AND MONITORING) Tj
+0 -14 Td
+(PAGE 45: SECURITY MAINTENANCE) Tj
+0 -14 Td
+(PAGE 46: TROUBLESHOOTING MATRIX) Tj
+0 -14 Td
+(PAGE 47: INCIDENT RESPONSE AND ROLLBACK) Tj
+0 -14 Td
+(PAGE 48: MAINTENANCE SCHEDULE AND CHECKLIST) Tj
+0 -14 Td
+(PAGE 49: APPENDIX A - OPERATIONS TEMPLATES) Tj
+0 -14 Td
+(PAGE 50: APPENDIX B - FINAL ACCEPTANCE CHECKLIST) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 2) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1709 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 1: INTRODUCTION AND DOCUMENT CONTROL) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Purpose) Tj
+0 -14 Td
+(This guide provides repeatable procedures for keeping Beat the Heat available,) Tj
+0 -14 Td
+(secure, accurate, and recoverable. It is intended for the system administrator,) Tj
+0 -14 Td
+(database administrator, developer, and authorized school personnel.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Maintenance objectives) Tj
+0 -14 Td
+(- Keep heat-index readings and health advisories reliable.) Tj
+0 -14 Td
+(- Keep user, school, incident, notification, and weather records consistent.) Tj
+0 -14 Td
+(- Prevent data loss through scheduled backups and tested restoration.) Tj
+0 -14 Td
+(- Apply controlled updates without losing configuration or audit evidence.) Tj
+0 -14 Td
+(- Record every significant maintenance activity.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Document control) Tj
+0 -14 Td
+(Record the guide version, date, author, reviewer, approved changes, and reason) Tj
+0 -14 Td
+(for each revision. The current approved copy should be stored with the project) Tj
+0 -14 Td
+(records and an offline backup.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+([INSERT SCREENSHOT 1: Guide cover or approved document-control page.]) Tj
+0 -14 Td
+(Capture the item described above; redact private data and add a figure caption.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 3) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 1857 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 2: SYSTEM PURPOSE AND SCOPE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Beat the Heat is a web-based system that receives weather information, computes) Tj
+0 -14 Td
+(heat-index conditions, produces health advisories, and presents role-based) Tj
+0 -14 Td
+(dashboards and notifications for a school community.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(In scope) Tj
+0 -14 Td
+(- React and Vite frontend.) Tj
+0 -14 Td
+(- Node.js and TypeScript backend API.) Tj
+0 -14 Td
+(- Supabase/PostgreSQL data services and row-level security.) Tj
+0 -14 Td
+(- Weather retrieval, heat-index calculation, advisory generation, and AI logs.) Tj
+0 -14 Td
+(- Authentication, role permissions, incidents, announcements, and messages.) Tj
+0 -14 Td
+(- Operational logs, database backups, migrations, and recovery.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Out of scope) Tj
+0 -14 Td
+(This guide does not replace school emergency protocols, medical advice, vendor) Tj
+0 -14 Td
+(documentation, or the institution's information-security policy.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Manual organization) Tj
+0 -14 Td
+(Chapters 1?5 cover introduction and scope, platform and system overview,) Tj
+0 -14 Td
+(preventive maintenance, corrective troubleshooting, and recovery or general) Tj
+0 -14 Td
+(procedures. The appendices contain evidence templates and acceptance checklists.) Tj
+0 -14 Td
+(This follows the professor's maintenance-manual reference while adapting the) Tj
+0 -14 Td
+(procedures to Beat the Heat.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 4) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 1397 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 3: ROLES AND RESPONSIBILITIES) Tj
+/F1 {fs} Tf
+0 -24 Td
+(System administrator) Tj
+0 -14 Td
+(Maintains deployment settings, environment variables, service availability,) Tj
+0 -14 Td
+(logs, domains, and release records.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Database administrator) Tj
+0 -14 Td
+(Runs migrations, verifies constraints and policies, creates backups, tests) Tj
+0 -14 Td
+(restores, checks indexes, and protects database credentials.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Developer or maintainer) Tj
+0 -14 Td
+(Reviews code changes, updates dependencies, runs tests and builds, and prepares) Tj
+0 -14 Td
+(rollback instructions before a release.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Authorized school administrator) Tj
+0 -14 Td
+(Reviews accounts, roles, advisories, incidents, and operational reports.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(All personnel) Tj
+0 -14 Td
+(Must protect credentials, follow least privilege, document changes, and report) Tj
+0 -14 Td
+(unexpected behavior immediately.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 5) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 1342 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 4: MAINTENANCE CLASSIFICATION) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Corrective maintenance fixes a confirmed defect, such as a failed API request,) Tj
+0 -14 Td
+(incorrect advisory text, or broken dashboard action.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Adaptive maintenance changes the system for a new browser, Node.js version,) Tj
+0 -14 Td
+(weather provider, school policy, or database platform.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Perfective maintenance improves performance, usability, reporting, or clarity) Tj
+0 -14 Td
+(without changing the intended safety behavior.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Preventive maintenance reduces future failures through backups, dependency) Tj
+0 -14 Td
+(updates, log review, database cleanup, monitoring, and restore drills.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Each ticket should identify the category, impact, owner, start time, end time,) Tj
+0 -14 Td
+(actions taken, validation result, and rollback option.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 6) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 1196 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 5: MAINTENANCE WORKFLOW) Tj
+/F1 {fs} Tf
+0 -24 Td
+(1. Receive and record the request or alert.) Tj
+0 -14 Td
+(2. Classify impact and urgency.) Tj
+0 -14 Td
+(3. Confirm authorization and create a maintenance record.) Tj
+0 -14 Td
+(4. Back up affected data and configuration.) Tj
+0 -14 Td
+(5. Reproduce the issue or define the requested change.) Tj
+0 -14 Td
+(6. Apply the smallest controlled change.) Tj
+0 -14 Td
+(7. Test the affected feature and related safety behavior.) Tj
+0 -14 Td
+(8. Monitor after release and document the result.) Tj
+0 -14 Td
+(9. Close the record only after the responsible reviewer accepts it.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Never edit production data directly without a recorded reason, a backup, and a) Tj
+0 -14 Td
+(verification query or report.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 7) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 18 0 R >>
+endobj
+18 0 obj
+<< /Length 1408 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 6: ENVIRONMENT INVENTORY) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Maintain an inventory containing environment name, URL, server or hosting) Tj
+0 -14 Td
+(location, frontend version, backend version, database project, deployment date,) Tj
+0 -14 Td
+(owner, and last verification date.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Recommended environments) Tj
+0 -14 Td
+(- Development: local work and test data only.) Tj
+0 -14 Td
+(- Staging: release candidate validation with safe sample data.) Tj
+0 -14 Td
+(- Production: live school data and restricted administrator access.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Never copy production credentials into a local file or commit an environment) Tj
+0 -14 Td
+(file containing secrets. Use separate credentials and service roles per) Tj
+0 -14 Td
+(environment.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+([INSERT SCREENSHOT 2: Project directory or deployment environment inventory.]) Tj
+0 -14 Td
+(Capture the item described above; redact private data and add a figure caption.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 8) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 20 0 R >>
+endobj
+20 0 obj
+<< /Length 1784 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 7: HARDWARE AND SOFTWARE PREREQUISITES) Tj
+/F1 {fs} Tf
+0 -24 Td
+(The backend requires Node.js 18 or later according to the project manifest. The) Tj
+0 -14 Td
+(frontend is built with React and Vite. The system also requires network access) Tj
+0 -14 Td
+(to the configured Supabase project and weather provider.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Before maintenance verify:) Tj
+0 -14 Td
+(- Supported Node.js and npm versions.) Tj
+0 -14 Td
+(- Available disk space for logs, build output, and backup exports.) Tj
+0 -14 Td
+(- Correct system time and time zone.) Tj
+0 -14 Td
+(- Working DNS, HTTPS, and outbound network access.) Tj
+0 -14 Td
+(- Database project availability and connection permissions.) Tj
+0 -14 Td
+(- Approved network routes, CORS origins, and time synchronization.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(If a prerequisite is missing, stop the change and record the issue rather than) Tj
+0 -14 Td
+(forcing an unsupported installation.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Network and time maintenance) Tj
+0 -14 Td
+(Verify the server, database provider, and operator workstation use the approved) Tj
+0 -14 Td
+(time zone and a reliable time source. Confirm that HTTPS certificates are valid) Tj
+0 -14 Td
+(and that only required application and database connections are allowed. Record) Tj
+0 -14 Td
+(any firewall, DNS, or provider change before testing the application.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 9) Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 22 0 R >>
+endobj
+22 0 obj
+<< /Length 1598 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 8: INSTALLING THE BACKEND) Tj
+/F1 {fs} Tf
+0 -24 Td
+(1. Obtain the approved source version.) Tj
+0 -14 Td
+(2. Open a terminal in the backend directory.) Tj
+0 -14 Td
+(3. Run `npm install` using the approved lockfile.) Tj
+0 -14 Td
+(4. Create environment configuration from the approved template.) Tj
+0 -14 Td
+(5. Set database, authentication, mail, weather, and AI settings.) Tj
+0 -14 Td
+(6. Run `npm run build`.) Tj
+0 -14 Td
+(7. Run the backend test command.) Tj
+0 -14 Td
+(8. Start the service using the approved process manager.) Tj
+0 -14 Td
+(9. Verify the health endpoint and a protected API request.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Evidence to capture: terminal showing the backend directory, successful) Tj
+0 -14 Td
+(`npm run build`, and successful tests. Crop the terminal to show the command,) Tj
+0 -14 Td
+(the final success message, and the date or project path. Do not print) Tj
+0 -14 Td
+(environment variables in terminal logs or screenshots.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+([INSERT SCREENSHOT 3A: Cropped backend terminal showing build and test success.]) Tj
+0 -14 Td
+(Capture the item described above; redact private data and add a figure caption.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 10) Tj
+ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 24 0 R >>
+endobj
+24 0 obj
+<< /Length 1384 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 9: INSTALLING THE FRONTEND) Tj
+/F1 {fs} Tf
+0 -24 Td
+(1. Open a terminal in the frontend directory.) Tj
+0 -14 Td
+(2. Run `npm install` using the approved lockfile.) Tj
+0 -14 Td
+(3. Configure the approved API and Supabase public settings.) Tj
+0 -14 Td
+(4. Run `npm run build`.) Tj
+0 -14 Td
+(5. Publish the build through the approved hosting process.) Tj
+0 -14 Td
+(6. Open the public application in a supported browser.) Tj
+0 -14 Td
+(7. Verify login, dashboard loading, weather display, advisory display, and) Tj
+0 -14 Td
+(logout.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+([INSERT SCREENSHOT 3B: Cropped frontend terminal showing Vite build success.]) Tj
+0 -14 Td
+(Capture the item described above; redact private data and add a figure caption.) Tj
+0 -14 Td
+(If the screenshot limit allows only one image for this section, use the browser) Tj
+0 -14 Td
+(login/dashboard screenshot instead and cite the terminal result in the evidence) Tj
+0 -14 Td
+(box.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 11) Tj
+ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 26 0 R >>
+endobj
+26 0 obj
+<< /Length 1288 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 10: CONFIGURATION MANAGEMENT) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Configuration must be documented without exposing secret values. Keep a) Tj
+0 -14 Td
+(configuration register containing variable name, purpose, environment, owner,) Tj
+0 -14 Td
+(last rotation date, and validation method.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Typical configuration groups) Tj
+0 -14 Td
+(- API and frontend URLs.) Tj
+0 -14 Td
+(- Supabase URL and public key.) Tj
+0 -14 Td
+(- Server port and CORS origins.) Tj
+0 -14 Td
+(- JWT and session settings.) Tj
+0 -14 Td
+(- Weather provider settings.) Tj
+0 -14 Td
+(- Mail and SMS provider settings.) Tj
+0 -14 Td
+(- Heat thresholds and notification settings.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(After changing configuration, restart the affected service and run a smoke) Tj
+0 -14 Td
+(test. Roll back if the service cannot connect or authorization behavior changes.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 12) Tj
+ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 28 0 R >>
+endobj
+28 0 obj
+<< /Length 1138 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 11: RELEASE AND VERSION CONTROL) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Every release needs a version identifier, change summary, affected components,) Tj
+0 -14 Td
+(database migration list, test result, deployment time, owner, and rollback plan.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Release checklist) Tj
+0 -14 Td
+(- Review changed files.) Tj
+0 -14 Td
+(- Confirm no secrets or debug data are included.) Tj
+0 -14 Td
+(- Install dependencies from the approved lockfile.) Tj
+0 -14 Td
+(- Run backend build and tests.) Tj
+0 -14 Td
+(- Run frontend lint and build.) Tj
+0 -14 Td
+(- Test authentication and the main advisory flow.) Tj
+0 -14 Td
+(- Back up production data before deployment.) Tj
+0 -14 Td
+(- Monitor logs after deployment.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 13) Tj
+ET
+endstream
+endobj
+29 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 30 0 R >>
+endobj
+30 0 obj
+<< /Length 1269 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 12: DEPENDENCY MAINTENANCE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Review dependencies on a planned schedule rather than updating randomly in) Tj
+0 -14 Td
+(production. Group compatible updates, read breaking-change notes, and test the) Tj
+0 -14 Td
+(complete application.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. List outdated packages in a non-production environment.) Tj
+0 -14 Td
+(2. Check compatibility with Node.js, TypeScript, React, and Supabase.) Tj
+0 -14 Td
+(3. Update one logical group at a time.) Tj
+0 -14 Td
+(4. Run builds, tests, and smoke tests.) Tj
+0 -14 Td
+(5. Record package changes and known risks.) Tj
+0 -14 Td
+(6. Deploy only after reviewer approval.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Do not remove a package solely because it appears unused without verifying) Tj
+0 -14 Td
+(imports, scripts, and deployment configuration.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 14) Tj
+ET
+endstream
+endobj
+31 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 32 0 R >>
+endobj
+32 0 obj
+<< /Length 1208 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 13: FRONTEND MAINTENANCE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Review login, registration, dashboards, role navigation, profile settings,) Tj
+0 -14 Td
+(notifications, messages, advisories, incident forms, and report views.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(For each UI change verify:) Tj
+0 -14 Td
+(- Loading and error states.) Tj
+0 -14 Td
+(- Mobile and desktop layout.) Tj
+0 -14 Td
+(- Keyboard navigation and readable labels.) Tj
+0 -14 Td
+(- Date, time, and temperature formatting.) Tj
+0 -14 Td
+(- Role restrictions.) Tj
+0 -14 Td
+(- Network failure behavior.) Tj
+0 -14 Td
+(- No sensitive data in browser console logs.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use the browser's network and console tools only in a controlled environment) Tj
+0 -14 Td
+(and remove temporary debugging output before release.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 15) Tj
+ET
+endstream
+endobj
+33 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 34 0 R >>
+endobj
+34 0 obj
+<< /Length 1178 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 14: BACKEND API MAINTENANCE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Review route authorization, input validation, response status codes, error) Tj
+0 -14 Td
+(handling, rate limiting, logging, and database calls.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Identify the route and its controller/service.) Tj
+0 -14 Td
+(2. Check authenticated and unauthorized behavior.) Tj
+0 -14 Td
+(3. Test valid, missing, malformed, and boundary inputs.) Tj
+0 -14 Td
+(4. Confirm errors are safe and useful without exposing secrets.) Tj
+0 -14 Td
+(5. Run related unit or integration tests.) Tj
+0 -14 Td
+(6. Confirm frontend consumers still match the response shape.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Record any API contract change and update the operations documentation.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 16) Tj
+ET
+endstream
+endobj
+35 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 36 0 R >>
+endobj
+36 0 obj
+<< /Length 1221 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 15: AUTHENTICATION AND SESSION MAINTENANCE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Review sign-in, registration, password reset, OTP or verification flow, token) Tj
+0 -14 Td
+(expiration, device sessions, and logout.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Operational checks) Tj
+0 -14 Td
+(- Disabled or unverified users cannot use restricted features.) Tj
+0 -14 Td
+(- Passwords are never stored or logged in plain text.) Tj
+0 -14 Td
+(- Expired sessions are rejected.) Tj
+0 -14 Td
+(- Logout invalidates the expected client session.) Tj
+0 -14 Td
+(- Repeated failed authentication is rate limited.) Tj
+0 -14 Td
+(- Administrative routes enforce the intended role.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(When authentication behavior changes, test each role in a safe environment and) Tj
+0 -14 Td
+(record the test accounts used.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 17) Tj
+ET
+endstream
+endobj
+37 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 38 0 R >>
+endobj
+38 0 obj
+<< /Length 1308 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 16: USER AND ROLE MAINTENANCE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Create, update, disable, and review users through the approved administrative) Tj
+0 -14 Td
+(workflow. Use the least privilege required by the person's responsibilities.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Account review procedure) Tj
+0 -14 Td
+(1. Export or view the current account and role list.) Tj
+0 -14 Td
+(2. Compare accounts with the authorized school roster.) Tj
+0 -14 Td
+(3. Disable departed or duplicate accounts.) Tj
+0 -14 Td
+(4. Review administrator and head-teacher access.) Tj
+0 -14 Td
+(5. Confirm the change with the responsible school authority.) Tj
+0 -14 Td
+(6. Record the date, reason, and approver.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+([INSERT SCREENSHOT 4: Redacted user-management or role-review screen.]) Tj
+0 -14 Td
+(Capture the item described above; redact private data and add a figure caption.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 18) Tj
+ET
+endstream
+endobj
+39 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 40 0 R >>
+endobj
+40 0 obj
+<< /Length 1167 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 17: DATABASE STRUCTURE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(The database contains users, schools, heat-index data, weather data, advisories,) Tj
+0 -14 Td
+(notifications, AI analysis logs, preferences, incidents, messages, sessions,) Tj
+0 -14 Td
+(and related feature tables.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Before changing a table, identify:) Tj
+0 -14 Td
+(- Referencing foreign keys and application models.) Tj
+0 -14 Td
+(- Row-level security policies.) Tj
+0 -14 Td
+(- Triggers, functions, views, and indexes.) Tj
+0 -14 Td
+(- Seed or migration dependencies.) Tj
+0 -14 Td
+(- Existing production data and rollback risk.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Schema changes must be delivered as versioned migrations, not undocumented) Tj
+0 -14 Td
+(manual edits.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 19) Tj
+ET
+endstream
+endobj
+41 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 42 0 R >>
+endobj
+42 0 obj
+<< /Length 1502 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 18: DATABASE HEALTH CHECK) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Perform a scheduled health check covering availability, storage, connections,) Tj
+0 -14 Td
+(slow queries, failed requests, recent migration status, and policy behavior.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Record:) Tj
+0 -14 Td
+(- Check date and operator.) Tj
+0 -14 Td
+(- Database project and environment.) Tj
+0 -14 Td
+(- Query or dashboard used.) Tj
+0 -14 Td
+(- Findings and severity.) Tj
+0 -14 Td
+(- Corrective action and follow-up date.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Never expose real user data in a report or screenshot. Redact names, email) Tj
+0 -14 Td
+(addresses, tokens, phone numbers, and message content.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(System health-check record) Tj
+0 -14 Td
+(Check service availability, API response time, database connectivity, recent) Tj
+0 -14 Td
+(weather-data timestamp, advisory generation, notification processing, storage,) Tj
+0 -14 Td
+(error rate, and backup status. Mark each item PASS, WARN, or FAIL, explain the) Tj
+0 -14 Td
+(finding, and assign an owner and due date for every WARN or FAIL.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 20) Tj
+ET
+endstream
+endobj
+43 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 44 0 R >>
+endobj
+44 0 obj
+<< /Length 1175 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 19: DATABASE CLEANUP AND RETENTION) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Cleanup must follow the approved retention policy. Do not delete records merely) Tj
+0 -14 Td
+(because they are old or large.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Before cleanup:) Tj
+0 -14 Td
+(1. Obtain authorization.) Tj
+0 -14 Td
+(2. Define exact records and date range.) Tj
+0 -14 Td
+(3. Export or back up the affected data.) Tj
+0 -14 Td
+(4. Test the selection query in a non-production environment.) Tj
+0 -14 Td
+(5. Execute in a transaction when supported.) Tj
+0 -14 Td
+(6. Verify counts and application behavior.) Tj
+0 -14 Td
+(7. Record the result.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Preserve audit, incident, and safety-related evidence according to institutional) Tj
+0 -14 Td
+(requirements.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 21) Tj
+ET
+endstream
+endobj
+45 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 46 0 R >>
+endobj
+46 0 obj
+<< /Length 1244 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 20: INDEXES AND PERFORMANCE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Performance maintenance includes reviewing common filters, joins, ordering,) Tj
+0 -14 Td
+(pagination, and dashboard queries. Use indexes only when they support measured) Tj
+0 -14 Td
+(workloads and do not create unnecessary write cost.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Identify a slow or frequently executed query.) Tj
+0 -14 Td
+(2. Capture baseline timing and result correctness.) Tj
+0 -14 Td
+(3. Review existing indexes.) Tj
+0 -14 Td
+(4. Test the proposed index in staging.) Tj
+0 -14 Td
+(5. Compare timing and storage impact.) Tj
+0 -14 Td
+(6. Apply a versioned migration if approved.) Tj
+0 -14 Td
+(7. Monitor after release.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Do not solve a performance issue by removing validation or authorization checks.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 22) Tj
+ET
+endstream
+endobj
+47 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 48 0 R >>
+endobj
+48 0 obj
+<< /Length 1207 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 21: BACKUP POLICY) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Backups protect against accidental deletion, failed migration, corruption,) Tj
+0 -14 Td
+(provider outage, and deployment mistakes. Define recovery point objective and) Tj
+0 -14 Td
+(recovery time objective with the project adviser or system owner.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Each backup record should include:) Tj
+0 -14 Td
+(- Backup identifier and creation time.) Tj
+0 -14 Td
+(- Environment and database provider.) Tj
+0 -14 Td
+(- Tool and command or dashboard action.) Tj
+0 -14 Td
+(- Encrypted storage location.) Tj
+0 -14 Td
+(- Retention expiration.) Tj
+0 -14 Td
+(- Verification result.) Tj
+0 -14 Td
+(- Person responsible.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(At least one backup copy should be stored separately from the live database.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 23) Tj
+ET
+endstream
+endobj
+49 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 50 0 R >>
+endobj
+50 0 obj
+<< /Length 1248 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 22: MYSQL BACKUP) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Use the approved MySQL client and credentials with minimum required privilege.) Tj
+0 -14 Td
+(Export schema and data using a consistent character set and timestamped file) Tj
+0 -14 Td
+(name.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Confirm the source database and maintenance window.) Tj
+0 -14 Td
+(2. Verify available storage and backup destination.) Tj
+0 -14 Td
+(3. Run the approved logical dump command.) Tj
+0 -14 Td
+(4. Record the command without recording its password.) Tj
+0 -14 Td
+(5. Check the exit status and file size.) Tj
+0 -14 Td
+(6. Compress and encrypt the dump.) Tj
+0 -14 Td
+(7. Calculate a checksum.) Tj
+0 -14 Td
+(8. Test the file in an isolated restore environment.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Do not overwrite the previous verified backup.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 24) Tj
+ET
+endstream
+endobj
+51 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 52 0 R >>
+endobj
+52 0 obj
+<< /Length 1280 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 23: ORACLE LITE BACKUP) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Confirm the exact Oracle Lite tool and version used by the school because) Tj
+0 -14 Td
+(commands vary between installations. Stop or quiesce writes when required by) Tj
+0 -14 Td
+(the tool's documentation.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Confirm the database service and storage path.) Tj
+0 -14 Td
+(2. Use the approved export or backup utility.) Tj
+0 -14 Td
+(3. Include schema objects and required data.) Tj
+0 -14 Td
+(4. Save the output with date, environment, and version.) Tj
+0 -14 Td
+(5. Verify the export log and object count.) Tj
+0 -14 Td
+(6. Encrypt and store the backup separately.) Tj
+0 -14 Td
+(7. Perform a sample restore test.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Attach the vendor command reference to the maintenance record, not to the) Tj
+0 -14 Td
+(production database.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 25) Tj
+ET
+endstream
+endobj
+53 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 54 0 R >>
+endobj
+54 0 obj
+<< /Length 1191 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 24: MSSQL BACKUP) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Use SQL Server Management Studio or the approved command-line tool. A full) Tj
+0 -14 Td
+(backup should be followed by the required differential or transaction-log plan.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Confirm the selected database and recovery model.) Tj
+0 -14 Td
+(2. Choose a verified backup destination.) Tj
+0 -14 Td
+(3. Run a full backup with checksum when supported.) Tj
+0 -14 Td
+(4. Verify completion and backup history.) Tj
+0 -14 Td
+(5. Copy the file to protected storage.) Tj
+0 -14 Td
+(6. Test restore with a different database name.) Tj
+0 -14 Td
+(7. Record media, checksum, and restore result.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Protect `.bak` and transaction-log files as sensitive data.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 26) Tj
+ET
+endstream
+endobj
+55 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 56 0 R >>
+endobj
+56 0 obj
+<< /Length 1191 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 25: MS ACCESS 2010 BACKUP) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Close active editing sessions before copying an Access database. A file copy) Tj
+0 -14 Td
+(made while the database is open may be inconsistent.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Notify users of the maintenance window.) Tj
+0 -14 Td
+(2. Confirm no one is editing the file.) Tj
+0 -14 Td
+(3. Compact and repair only after an approved backup.) Tj
+0 -14 Td
+(4. Copy the `.accdb` or `.mdb` file to a dated folder.) Tj
+0 -14 Td
+(5. Encrypt the backup and restrict access.) Tj
+0 -14 Td
+(6. Open a copy to verify it is readable.) Tj
+0 -14 Td
+(7. Record file size, timestamp, and verification result.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Never store an Access backup in a publicly served web directory.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 27) Tj
+ET
+endstream
+endobj
+57 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 58 0 R >>
+endobj
+58 0 obj
+<< /Length 1288 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 26: POSTGRESQL BACKUP) Tj
+/F1 {fs} Tf
+0 -24 Td
+(For PostgreSQL or Supabase, use the provider-approved export or PostgreSQL) Tj
+0 -14 Td
+(client. Include schema, data, extensions or functions required by the project,) Tj
+0 -14 Td
+(and policy-related objects where the provider permits.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Confirm the project and database target.) Tj
+0 -14 Td
+(2. Create a timestamped logical backup.) Tj
+0 -14 Td
+(3. Verify tables, functions, views, policies, and sequences as applicable.) Tj
+0 -14 Td
+(4. Encrypt the backup.) Tj
+0 -14 Td
+(5. Store it separately from the live project.) Tj
+0 -14 Td
+(6. Restore into an isolated test database.) Tj
+0 -14 Td
+(7. Run application smoke tests against the restored copy.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Keep service-role keys out of commands, screenshots, and backup filenames.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 28) Tj
+ET
+endstream
+endobj
+59 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 60 0 R >>
+endobj
+60 0 obj
+<< /Length 1269 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 27: EXCEL BACKUP) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Excel exports are useful for reports and manual review but are not a complete) Tj
+0 -14 Td
+(database backup. Export only approved columns and remove unnecessary personal) Tj
+0 -14 Td
+(information.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Select the report or data range through an authorized workflow.) Tj
+0 -14 Td
+(2. Confirm date range, filters, and record count.) Tj
+0 -14 Td
+(3. Export using a timestamped filename.) Tj
+0 -14 Td
+(4. Protect the file and limit sharing.) Tj
+0 -14 Td
+(5. Record the source query or report definition.) Tj
+0 -14 Td
+(6. Verify totals against the application or database.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Do not treat an Excel export as sufficient for restoring relational constraints,) Tj
+0 -14 Td
+(policies, triggers, or application configuration.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 29) Tj
+ET
+endstream
+endobj
+61 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 62 0 R >>
+endobj
+62 0 obj
+<< /Length 1214 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 28: DBASE III BACKUP) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Confirm the legacy dBase III file format and any memo or index files used by the) Tj
+0 -14 Td
+(installation. Copy the complete related set, not just the main table file.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Procedure) Tj
+0 -14 Td
+(1. Close the application using the files.) Tj
+0 -14 Td
+(2. Identify `.dbf`, memo, and index files.) Tj
+0 -14 Td
+(3. Copy the complete set to a dated backup folder.) Tj
+0 -14 Td
+(4. Verify file names, sizes, and timestamps.) Tj
+0 -14 Td
+(5. Compress and encrypt the backup.) Tj
+0 -14 Td
+(6. Open a copy with the approved compatible tool.) Tj
+0 -14 Td
+(7. Record the result and retain the original files unchanged.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Legacy files require an isolated restore test before any conversion.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 30) Tj
+ET
+endstream
+endobj
+63 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 64 0 R >>
+endobj
+64 0 obj
+<< /Length 1157 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 29: BACKUP VERIFICATION) Tj
+/F1 {fs} Tf
+0 -24 Td
+(A successful backup command does not prove that the backup is usable.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Verification checklist) Tj
+0 -14 Td
+(- File exists at the intended location.) Tj
+0 -14 Td
+(- File size is plausible compared with the source.) Tj
+0 -14 Td
+(- Checksum is recorded.) Tj
+0 -14 Td
+(- Backup is encrypted and access-restricted.) Tj
+0 -14 Td
+(- Schema and expected table counts are present.) Tj
+0 -14 Td
+(- A sample record or report is readable.) Tj
+0 -14 Td
+(- A restore test has a recorded result.) Tj
+0 -14 Td
+(- Retention and deletion dates are known.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Mark a backup as verified only after the operator signs or initials the record.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 31) Tj
+ET
+endstream
+endobj
+65 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 66 0 R >>
+endobj
+66 0 obj
+<< /Length 1199 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 30: RESTORE READINESS) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Before a restore, identify the incident, target environment, desired restore) Tj
+0 -14 Td
+(point, data owner, and approval. A production restore can overwrite newer data.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Preparation) Tj
+0 -14 Td
+(1. Stop or restrict writes when authorized.) Tj
+0 -14 Td
+(2. Preserve current logs and take a last-resort snapshot if possible.) Tj
+0 -14 Td
+(3. Locate the latest verified backup before the incident.) Tj
+0 -14 Td
+(4. Confirm encryption access and checksum.) Tj
+0 -14 Td
+(5. Prepare a separate restore target first.) Tj
+0 -14 Td
+(6. Define validation queries and user acceptance checks.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(If the backup is unverified or corrupted, do not claim recovery is complete.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 32) Tj
+ET
+endstream
+endobj
+67 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 68 0 R >>
+endobj
+68 0 obj
+<< /Length 1081 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 31: MYSQL RESTORE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(1. Create an isolated empty database.) Tj
+0 -14 Td
+(2. Apply the approved schema or import the logical dump.) Tj
+0 -14 Td
+(3. Restore data and required routines.) Tj
+0 -14 Td
+(4. Check import errors and row counts.) Tj
+0 -14 Td
+(5. Validate primary keys, foreign keys, and important queries.) Tj
+0 -14 Td
+(6. Run the application against the restored copy.) Tj
+0 -14 Td
+(7. Obtain approval before replacing a live target.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(For a live replacement, schedule downtime, preserve the old target, announce) Tj
+0 -14 Td
+(the change, and document the exact cutover and rollback steps.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 33) Tj
+ET
+endstream
+endobj
+69 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 70 0 R >>
+endobj
+70 0 obj
+<< /Length 1104 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 32: ORACLE LITE RESTORE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Use the same or a documented compatible Oracle Lite version. Restore into an) Tj
+0 -14 Td
+(isolated target before touching the operational database.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Validate:) Tj
+0 -14 Td
+(- Database opens normally.) Tj
+0 -14 Td
+(- Expected schema objects are present.) Tj
+0 -14 Td
+(- Record counts match the backup report.) Tj
+0 -14 Td
+(- Application connectivity works.) Tj
+0 -14 Td
+(- Read and write permissions are correct.) Tj
+0 -14 Td
+(- Locale, date, and character settings are compatible.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Record tool version, export identifier, errors, corrective actions, and approval.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 34) Tj
+ET
+endstream
+endobj
+71 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 72 0 R >>
+endobj
+72 0 obj
+<< /Length 1071 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 33: MSSQL RESTORE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(1. Confirm the backup chain and target recovery model.) Tj
+0 -14 Td
+(2. Restore the full backup into a test database.) Tj
+0 -14 Td
+(3. Apply differential and log backups if required.) Tj
+0 -14 Td
+(4. Use a new database name during validation.) Tj
+0 -14 Td
+(5. Run consistency checks and application queries.) Tj
+0 -14 Td
+(6. Verify logins, users, roles, and permissions.) Tj
+0 -14 Td
+(7. Cut over only after approval.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(After cutover, monitor failed logins, API errors, missing rows, and write) Tj
+0 -14 Td
+(failures. Keep the former database protected for rollback.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 35) Tj
+ET
+endstream
+endobj
+73 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 74 0 R >>
+endobj
+74 0 obj
+<< /Length 1033 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 34: MS ACCESS 2010 RESTORE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(1. Preserve the current file before replacement.) Tj
+0 -14 Td
+(2. Copy the verified backup to a separate restore location.) Tj
+0 -14 Td
+(3. Open the restored copy with the approved Access version.) Tj
+0 -14 Td
+(4. Run compact and repair only on the copy when authorized.) Tj
+0 -14 Td
+(5. Verify tables, relationships, forms, and reports.) Tj
+0 -14 Td
+(6. Reconnect approved application links.) Tj
+0 -14 Td
+(7. Obtain user confirmation before operational use.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Do not restore an unknown file over the only current copy.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 36) Tj
+ET
+endstream
+endobj
+75 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 76 0 R >>
+endobj
+76 0 obj
+<< /Length 1072 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 35: POSTGRESQL RESTORE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(1. Create a new isolated PostgreSQL or Supabase target.) Tj
+0 -14 Td
+(2. Restore schema and data using the matching tool.) Tj
+0 -14 Td
+(3. Reapply provider-specific settings only through approved procedures.) Tj
+0 -14 Td
+(4. Verify functions, views, indexes, policies, and sequences.) Tj
+0 -14 Td
+(5. Test authentication and representative application requests.) Tj
+0 -14 Td
+(6. Compare key counts and timestamps with the backup report.) Tj
+0 -14 Td
+(7. Cut over only after owner approval.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Never paste service keys into a public issue, document, or screenshot.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 37) Tj
+ET
+endstream
+endobj
+77 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 78 0 R >>
+endobj
+78 0 obj
+<< /Length 1096 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 36: EXCEL AND DBASE RESTORE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Excel restore means replacing or recreating a report/export, not reconstructing) Tj
+0 -14 Td
+(a relational database. Verify formulas, filters, headers, dates, and totals.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(For dBase III, restore every related file and use a compatible tool. Confirm) Tj
+0 -14 Td
+(that indexes and memo fields are available. Compare record counts with the) Tj
+0 -14 Td
+(original backup manifest and preserve the original files.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Document limitations clearly when a file export cannot restore application) Tj
+0 -14 Td
+(logic, relationships, permissions, or audit history.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 38) Tj
+ET
+endstream
+endobj
+79 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 80 0 R >>
+endobj
+80 0 obj
+<< /Length 1583 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 37: FULL DATABASE RESTORE TEST) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Perform a full restore drill at a planned interval.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Drill steps) Tj
+0 -14 Td
+(1. Select a verified backup without using the production target.) Tj
+0 -14 Td
+(2. Record start time and expected recovery point.) Tj
+0 -14 Td
+(3. Restore all required objects and data.) Tj
+0 -14 Td
+(4. Start the application against the restored target.) Tj
+0 -14 Td
+(5. Test login, heat index, weather, advisories, notifications, incidents, and) Tj
+0 -14 Td
+(one administrative workflow.) Tj
+0 -14 Td
+(6. Record end time, defects, and data differences.) Tj
+0 -14 Td
+(7. Destroy the test target only after evidence is archived.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+([INSERT SCREENSHOT 5: Redacted restore validation result or test environment.]) Tj
+0 -14 Td
+(Capture the item described above; redact private data and add a figure caption.) Tj
+0 -14 Td
+(Preferred evidence is a cropped terminal or database console showing the) Tj
+0 -14 Td
+(restore command/result and a safe row-count verification. Do not show keys,) Tj
+0 -14 Td
+(passwords, connection strings, or private records.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 39) Tj
+ET
+endstream
+endobj
+81 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 82 0 R >>
+endobj
+82 0 obj
+<< /Length 1208 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 38: DATABASE MIGRATION PLANNING) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Migration may mean moving the current database to a new platform or applying a) Tj
+0 -14 Td
+(versioned schema change. Both require inventory and rollback planning.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Planning checklist) Tj
+0 -14 Td
+(- Source and target platform and versions.) Tj
+0 -14 Td
+(- Tables, columns, keys, indexes, policies, views, functions, and triggers.) Tj
+0 -14 Td
+(- Data types and unsupported features.) Tj
+0 -14 Td
+(- Character set, time zone, and null behavior.) Tj
+0 -14 Td
+(- Application connection changes.) Tj
+0 -14 Td
+(- Downtime and communication plan.) Tj
+0 -14 Td
+(- Validation queries and rollback method.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Never begin a production migration without a verified backup.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 40) Tj
+ET
+endstream
+endobj
+83 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 84 0 R >>
+endobj
+84 0 obj
+<< /Length 1091 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 39: DATABASE MIGRATION PROCEDURE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(1. Export the source database and record the manifest.) Tj
+0 -14 Td
+(2. Create the target schema through approved migrations.) Tj
+0 -14 Td
+(3. Transform incompatible types in a controlled script.) Tj
+0 -14 Td
+(4. Import data in dependency order.) Tj
+0 -14 Td
+(5. Recreate indexes, policies, functions, views, and triggers.) Tj
+0 -14 Td
+(6. Compare row counts, totals, timestamps, and representative records.) Tj
+0 -14 Td
+(7. Point staging to the target and run application tests.) Tj
+0 -14 Td
+(8. Schedule and execute production cutover.) Tj
+0 -14 Td
+(9. Monitor and retain the source for rollback.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 41) Tj
+ET
+endstream
+endobj
+85 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 86 0 R >>
+endobj
+86 0 obj
+<< /Length 1284 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 40: MIGRATION VALIDATION) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Validate both technical and business behavior.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Technical checks) Tj
+0 -14 Td
+(- All expected tables and columns exist.) Tj
+0 -14 Td
+(- Primary and foreign keys are valid.) Tj
+0 -14 Td
+(- Policies allow intended roles and deny unauthorized access.) Tj
+0 -14 Td
+(- Functions, views, triggers, and indexes work.) Tj
+0 -14 Td
+(- Application connections use the target.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Business checks) Tj
+0 -14 Td
+(- Heat readings show correct units and timestamps.) Tj
+0 -14 Td
+(- Advisories match the configured thresholds.) Tj
+0 -14 Td
+(- Notifications and incidents remain linked to the correct users or schools.) Tj
+0 -14 Td
+(- Reports and dashboards show expected totals.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Record mismatches instead of silently correcting them.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 42) Tj
+ET
+endstream
+endobj
+87 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 88 0 R >>
+endobj
+88 0 obj
+<< /Length 1156 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 41: AI AND WEATHER DATA MAINTENANCE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Review weather-provider availability, response shape, units, timestamps, rate) Tj
+0 -14 Td
+(limits, and fallback behavior. Confirm that missing or stale weather data does) Tj
+0 -14 Td
+(not produce an unsafe confident advisory.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(For AI or model artifacts:) Tj
+0 -14 Td
+(- Record model version and release date.) Tj
+0 -14 Td
+(- Keep training or evaluation evidence with the release.) Tj
+0 -14 Td
+(- Verify input feature names and ranges.) Tj
+0 -14 Td
+(- Compare output against approved scenarios.) Tj
+0 -14 Td
+(- Keep a previous model available for rollback.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use human review for safety-sensitive changes.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 43) Tj
+ET
+endstream
+endobj
+89 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 90 0 R >>
+endobj
+90 0 obj
+<< /Length 1175 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 42: HEAT INDEX AND ADVISORY VALIDATION) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Run known temperature and humidity scenarios after changes to thresholds,) Tj
+0 -14 Td
+(calculation logic, weather parsing, or model behavior.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Validation cases should include:) Tj
+0 -14 Td
+(- Normal conditions.) Tj
+0 -14 Td
+(- Moderate, high, and extreme heat.) Tj
+0 -14 Td
+(- Missing humidity or weather fields.) Tj
+0 -14 Td
+(- Boundary values at each threshold.) Tj
+0 -14 Td
+(- Unit conversion between Celsius and Fahrenheit.) Tj
+0 -14 Td
+(- Stale or unavailable provider responses.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Confirm the displayed advisory, notification content, timestamp, and audit log) Tj
+0 -14 Td
+(are consistent with the approved policy.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 44) Tj
+ET
+endstream
+endobj
+91 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 92 0 R >>
+endobj
+92 0 obj
+<< /Length 1131 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 43: NOTIFICATIONS, INCIDENTS, AND MESSAGES) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Verify notification creation, read state, delivery retries, email or SMS) Tj
+0 -14 Td
+(configuration, and user preferences. Test that an advisory is not duplicated) Tj
+0 -14 Td
+(unnecessarily during retries.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(For incidents and messages verify:) Tj
+0 -14 Td
+(- Correct role access.) Tj
+0 -14 Td
+(- Correct school or student association.) Tj
+0 -14 Td
+(- Required fields and validation.) Tj
+0 -14 Td
+(- Auditability of status changes.) Tj
+0 -14 Td
+(- Safe handling of attachments or message content.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Use redacted test accounts and never use real emergency details in a test.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 45) Tj
+ET
+endstream
+endobj
+93 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 94 0 R >>
+endobj
+94 0 obj
+<< /Length 1211 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 44: LOGGING AND MONITORING) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Review application, database, deployment, and provider logs on a planned) Tj
+0 -14 Td
+(schedule. Look for repeated errors, authentication failures, timeouts, rate) Tj
+0 -14 Td
+(limits, failed jobs, and unusual data changes.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Log review procedure) Tj
+0 -14 Td
+(1. Select the time window and environment.) Tj
+0 -14 Td
+(2. Filter by severity and affected component.) Tj
+0 -14 Td
+(3. Correlate timestamps and request identifiers.) Tj
+0 -14 Td
+(4. Remove or redact sensitive values from reports.) Tj
+0 -14 Td
+(5. Open an incident for recurring or high-impact errors.) Tj
+0 -14 Td
+(6. Confirm resolution with a new observation.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Retain logs according to the approved policy.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 46) Tj
+ET
+endstream
+endobj
+95 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 96 0 R >>
+endobj
+96 0 obj
+<< /Length 1051 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 45: SECURITY MAINTENANCE) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Security maintenance includes dependency review, secret rotation, access review,) Tj
+0 -14 Td
+(HTTPS verification, CORS review, rate-limit checks, and backup access review.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Immediately rotate a credential if it may have been exposed. Update dependent) Tj
+0 -14 Td
+(services, verify authentication, and document the rotation without recording) Tj
+0 -14 Td
+(the secret itself.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Review administrator access more often than ordinary user access. Remove stale) Tj
+0 -14 Td
+(accounts and unused service credentials.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 47) Tj
+ET
+endstream
+endobj
+97 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 98 0 R >>
+endobj
+98 0 obj
+<< /Length 1873 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 46: TROUBLESHOOTING MATRIX) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Frontend does not load: check deployment status, browser console, API URL,) Tj
+0 -14 Td
+(network access, and build output.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Login fails: check authentication provider status, user state, redirect settings,) Tj
+0 -14 Td
+(clock synchronization, and safe server logs.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Weather is missing: check provider response, credentials, rate limits, units,) Tj
+0 -14 Td
+(timeout handling, and cached data.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Advisory is incorrect: verify input units, threshold configuration, calculation) Tj
+0 -14 Td
+(service, model version, and audit records.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Database request fails: check connectivity, migration status, policy decision,) Tj
+0 -14 Td
+(query shape, timeout, and service logs.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Alarm and severity handling) Tj
+0 -14 Td
+(Classify a finding as CRITICAL when a safety-related advisory is unavailable or) Tj
+0 -14 Td
+(incorrect, production data is at risk, or the complete service is down. Classify) Tj
+0 -14 Td
+(it as MAJOR when a role, feature, provider integration, or repeated job is) Tj
+0 -14 Td
+(unavailable but a safe workaround exists. Classify it as MINOR when the issue) Tj
+0 -14 Td
+(has limited user impact and does not affect data integrity or safety. Record the) Tj
+0 -14 Td
+(severity, start time, affected users, escalation target, and next update.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 48) Tj
+ET
+endstream
+endobj
+99 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 100 0 R >>
+endobj
+100 0 obj
+<< /Length 1692 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 47: INCIDENT RESPONSE AND ROLLBACK) Tj
+/F1 {fs} Tf
+0 -24 Td
+(For a high-impact failure:) Tj
+0 -14 Td
+(1. Notify the responsible owner.) Tj
+0 -14 Td
+(2. Preserve logs and current configuration.) Tj
+0 -14 Td
+(3. Identify affected users and functions.) Tj
+0 -14 Td
+(4. Disable only the unsafe feature if possible.) Tj
+0 -14 Td
+(5. Restore the last known-good release or database state.) Tj
+0 -14 Td
+(6. Validate authentication, heat data, advisories, and notifications.) Tj
+0 -14 Td
+(7. Communicate service status.) Tj
+0 -14 Td
+(8. Document cause, impact, recovery, and prevention.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Rollback must be a controlled release, not an undocumented file replacement.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Replacement and recovery procedures) Tj
+0 -14 Td
+(Beat the Heat is primarily software, so field-replaceable hardware procedures) Tj
+0 -14 Td
+(are replaced by controlled replacement of a failed service, deployment artifact,) Tj
+0 -14 Td
+(configuration, database target, or provider credential. Preserve the failed) Tj
+0 -14 Td
+(artifact and logs, deploy the known-good replacement, validate the main user) Tj
+0 -14 Td
+(flows, and document the old and new identifiers. Do not delete the failed) Tj
+0 -14 Td
+(artifact until the incident is closed.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 49) Tj
+ET
+endstream
+endobj
+101 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 102 0 R >>
+endobj
+102 0 obj
+<< /Length 1735 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 48: MAINTENANCE SCHEDULE AND CHECKLIST) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Daily: check availability, failed jobs, weather freshness, critical errors, and) Tj
+0 -14 Td
+(notification failures.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Weekly: review accounts, database health, backups, storage, incident status,) Tj
+0 -14 Td
+(and dependency alerts.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Monthly: test a restore, review policies and indexes, rotate planned secrets,) Tj
+0 -14 Td
+(review retention, and verify disaster-recovery contacts.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Preventive maintenance record) Tj
+0 -14 Td
+(Daily checks should include service availability, login, weather freshness,) Tj
+0 -14 Td
+(heat-index calculation, advisory display, notification queue, and critical) Tj
+0 -14 Td
+(errors. Monthly checks should include a restore drill, dependency review,) Tj
+0 -14 Td
+(account review, policy review, log-retention review, network/time verification,) Tj
+0 -14 Td
+(and an update of the contact and escalation list.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Per release: record version, run tests, back up data, deploy, smoke test,) Tj
+0 -14 Td
+(monitor, and close the release record.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Checklist fields: task, owner, date, result, evidence link, defect, corrective) Tj
+0 -14 Td
+(action, reviewer, and next due date.) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 50) Tj
+ET
+endstream
+endobj
+103 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 104 0 R >>
+endobj
+104 0 obj
+<< /Length 1445 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 49: APPENDIX A - OPERATIONS TEMPLATES) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Maintenance record) Tj
+0 -14 Td
+(Date/time: ____________________  Environment: ____________________) Tj
+0 -14 Td
+(Requester: ____________________  Operator: ____________________) Tj
+0 -14 Td
+(Change or incident: ______________________________________________) Tj
+0 -14 Td
+(Impact: _______________________  Approval: _______________________) Tj
+0 -14 Td
+(Backup identifier: _____________  Version: ________________________) Tj
+0 -14 Td
+(Tests performed: __________________________________________________) Tj
+0 -14 Td
+(Result: _______________________  Rollback needed: ________________) Tj
+0 -14 Td
+(Reviewer and date: _______________________________________________) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Backup manifest) Tj
+0 -14 Td
+(Identifier: __________ Source: __________ Tool/version: __________) Tj
+0 -14 Td
+(File/checksum: _________________________ Encrypted: yes / no) Tj
+0 -14 Td
+(Restore tested: yes / no  Test date: __________  Retention: ______) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 51) Tj
+ET
+endstream
+endobj
+105 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 107 0 R /F2 108 0 R >> >> /Contents 106 0 R >>
+endobj
+106 0 obj
+<< /Length 1635 >>
+stream
+BT
+/F1 10.2 Tf
+54 778 Td
+/F2 12 Tf
+(PAGE 50: APPENDIX B - FINAL ACCEPTANCE CHECKLIST) Tj
+/F1 {fs} Tf
+0 -24 Td
+(Before submitting or approving this guide, confirm:) Tj
+0 -14 Td
+(- The guide has at least 50 main-content pages, excluding title, contents, and) Tj
+0 -14 Td
+(appendices as required by the course directions.) Tj
+0 -14 Td
+(- Procedures are written for the actual Beat the Heat architecture.) Tj
+0 -14 Td
+(- Backup and full restore procedures cover the assigned database providers.) Tj
+0 -14 Td
+(- Migration, permissions, database maintenance, and software maintenance are) Tj
+0 -14 Td
+(included.) Tj
+0 -14 Td
+(- Screenshot placeholders have been replaced with redacted project screenshots) Tj
+0 -14 Td
+(where appropriate.) Tj
+0 -14 Td
+(- Screenshots remain within the required percentage.) Tj
+0 -14 Td
+(- Commands and configuration values were reviewed for secret exposure.) Tj
+0 -14 Td
+(- The guide has been reviewed by the project adviser or maintenance owner.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Final approval) Tj
+0 -14 Td
+(Prepared by: ____________________ Date: ____________________) Tj
+0 -14 Td
+(Reviewed by: _____________________ Date: ____________________) Tj
+0 -14 Td
+(Approved by: ____________________ Date: ____________________) Tj
+0 -14 Td
+ET
+BT
+/F2 9 Tf
+54 64 Td
+(OPERATOR EVIDENCE) Tj
+/F1 8.5 Tf
+0 -13 Td
+(Date: __________  Operator: __________  Environment: __________) Tj
+0 -12 Td
+(Result: __________________  Evidence/File reference: __________________) Tj
+0 -12 Td
+(Reviewer: __________________  Notes: ________________________________) Tj
+ET
+BT
+/F1 8 Tf
+54 30 Td
+(Beat the Heat Maintenance Guide | Page 52) Tj
+ET
+endstream
+endobj
+107 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+108 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 109
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000479 00000 n 
+0000000619 00000 n 
+0000000957 00000 n 
+0000001097 00000 n 
+0000004099 00000 n 
+0000004239 00000 n 
+0000006000 00000 n 
+0000006141 00000 n 
+0000008051 00000 n 
+0000008193 00000 n 
+0000009643 00000 n 
+0000009785 00000 n 
+0000011180 00000 n 
+0000011322 00000 n 
+0000012571 00000 n 
+0000012713 00000 n 
+0000014174 00000 n 
+0000014316 00000 n 
+0000016153 00000 n 
+0000016295 00000 n 
+0000017946 00000 n 
+0000018088 00000 n 
+0000019525 00000 n 
+0000019667 00000 n 
+0000021008 00000 n 
+0000021150 00000 n 
+0000022341 00000 n 
+0000022483 00000 n 
+0000023805 00000 n 
+0000023947 00000 n 
+0000025208 00000 n 
+0000025350 00000 n 
+0000026581 00000 n 
+0000026723 00000 n 
+0000027997 00000 n 
+0000028139 00000 n 
+0000029500 00000 n 
+0000029642 00000 n 
+0000030862 00000 n 
+0000031004 00000 n 
+0000032559 00000 n 
+0000032701 00000 n 
+0000033929 00000 n 
+0000034071 00000 n 
+0000035368 00000 n 
+0000035510 00000 n 
+0000036770 00000 n 
+0000036912 00000 n 
+0000038213 00000 n 
+0000038355 00000 n 
+0000039688 00000 n 
+0000039830 00000 n 
+0000041074 00000 n 
+0000041216 00000 n 
+0000042460 00000 n 
+0000042602 00000 n 
+0000043943 00000 n 
+0000044085 00000 n 
+0000045407 00000 n 
+0000045549 00000 n 
+0000046816 00000 n 
+0000046958 00000 n 
+0000048168 00000 n 
+0000048310 00000 n 
+0000049562 00000 n 
+0000049704 00000 n 
+0000050838 00000 n 
+0000050980 00000 n 
+0000052137 00000 n 
+0000052279 00000 n 
+0000053403 00000 n 
+0000053545 00000 n 
+0000054631 00000 n 
+0000054773 00000 n 
+0000055898 00000 n 
+0000056040 00000 n 
+0000057189 00000 n 
+0000057331 00000 n 
+0000058967 00000 n 
+0000059109 00000 n 
+0000060370 00000 n 
+0000060512 00000 n 
+0000061656 00000 n 
+0000061798 00000 n 
+0000063135 00000 n 
+0000063277 00000 n 
+0000064486 00000 n 
+0000064628 00000 n 
+0000065856 00000 n 
+0000065998 00000 n 
+0000067182 00000 n 
+0000067324 00000 n 
+0000068588 00000 n 
+0000068730 00000 n 
+0000069834 00000 n 
+0000069976 00000 n 
+0000071902 00000 n 
+0000072045 00000 n 
+0000073791 00000 n 
+0000073935 00000 n 
+0000075724 00000 n 
+0000075868 00000 n 
+0000077367 00000 n 
+0000077511 00000 n 
+0000079200 00000 n 
+0000079272 00000 n 
+trailer
+<< /Size 109 /Root 1 0 R >>
+startxref
+79349
+%%EOF
